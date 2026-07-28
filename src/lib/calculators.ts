@@ -111,9 +111,10 @@ export function dailyLogReturns(rows: NavRow[]): number[] {
 export function drawdownSeries(rows: NavRow[]): DrawdownPoint[] {
   const out: DrawdownPoint[] = [];
   let peak = -Infinity;
+  let peakT = rows[0]?.t ?? 0;
   for (const r of rows) {
-    if (r.nav > peak) peak = r.nav;
-    out.push({ t: r.t, dd: peak > 0 ? (r.nav - peak) / peak : 0 });
+    if (r.nav > peak) { peak = r.nav; peakT = r.t; }
+    out.push({ t: r.t, dd: peak > 0 ? (r.nav - peak) / peak : 0, peakT });
   }
   return out;
 }
