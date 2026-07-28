@@ -1,0 +1,224 @@
+import { useMemo, useState } from "react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
+} from "recharts";
+import { Card } from "@/components/ui/card";
+import { calculateRollingReturns, rollingStats } from "@/lib/calculators";
+import type { NormalizedScheme, RollingYears, RollingStats } from "@/types/mf";
+import { colorFor, csvEscape, downloadFile, fmtDateShort, fmtNum } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Download, FileImage, Eye, EyeOff } from "lucide-react";
+import { toPng } from "html-to-image";
+
+const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
+
+interface Props {
+  schemes: { code: number; name: string; data: NormalizedScheme }[];
+}
+
+export function RollingReturnsCard({ schemes }: Props) {
+  const [period, setPeriod] = useState<RollingYears>(3);
+  const [hidden, setHidden] = useState<Set<number>>(new Set());
+  const chartRef = useMemo(() => ({ current: null as HTMLDivElement | null }), []);
+
+  const rolling = useMemo(() => {
+    return schemes.map((s) => ({
+      ...s,
+      series: calculateRollingReturns(s.data.rows, period),
+    }));
+  }, [schemes, period]);
+
+  const stats: (RollingStats & { code: number; name: string })[] = useMemo(() => {
+    return rolling.map((r) => ({ ...rollingStats(r.series, period), code: r.code, name: r.name }));
+  }, [rolling, period]);
+
+  // Build unified chart data by date. Sample to keep it fast.
+  const chartData = useMemo(() => {
+    const times = new Set<number>();
+    for (const r of rolling) for (const p of r.series) times.add(p.t);
+    const sorted = [...times].sort((a, b) => a - b);
+    const stride = Math.max(1, Math.floor(sorted.length / 400));
+    const sampled = sorted.filter((_, i) => i % stride === 0);
+    return sampled.map((t) => {
+      const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
+      for (const r of rolling) {
+        const p = r.series.find((x) => x.t === t);
+        if (p) row[`s${r.code}`] = +(p.cagr * 100).toFixed(2);
+      }
+      return row;
+    });
+  }, [rolling]);
+
+  const toggle = (code: number) => {
+    setHidden((h) => {
+      const n = new Set(h);
+      if (n.has(code)) n.delete(code); else n.add(code);
+      return n;
+    });
+  };
+
+  const exportCsv = () => {
+    const header = ["Date", ...schemes.map((s) => s.name)].map(csvEscape).join(",");
+    const rows = chartData.map((r) => {
+      const vals = schemes.map((s) => {
+        const v = r[`s${s.code}`];
+        return typeof v === "number" ? v : "";
+      });
+      return [r.date, ...vals].map(csvEscape).join(",");
+    });
+    downloadFile(`rolling-${period}y-returns.csv`, [header, ...rows].join("\n"), "text/csv");
+  };
+
+  const exportPng = async () => {
+    if (!chartRef.current) return;
+    const dataUrl = await toPng(chartRef.current, { backgroundColor: "#0f1420", pixelRatio: 2 });
+    const a = document.createElement("a");
+    a.href = dataUrl; a.download = `rolling-${period}y-returns.png`; a.click();
+  };
+
+  return (
+    <Card className="p-5 card-glow">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold">Rolling CAGR Returns</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Every possible {period}-year rolling window across the full NAV history.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1 rounded-lg border border-border/60 p-1 bg-card/60">
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                  period === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {p}Y
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-3.5 w-3.5" /> CSV</Button>
+          <Button variant="outline" size="sm" onClick={exportPng}><FileImage className="h-3.5 w-3.5" /> PNG</Button>
+        </div>
+      </div>
+
+      <div ref={(el) => { chartRef.current = el; }} className="mt-4 h-[380px] w-full">
+        {chartData.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            Not enough history for a {period}-year rolling window.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.35} />
+              <XAxis dataKey="date" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} minTickGap={40} />
+              <YAxis
+                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                tickFormatter={(v) => `${v}%`}
+                width={54}
+              />
+              <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeDasharray="2 4" />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  fontSize: 12,
+                }}
+                formatter={(v: number, name) => [`${v.toFixed(2)}%`, name]}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11 }}
+                formatter={(value) => <span className="text-muted-foreground">{value}</span>}
+              />
+              {schemes.map((s, i) => (
+                !hidden.has(s.code) && (
+                  <Line
+                    key={s.code}
+                    type="monotone"
+                    dataKey={`s${s.code}`}
+                    name={s.name}
+                    stroke={colorFor(i)}
+                    strokeWidth={2}
+                    dot={false}
+                    isAnimationActive={false}
+                    connectNulls
+                  />
+                )
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* Legend / show-hide */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {schemes.map((s, i) => {
+          const isHidden = hidden.has(s.code);
+          return (
+            <button
+              key={s.code}
+              onClick={() => toggle(s.code)}
+              className={`flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                isHidden ? "opacity-40 border-border/40" : "border-border/60 hover:bg-accent/40"
+              }`}
+            >
+              {isHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(i) }} />
+              <span className="truncate max-w-[220px]">{s.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Rolling statistics table */}
+      <div className="mt-5 overflow-x-auto -mx-2 px-2">
+        <table className="w-full text-xs num">
+          <thead className="text-muted-foreground">
+            <tr className="border-b border-border/60">
+              <th className="text-left font-medium py-2 pr-3">Fund</th>
+              <th className="text-right font-medium">Windows</th>
+              <th className="text-right font-medium">Min</th>
+              <th className="text-right font-medium">Avg</th>
+              <th className="text-right font-medium">Median</th>
+              <th className="text-right font-medium">Max</th>
+              <th className="text-right font-medium">Std σ</th>
+              <th className="text-right font-medium">P5</th>
+              <th className="text-right font-medium">P25</th>
+              <th className="text-right font-medium">P75</th>
+              <th className="text-right font-medium">P95</th>
+              <th className="text-right font-medium">Pos %</th>
+              <th className="text-right font-medium">Current</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.map((s, i) => (
+              <tr key={s.code} className="border-b border-border/30 last:border-0">
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(i) }} />
+                    <span className="truncate max-w-[220px]">{s.name}</span>
+                  </div>
+                </td>
+                <td className="text-right">{s.count}</td>
+                <td className="text-right text-destructive-foreground/90">{fmtNum(s.min)}%</td>
+                <td className="text-right">{fmtNum(s.mean)}%</td>
+                <td className="text-right">{fmtNum(s.median)}%</td>
+                <td className="text-right text-success">{fmtNum(s.max)}%</td>
+                <td className="text-right">{fmtNum(s.std)}</td>
+                <td className="text-right">{fmtNum(s.p5)}%</td>
+                <td className="text-right">{fmtNum(s.p25)}%</td>
+                <td className="text-right">{fmtNum(s.p75)}%</td>
+                <td className="text-right">{fmtNum(s.p95)}%</td>
+                <td className="text-right">{fmtNum(s.positivePct, 1)}%</td>
+                <td className="text-right font-medium">{s.current == null ? "—" : `${fmtNum(s.current)}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}

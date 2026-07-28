@@ -1,0 +1,118 @@
+import { useMemo } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
+import { Card } from "@/components/ui/card";
+import { drawdownSeries, maxDrawdown, longestRecoveryDays, mean } from "@/lib/calculators";
+import type { NormalizedScheme } from "@/types/mf";
+import { colorFor, fmtDateShort, fmtNum, fmtPct } from "@/lib/format";
+
+interface Props {
+  schemes: { code: number; name: string; data: NormalizedScheme }[];
+}
+
+export function DrawdownCard({ schemes }: Props) {
+  const dd = useMemo(() => schemes.map((s) => {
+    const series = drawdownSeries(s.data.rows);
+    return {
+      ...s,
+      series,
+      max: maxDrawdown(series),
+      avg: mean(series.map((p) => p.dd).filter((v) => v < 0)),
+      current: series[series.length - 1]?.dd ?? 0,
+      recovery: longestRecoveryDays(s.data.rows),
+    };
+  }), [schemes]);
+
+  const chartData = useMemo(() => {
+    const times = new Set<number>();
+    for (const r of dd) for (const p of r.series) times.add(p.t);
+    const sorted = [...times].sort((a, b) => a - b);
+    const stride = Math.max(1, Math.floor(sorted.length / 400));
+    const sampled = sorted.filter((_, i) => i % stride === 0);
+    return sampled.map((t) => {
+      const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
+      for (const r of dd) {
+        const p = r.series.find((x) => x.t === t);
+        if (p) row[`s${r.code}`] = +(p.dd * 100).toFixed(2);
+      }
+      return row;
+    });
+  }, [dd]);
+
+  return (
+    <Card className="p-5">
+      <div>
+        <h3 className="font-display text-lg font-semibold">Drawdown Analysis</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          How deep and how long each fund fell from its peak.
+        </p>
+      </div>
+
+      <div className="mt-4 h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
+            <defs>
+              {schemes.map((s, i) => (
+                <linearGradient key={s.code} id={`dd-${s.code}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={colorFor(i)} stopOpacity={0.05} />
+                  <stop offset="100%" stopColor={colorFor(i)} stopOpacity={0.35} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.35} />
+            <XAxis dataKey="date" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} minTickGap={40} />
+            <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickFormatter={(v) => `${v}%`} width={54} />
+            <ReferenceLine y={0} stroke="var(--muted-foreground)" />
+            <Tooltip
+              contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
+              formatter={(v: number, name) => [`${v.toFixed(2)}%`, name]}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} formatter={(v) => <span className="text-muted-foreground">{v}</span>} />
+            {schemes.map((s, i) => (
+              <Area
+                key={s.code}
+                type="monotone"
+                dataKey={`s${s.code}`}
+                name={s.name}
+                stroke={colorFor(i)}
+                strokeWidth={1.5}
+                fill={`url(#dd-${s.code})`}
+                isAnimationActive={false}
+                connectNulls
+              />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="mt-5 overflow-x-auto">
+        <table className="w-full text-xs num">
+          <thead className="text-muted-foreground">
+            <tr className="border-b border-border/60">
+              <th className="text-left font-medium py-2">Fund</th>
+              <th className="text-right font-medium">Max Drawdown</th>
+              <th className="text-right font-medium">Current DD</th>
+              <th className="text-right font-medium">Avg DD</th>
+              <th className="text-right font-medium">Longest Recovery</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dd.map((s, i) => (
+              <tr key={s.code} className="border-b border-border/30 last:border-0">
+                <td className="py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(i) }} />
+                    <span className="truncate max-w-[280px]">{s.name}</span>
+                  </div>
+                </td>
+                <td className="text-right text-destructive-foreground">{fmtPct(s.max)}</td>
+                <td className="text-right">{fmtPct(s.current)}</td>
+                <td className="text-right">{fmtPct(s.avg)}</td>
+                <td className="text-right">{s.recovery ? `${fmtNum(s.recovery / 30, 1)} months` : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
