@@ -75,10 +75,45 @@ export interface RiskMetrics {
   var95: number;
   cvar95: number;
   recoveryDays: number | null;
+  alpha: number;
+  beta: number;
+  trackingError: number;
+  informationRatio: number;
 }
 
 export interface DrawdownPoint {
   t: number;
   dd: number; // negative or 0
   peakT: number; // timestamp of running peak that this dd is measured from
+}
+
+// ---------- Benchmarks ----------
+
+export type BenchmarkKey = "nifty50" | "nifty100" | "nifty150midcap" | "nifty250smallcap" | "sensex" | "nifty500" | "niftynext50";
+
+export interface Benchmark {
+  key: BenchmarkKey;
+  label: string;
+  yahooSymbol: string;
+  categoryHint: string[];
+}
+
+export interface BenchmarkData {
+  key: BenchmarkKey;
+  label: string;
+  rows: NavRow[];
+}
+
+export interface AnnualReturn {
+  year: number;
+  value: number; // total return for the calendar year
+}
+
+export interface CorrelationCell {
+  codeA: number;
+  nameA: string;
+  codeB: number;
+  nameB: string;
+  value: number; // -1..1
+  overlap: boolean; // > 0.85
 }
