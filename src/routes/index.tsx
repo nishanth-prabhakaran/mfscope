@@ -56,22 +56,40 @@ function Home() {
   const errored = queries.filter((q) => q.error).length;
 
   const startT = startDate ? startDate.getTime() : null;
+  const MIN_ROWS = 30;
 
-  const schemes = useMemo(
-    () =>
-      funds
-        .map((f, i) => {
-          const q = queries[i];
-          if (!q?.data) return null;
-          const data = startT
-            ? { ...q.data, rows: q.data.rows.filter((r) => r.t >= startT) }
-            : q.data;
-          if (!data.rows.length) return null;
-          return { code: f.schemeCode, name: f.schemeName, data };
-        })
-        .filter((x): x is { code: number; name: string; data: NonNullable<typeof x>["data"] } => !!x),
-    [funds, queries, startT],
-  );
+  const { schemes, excluded, earliestCommon } = useMemo(() => {
+    const kept: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }> = [];
+    const skipped: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }> = [];
+    let maxFirst = 0;
+    let anyLoaded = false;
+
+    funds.forEach((f, i) => {
+      const q = queries[i];
+      if (!q?.data) return;
+      anyLoaded = true;
+      const full = q.data;
+      const inception = full.rows[0]?.t ?? null;
+      if (inception != null) maxFirst = Math.max(maxFirst, inception);
+      const rows = startT ? full.rows.filter((r) => r.t >= startT) : full.rows;
+      if (!rows.length) {
+        skipped.push({ code: f.schemeCode, name: f.schemeName, inception, reason: "no-data" });
+        return;
+      }
+      if (rows.length < MIN_ROWS) {
+        skipped.push({ code: f.schemeCode, name: f.schemeName, inception, reason: "too-few" });
+        return;
+      }
+      kept.push({ code: f.schemeCode, name: f.schemeName, data: { ...full, rows } });
+    });
+
+    return {
+      schemes: kept,
+      excluded: skipped,
+      earliestCommon: anyLoaded && maxFirst ? new Date(maxFirst) : null,
+    };
+  }, [funds, queries, startT]);
+
 
 
   return (
