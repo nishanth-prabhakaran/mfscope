@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { use `useMemo, useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSchemeList } from "@/hooks/useSchemes";
@@ -35,18 +35,18 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
         if (!(lower.includes(query) || guessAmc(name).toLowerCase().includes(query))) continue;
       }
       out.push({ code: s.schemeCode, name, amc: guessAmc(name), cat });
-      if (out.length >= 40) break;
+      if (out.length >= 60) break;
     }
     return out;
   }, [data, q, category]);
 
   return (
-    <div className="relative">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+    <div className="relative w-full">
+      <div className="w-full">
+        <div className="relative w-full">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
           {isLoading && (
-            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 h-6 w-6 animate-spin text-muted-foreground" />
           )}
           <Input
             value={q}
@@ -54,21 +54,21 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
             placeholder={isLoading ? "Loading schemes…" : "Search Direct Growth funds by scheme or AMC…"}
-            className="pl-12 pr-12 h-14 md:h-16 text-base md:text-lg bg-card/60 border-border/60 rounded-xl"
+            className="w-full pl-14 pr-14 h-16 md:h-[72px] text-lg md:text-xl bg-card/60 border-border/60 rounded-2xl placeholder:text-muted-foreground/70"
             disabled={disabled || isLoading}
           />
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-2">
           {(["All", ...CATEGORIES] as const).map((c) => (
             <button
               key={c}
               onClick={() => setCategory(c)}
               className={cn(
-                "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                "text-xs px-3 py-1.5 rounded-full border transition-colors",
                 category === c
-                  ? "bg-primary/15 border-primary/40 text-primary"
-                  : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border",
+                  ? "bg-primary/15 border-primary/50 text-primary font-medium"
+                  : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/30",
               )}
             >
               {c}
@@ -78,8 +78,8 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
       </div>
 
       {focused && filtered.length > 0 && (
-        <div className="absolute z-40 left-0 right-0 top-full mt-2 glass rounded-xl overflow-hidden shadow-2xl">
-          <div className="max-h-96 overflow-y-auto divide-y divide-border/40">
+        <div className="absolute z-50 left-0 right-0 top-full mt-2 glass rounded-2xl overflow-hidden shadow-2xl card-glow border border-border/60">
+          <div className="max-h-[420px] overflow-y-auto divide-y divide-border/40">
             {filtered.map((f) => {
               const selected = isSelected(f.code);
               return (
@@ -91,23 +91,25 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
                     if (!selected) onPick({ schemeCode: f.code, schemeName: f.name });
                   }}
                   className={cn(
-                    "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors",
-                    selected ? "opacity-40 cursor-not-allowed" : "hover:bg-accent/40",
+                    "flex w-full items-start gap-4 px-5 py-4 text-left transition-colors",
+                    selected ? "opacity-40 cursor-not-allowed" : "hover:bg-primary/10",
                   )}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{f.name}</div>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{f.amc}</span>
+                    <div className="text-base font-medium leading-snug truncate">{f.name}</div>
+                    <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground/80">{f.amc}</span>
                       {f.cat && (
                         <>
                           <span className="opacity-40">•</span>
-                          <span>{f.cat}</span>
+                          <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0 h-5 border-border/60">
+                            {f.cat}
+                          </Badge>
                         </>
                       )}
                     </div>
                   </div>
-                  {selected && <Badge variant="secondary" className="text-[10px]">Added</Badge>}
+                  {selected && <Badge variant="secondary" className="text-[10px] shrink-0">Added</Badge>}
                 </button>
               );
             })}
