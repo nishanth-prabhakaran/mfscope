@@ -139,14 +139,13 @@ export function longestRecoveryDays(rows: NavRow[]): number | null {
 }
 
 // ---------- Risk metrics ----------
-export function calculateRisk(rows: NavRow[], riskFree = 0.065): RiskMetrics {
-  if (rows.length < 30) {
-    return {
-      annualReturn: 0, cagr: 0, volatility: 0, downsideVol: 0, sharpe: 0, sortino: 0,
-      calmar: 0, maxDrawdown: 0, avgDrawdown: 0, ulcerIndex: 0, skewness: 0, kurtosis: 0,
-      var95: 0, cvar95: 0, recoveryDays: null,
-    };
-  }
+export function calculateRisk(rows: NavRow[], riskFree = 0.065, benchmarkRows?: NavRow[]): RiskMetrics {
+  const empty = {
+    annualReturn: 0, cagr: 0, volatility: 0, downsideVol: 0, sharpe: 0, sortino: 0,
+    calmar: 0, maxDrawdown: 0, avgDrawdown: 0, ulcerIndex: 0, skewness: 0, kurtosis: 0,
+    var95: 0, cvar95: 0, recoveryDays: null, alpha: 0, beta: 0, trackingError: 0, informationRatio: 0,
+  };
+  if (rows.length < 30) return empty;
   const first = rows[0], last = rows[rows.length - 1];
   const years = (last.t - first.t) / (YEAR_DAYS * DAY);
   const cagr = calculateCAGR(first.nav, last.nav, years);
@@ -171,11 +170,17 @@ export function calculateRisk(rows: NavRow[], riskFree = 0.065): RiskMetrics {
   const tailCount = Math.max(1, Math.floor(0.05 * sortedDaily.length));
   const cvar95 = -mean(sortedDaily.slice(0, tailCount)) * Math.sqrt(TRADING_DAYS);
 
+  const beta = benchmarkRows && benchmarkRows.length ? calculateBeta(rows, benchmarkRows) : 0;
+  const alpha = benchmarkRows && benchmarkRows.length ? calculateAlpha(rows, benchmarkRows, riskFree) : 0;
+  const trackingError = benchmarkRows && benchmarkRows.length ? calculateTrackingError(rows, benchmarkRows) : 0;
+  const informationRatio = trackingError ? alpha / trackingError : 0;
+
   return {
     annualReturn, cagr, volatility: vol, downsideVol: downside,
     sharpe, sortino, calmar, maxDrawdown: mdd, avgDrawdown: avgDD, ulcerIndex: ulcer,
     skewness: skewness(daily), kurtosis: kurtosis(daily),
     var95, cvar95, recoveryDays: longestRecoveryDays(rows),
+    alpha, beta, trackingError, informationRatio,
   };
 }
 
