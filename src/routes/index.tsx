@@ -25,7 +25,7 @@ import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useBenchmark } from "@/hooks/useBenchmark";
-import type { BenchmarkKey } from "@/types/mf";
+import type { BenchmarkKey, NavRow } from "@/types/mf";
 
 
 export const Route = createFileRoute("/")({
