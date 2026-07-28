@@ -46,6 +46,7 @@ export function DrawdownCard({ schemes }: Props) {
         const p = r.series.find((x) => x.t === t);
         if (p) {
           row[`s${r.code}`] = +(p.dd * 100).toFixed(2);
+          row[`peak${r.code}`] = p.peakT;
           vals.push(p.dd * 100);
         }
       }
