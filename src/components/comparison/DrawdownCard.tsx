@@ -20,6 +20,7 @@ interface Props {
 }
 
 export function DrawdownCard({ schemes }: Props) {
+  const [showPeer, setShowPeer] = useState(true);
   const dd = useMemo(() => schemes.map((s) => {
     const series = drawdownSeries(s.data.rows);
     return {
@@ -40,21 +41,51 @@ export function DrawdownCard({ schemes }: Props) {
     const sampled = sorted.filter((_, i) => i % stride === 0);
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
+      const vals: number[] = [];
       for (const r of dd) {
         const p = r.series.find((x) => x.t === t);
-        if (p) row[`s${r.code}`] = +(p.dd * 100).toFixed(2);
+        if (p) {
+          row[`s${r.code}`] = +(p.dd * 100).toFixed(2);
+          vals.push(p.dd * 100);
+        }
+      }
+      if (vals.length >= 2) {
+        row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+        row.peerMed = +medianOf(vals).toFixed(2);
       }
       return row;
     });
   }, [dd]);
 
+  const peer = useMemo(() => {
+    const avgs = chartData.map((r) => r.peerAvg).filter((v): v is number => typeof v === "number");
+    const meds = chartData.map((r) => r.peerMed).filter((v): v is number => typeof v === "number");
+    const summ = (arr: number[]) => arr.length ? {
+      max: Math.min(...arr) / 100,
+      current: arr[arr.length - 1] / 100,
+      avg: arr.filter((v) => v < 0).reduce((a, b) => a + b, 0) / (arr.filter((v) => v < 0).length || 1) / 100,
+    } : null;
+    return { avg: summ(avgs), med: summ(meds) };
+  }, [chartData]);
+
   return (
     <Card className="p-5">
-      <div>
-        <h3 className="font-display text-lg font-semibold">Drawdown Analysis</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          How deep and how long each fund fell from its peak.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold">Drawdown Analysis</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            How deep and how long each fund fell from its peak.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowPeer((v) => !v)}
+          className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
+            showPeer ? "border-border/60 bg-accent/40 text-foreground" : "border-border/40 text-muted-foreground hover:text-foreground"
+          }`}
+          title="Overlay peer average & median drawdown across your selected funds"
+        >
+          {showPeer ? "Peer lines: On" : "Peer lines: Off"}
+        </button>
       </div>
 
       <div className="mt-4 h-[300px]">
@@ -90,6 +121,12 @@ export function DrawdownCard({ schemes }: Props) {
                 connectNulls
               />
             ))}
+            {showPeer && schemes.length >= 2 && (
+              <Line type="monotone" dataKey="peerAvg" name="Peer Average" stroke={AVG_COLOR} strokeWidth={2} strokeDasharray="6 4" dot={false} isAnimationActive={false} connectNulls />
+            )}
+            {showPeer && schemes.length >= 2 && (
+              <Line type="monotone" dataKey="peerMed" name="Peer Median" stroke={MED_COLOR} strokeWidth={2} strokeDasharray="2 4" dot={false} isAnimationActive={false} connectNulls />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -120,6 +157,34 @@ export function DrawdownCard({ schemes }: Props) {
                 <td className="text-right">{s.recovery ? `${fmtNum(s.recovery / 30, 1)} months` : "—"}</td>
               </tr>
             ))}
+            {showPeer && schemes.length >= 2 && peer.avg && (
+              <tr className="border-t border-border/60 bg-accent/10">
+                <td className="py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: AVG_COLOR }} />
+                    <span className="text-muted-foreground">Peer Average</span>
+                  </div>
+                </td>
+                <td className="text-right">{fmtPct(peer.avg.max)}</td>
+                <td className="text-right">{fmtPct(peer.avg.current)}</td>
+                <td className="text-right">{fmtPct(peer.avg.avg)}</td>
+                <td className="text-right">—</td>
+              </tr>
+            )}
+            {showPeer && schemes.length >= 2 && peer.med && (
+              <tr className="bg-accent/10">
+                <td className="py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: MED_COLOR }} />
+                    <span className="text-muted-foreground">Peer Median</span>
+                  </div>
+                </td>
+                <td className="text-right">{fmtPct(peer.med.max)}</td>
+                <td className="text-right">{fmtPct(peer.med.current)}</td>
+                <td className="text-right">{fmtPct(peer.med.avg)}</td>
+                <td className="text-right">—</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
