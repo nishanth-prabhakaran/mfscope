@@ -6,10 +6,11 @@ import { colorFor, fmtDateShort, fmtNum } from "@/lib/format";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  benchmarkRows?: import("@/types/mf").NavRow[];
 }
 
 /** Normalise every fund to 100 at earliest common date for a fair growth-of-100 view. */
-export function NavGrowthCard({ schemes }: Props) {
+export function NavGrowthCard({ schemes, benchmarkRows }: Props) {
   const { chartData, commonStart } = useMemo(() => {
     if (!schemes.length) return { chartData: [] as Record<string, number | string>[], commonStart: 0 };
     const commonStart = Math.max(...schemes.map((s) => s.data.rows[0]?.t ?? 0));

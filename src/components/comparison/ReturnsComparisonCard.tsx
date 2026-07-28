@@ -6,9 +6,10 @@ import { colorFor, fmtPct } from "@/lib/format";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  benchmarkRows?: import("@/types/mf").NavRow[];
 }
 
-export function ReturnsComparisonCard({ schemes }: Props) {
+export function ReturnsComparisonCard({ schemes, benchmarkRows }: Props) {
   const rows = useMemo(() =>
     schemes.map((s, i) => ({
       ...s, i,

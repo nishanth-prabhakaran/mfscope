@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  benchmarkRows?: import("@/types/mf").NavRow[];
 }
 
 interface Scored {
