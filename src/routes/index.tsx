@@ -26,13 +26,13 @@ import { useHydrated } from "@/hooks/useHydrated";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AlphaScope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
+      { title: "RupeeScope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
       {
         name: "description",
         content:
           "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
       },
-      { property: "og:title", content: "AlphaScope · Mutual Fund Research Terminal" },
+      { property: "og:title", content: "RupeeScope · Mutual Fund Research Terminal" },
       {
         property: "og:description",
         content:
@@ -110,10 +110,10 @@ function Home() {
             </div>
             <div>
               <div className="font-display text-lg font-semibold tracking-tight leading-tight">
-                AlphaScope
+                RupeeScope
               </div>
               <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
-                Mutual Fund Research Terminal
+                Indian Mutual Fund Research Terminal
               </div>
 
             </div>
