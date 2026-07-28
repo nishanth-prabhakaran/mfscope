@@ -1,4 +1,4 @@
-import type { NavRow, RiskMetrics, RollingStats, RollingYears, DrawdownPoint } from "@/types/mf";
+import type { NavRow, RiskMetrics, RollingStats, RollingYears, DrawdownPoint, NormalizedScheme, CorrelationCell, AnnualReturn } from "@/types/mf";
 
 const DAY = 86_400_000;
 const YEAR_DAYS = 365.25;
