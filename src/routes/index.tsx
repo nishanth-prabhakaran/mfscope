@@ -26,13 +26,13 @@ import { useHydrated } from "@/hooks/useHydrated";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fundlens · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
+      { title: "AlphaScope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
       {
         name: "description",
         content:
           "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
       },
-      { property: "og:title", content: "Fundlens · Mutual Fund Research Terminal" },
+      { property: "og:title", content: "AlphaScope · Mutual Fund Research Terminal" },
       {
         property: "og:description",
         content:
@@ -48,7 +48,9 @@ export const Route = createFileRoute("/")({
 function Home() {
   const hydrated = useHydrated();
   const { funds, add, remove, clear, has } = useSelection();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const queries = useSchemes(funds.map((f) => f.schemeCode));
+
 
   const loading = queries.some((q) => q.isLoading);
   const errored = queries.filter((q) => q.error).length;
