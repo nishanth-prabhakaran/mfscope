@@ -55,16 +55,24 @@ function Home() {
   const loading = queries.some((q) => q.isLoading);
   const errored = queries.filter((q) => q.error).length;
 
+  const startT = startDate ? startDate.getTime() : null;
+
   const schemes = useMemo(
     () =>
       funds
         .map((f, i) => {
           const q = queries[i];
-          return q?.data ? { code: f.schemeCode, name: f.schemeName, data: q.data } : null;
+          if (!q?.data) return null;
+          const data = startT
+            ? { ...q.data, rows: q.data.rows.filter((r) => r.t >= startT) }
+            : q.data;
+          if (!data.rows.length) return null;
+          return { code: f.schemeCode, name: f.schemeName, data };
         })
         .filter((x): x is { code: number; name: string; data: NonNullable<typeof x>["data"] } => !!x),
-    [funds, queries],
+    [funds, queries, startT],
   );
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
