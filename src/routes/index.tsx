@@ -301,7 +301,7 @@ function Home() {
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
           <div className="space-y-6">
-            <RollingReturnsCard schemes={schemes} />
+            <RollingReturnsCard schemes={schemes} benchmarkRows={benchmarkRows} />
 
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full overflow-x-auto flex justify-start">
@@ -311,13 +311,17 @@ function Home() {
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
                 <TabsTrigger value="scores">Scores & Ranks</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
+                <TabsTrigger value="diversify">Diversify</TabsTrigger>
+                <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
-              <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} /></TabsContent>
-              <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} /></TabsContent>
-              <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} /></TabsContent>
-              <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} /></TabsContent>
-              <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} /></TabsContent>
+              <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
               <TabsContent value="calc" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
+              <TabsContent value="diversify" className="mt-4"><CorrelationMatrixCard schemes={schemes} /></TabsContent>
+              <TabsContent value="annual" className="mt-4"><AnnualReturnsCard schemes={schemes} /></TabsContent>
             </Tabs>
           </div>
         )}
