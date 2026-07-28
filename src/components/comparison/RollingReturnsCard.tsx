@@ -11,6 +11,16 @@ import { Download, FileImage, Eye, EyeOff } from "lucide-react";
 import { toPng } from "html-to-image";
 
 const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
+const AVG_COLOR = "#f5b642";
+const MED_COLOR = "#22d3ee";
+
+function median(arr: number[]) {
+  if (!arr.length) return NaN;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
