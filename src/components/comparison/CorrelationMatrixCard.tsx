@@ -50,7 +50,7 @@ export function CorrelationMatrixCard({ schemes }: Props) {
               <tbody>
                 {matrix.map((m) => {
                   const abs = Math.abs(m.value);
-                  const tone = abs > 0.85 ? "destructive" : abs > 0.65 ? "warning" : "success";
+                  const variant = abs > 0.85 ? "destructive" : abs > 0.65 ? "default" : "secondary";
                   return (
                     <tr key={`${m.codeA}-${m.codeB}`} className="border-b border-border/30 last:border-0">
                       <td className="py-2.5 pr-4">
@@ -60,10 +60,10 @@ export function CorrelationMatrixCard({ schemes }: Props) {
                         </div>
                       </td>
                       <td className="py-2.5 pr-4 text-right tabular-nums">
-                        {formatPct(m.value, 2)}
+                        {fmtPct(m.value, 2)}
                       </td>
                       <td className="py-2.5">
-                        <Badge variant={tone} className="text-[10px]">
+                        <Badge variant={variant} className="text-[10px]">
                           {abs > 0.85 ? "High overlap" : abs > 0.65 ? "Moderate" : "Diversified"}
                         </Badge>
                       </td>
