@@ -1,9 +1,19 @@
-import { useMemo } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
+import { useMemo, useState } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Line } from "recharts";
 import { Card } from "@/components/ui/card";
 import { drawdownSeries, maxDrawdown, longestRecoveryDays, mean } from "@/lib/calculators";
 import type { NormalizedScheme } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum, fmtPct } from "@/lib/format";
+
+const AVG_COLOR = "#f5b642";
+const MED_COLOR = "#22d3ee";
+
+function medianOf(arr: number[]) {
+  if (!arr.length) return NaN;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
