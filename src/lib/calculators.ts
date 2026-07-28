@@ -138,6 +138,60 @@ export function longestRecoveryDays(rows: NavRow[]): number | null {
   return longest || null;
 }
 
+// ---------- Benchmark alignment & relative metrics ----------
+/** Align two NAV series to common dates and return paired log returns. */
+export function alignedReturns(fundRows: NavRow[], benchRows: NavRow[]): { fund: number[]; bench: number[] } {
+  const fund: number[] = [];
+  const bench: number[] = [];
+  let j = 0;
+  for (let i = 1; i < fundRows.length; i++) {
+    const t = fundRows[i].t;
+    while (j < benchRows.length - 1 && benchRows[j + 1].t <= t) j++;
+    if (j > 0 && benchRows[j].t >= fundRows[i - 1].t) {
+      const f0 = fundRows[i - 1].nav, f1 = fundRows[i].nav;
+      const b0 = benchRows[j - 1]?.nav ?? benchRows[0].nav;
+      const b1 = benchRows[j].nav;
+      if (f0 > 0 && f1 > 0 && b0 > 0 && b1 > 0) {
+        fund.push(Math.log(f1 / f0));
+        bench.push(Math.log(b1 / b0));
+      }
+    }
+  }
+  return { fund, bench };
+}
+
+export function calculateBeta(fundRows: NavRow[], benchRows: NavRow[]): number {
+  const { fund, bench } = alignedReturns(fundRows, benchRows);
+  if (fund.length < 10) return 0;
+  const cov = covariance(fund, bench);
+  const varB = variance(bench);
+  return varB ? cov / varB : 0;
+}
+
+export function calculateAlpha(fundRows: NavRow[], benchRows: NavRow[], riskFree = 0.065): number {
+  const { fund, bench } = alignedReturns(fundRows, benchRows);
+  if (fund.length < 10) return 0;
+  const meanF = mean(fund) * TRADING_DAYS;
+  const meanB = mean(bench) * TRADING_DAYS;
+  const beta = calculateBeta(fundRows, benchRows);
+  return meanF - (riskFree + beta * (meanB - riskFree));
+}
+
+export function calculateTrackingError(fundRows: NavRow[], benchRows: NavRow[]): number {
+  const { fund, bench } = alignedReturns(fundRows, benchRows);
+  if (fund.length < 10) return 0;
+  const diffs = fund.map((f, i) => f - bench[i]);
+  return stddev(diffs) * Math.sqrt(TRADING_DAYS);
+}
+
+function covariance(a: number[], b: number[]): number {
+  const n = a.length;
+  if (n < 2 || n !== b.length) return 0;
+  const ma = mean(a), mb = mean(b);
+  return a.reduce((s, v, i) => s + (v - ma) * (b[i] - mb), 0) / (n - 1);
+}
+
+
 // ---------- Risk metrics ----------
 export function calculateRisk(rows: NavRow[], riskFree = 0.065, benchmarkRows?: NavRow[]): RiskMetrics {
   const empty = {
