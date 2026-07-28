@@ -44,9 +44,9 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
     <div className="relative">
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           {isLoading && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
           )}
           <Input
             value={q}
@@ -54,10 +54,11 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
             placeholder={isLoading ? "Loading schemes…" : "Search Direct Growth funds by scheme or AMC…"}
-            className="pl-9 h-11 bg-card/60 border-border/60"
+            className="pl-12 pr-12 h-14 md:h-16 text-base md:text-lg bg-card/60 border-border/60 rounded-xl"
             disabled={disabled || isLoading}
           />
         </div>
+
         <div className="flex flex-wrap gap-1.5">
           {(["All", ...CATEGORIES] as const).map((c) => (
             <button

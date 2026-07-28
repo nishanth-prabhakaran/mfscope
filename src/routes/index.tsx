@@ -1,9 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { LineChart, Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { LineChart, Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3, CalendarIcon, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
 import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
@@ -17,16 +22,17 @@ import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
 
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fundlens · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
+      { title: "AlphaScope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
       {
         name: "description",
         content:
           "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
       },
-      { property: "og:title", content: "Fundlens · Mutual Fund Research Terminal" },
+      { property: "og:title", content: "AlphaScope · Mutual Fund Research Terminal" },
       {
         property: "og:description",
         content:
@@ -42,21 +48,31 @@ export const Route = createFileRoute("/")({
 function Home() {
   const hydrated = useHydrated();
   const { funds, add, remove, clear, has } = useSelection();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const queries = useSchemes(funds.map((f) => f.schemeCode));
+
 
   const loading = queries.some((q) => q.isLoading);
   const errored = queries.filter((q) => q.error).length;
+
+  const startT = startDate ? startDate.getTime() : null;
 
   const schemes = useMemo(
     () =>
       funds
         .map((f, i) => {
           const q = queries[i];
-          return q?.data ? { code: f.schemeCode, name: f.schemeName, data: q.data } : null;
+          if (!q?.data) return null;
+          const data = startT
+            ? { ...q.data, rows: q.data.rows.filter((r) => r.t >= startT) }
+            : q.data;
+          if (!data.rows.length) return null;
+          return { code: f.schemeCode, name: f.schemeName, data };
         })
         .filter((x): x is { code: number; name: string; data: NonNullable<typeof x>["data"] } => !!x),
-    [funds, queries],
+    [funds, queries, startT],
   );
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -76,11 +92,12 @@ function Home() {
             </div>
             <div>
               <div className="font-display text-lg font-semibold tracking-tight leading-tight">
-                Fundlens
+                AlphaScope
               </div>
               <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
                 Mutual Fund Research Terminal
               </div>
+
             </div>
           </div>
           <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
@@ -114,12 +131,58 @@ function Home() {
         {/* Search + chips */}
         <Card className="p-5 mb-6">
           <FundSearch onPick={add} isSelected={has} disabled={funds.length >= 10} />
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              Analysis start date
+            </span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 justify-start text-left font-normal gap-2",
+                    !startDate && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {startDate ? format(startDate, "dd MMM yyyy") : "Optional — use full history"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  captionLayout="dropdown"
+                  fromYear={2000}
+                  toYear={new Date().getFullYear()}
+                  disabled={(d) => d > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            {startDate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStartDate(undefined)}
+                className="h-8 gap-1 text-xs text-muted-foreground"
+              >
+                <X className="h-3 w-3" /> Clear
+              </Button>
+            )}
+          </div>
+
           {hydrated && funds.length > 0 && (
             <div className="mt-4">
               <FundChips funds={funds} onRemove={remove} onClear={clear} />
             </div>
           )}
         </Card>
+
 
         {/* Empty state */}
         {hydrated && funds.length === 0 && <EmptyState />}
