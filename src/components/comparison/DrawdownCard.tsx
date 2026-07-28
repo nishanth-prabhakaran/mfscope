@@ -46,6 +46,7 @@ export function DrawdownCard({ schemes }: Props) {
         const p = r.series.find((x) => x.t === t);
         if (p) {
           row[`s${r.code}`] = +(p.dd * 100).toFixed(2);
+          row[`peak${r.code}`] = p.peakT;
           vals.push(p.dd * 100);
         }
       }
@@ -104,9 +105,42 @@ export function DrawdownCard({ schemes }: Props) {
             <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickFormatter={(v) => `${v}%`} width={54} />
             <ReferenceLine y={0} stroke="var(--muted-foreground)" />
             <Tooltip
-              contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
-              formatter={(v: number, name) => [`${v.toFixed(2)}%`, name]}
+              cursor={{ stroke: "var(--border)" }}
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                const row = payload[0]?.payload as Record<string, number | string> | undefined;
+                return (
+                  <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12, padding: "8px 10px", minWidth: 240 }}>
+                    <div className="text-[11px] text-muted-foreground">Drawdown as of</div>
+                    <div className="text-foreground font-medium">{label}</div>
+                    <div className="mt-1.5 space-y-1">
+                      {payload.map((p) => {
+                        const key = String(p.dataKey);
+                        const code = key.startsWith("s") ? key.slice(1) : null;
+                        const peakT = code ? (row?.[`peak${code}`] as number | undefined) : undefined;
+                        return (
+                          <div key={key} className="flex flex-col">
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="flex items-center gap-1.5 truncate max-w-[200px]">
+                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color as string }} />
+                                <span className="text-foreground/90 truncate">{p.name}</span>
+                              </span>
+                              <span className="num font-medium">{(p.value as number).toFixed(2)}%</span>
+                            </div>
+                            {peakT ? (
+                              <div className="text-[10px] text-muted-foreground pl-3.5">
+                                from peak {fmtDateShort(peakT)} → {label}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }}
             />
+
             <Legend wrapperStyle={{ fontSize: 11 }} formatter={(v) => <span className="text-muted-foreground">{v}</span>} />
             {schemes.map((s, i) => (
               <Area

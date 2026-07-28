@@ -167,14 +167,35 @@ export function RollingReturnsCard({ schemes }: Props) {
               />
               <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeDasharray="2 4" />
               <Tooltip
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  fontSize: 12,
+                cursor={{ stroke: "var(--border)" }}
+                content={({ active, payload, label }) => {
+                  if (!active || !payload?.length) return null;
+                  const endT = (payload[0]?.payload?.t as number) ?? 0;
+                  const startT = endT - period * 365.25 * 86_400_000;
+                  return (
+                    <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12, padding: "8px 10px", minWidth: 220 }}>
+                      <div className="text-[11px] text-muted-foreground">
+                        {period}Y window measured
+                      </div>
+                      <div className="text-foreground font-medium">
+                        {fmtDateShort(startT)} → {label}
+                      </div>
+                      <div className="mt-1.5 space-y-0.5">
+                        {payload.map((p) => (
+                          <div key={String(p.dataKey)} className="flex items-center justify-between gap-4">
+                            <span className="flex items-center gap-1.5 truncate max-w-[200px]" style={{ color: p.color as string }}>
+                              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color as string }} />
+                              <span className="text-foreground/90 truncate">{p.name}</span>
+                            </span>
+                            <span className="num font-medium">{(p.value as number).toFixed(2)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
                 }}
-                formatter={(v: number, name) => [`${v.toFixed(2)}%`, name]}
               />
+
               <Legend
                 wrapperStyle={{ fontSize: 11 }}
                 formatter={(value) => <span className="text-muted-foreground">{value}</span>}

@@ -10,19 +10,17 @@ interface Props {
 
 /** Normalise every fund to 100 at earliest common date for a fair growth-of-100 view. */
 export function NavGrowthCard({ schemes }: Props) {
-  const chartData = useMemo(() => {
-    if (!schemes.length) return [];
+  const { chartData, commonStart } = useMemo(() => {
+    if (!schemes.length) return { chartData: [] as Record<string, number | string>[], commonStart: 0 };
     const commonStart = Math.max(...schemes.map((s) => s.data.rows[0]?.t ?? 0));
     const bases = schemes.map((s) => s.data.rows.find((r) => r.t >= commonStart)?.nav ?? 1);
-    // Union of times >= commonStart
     const times = new Set<number>();
     for (const s of schemes) for (const r of s.data.rows) if (r.t >= commonStart) times.add(r.t);
     const sorted = [...times].sort((a, b) => a - b);
     const stride = Math.max(1, Math.floor(sorted.length / 500));
     const sampled = sorted.filter((_, i) => i % stride === 0);
-    // Prep index maps
     const lastIdx: number[] = schemes.map(() => 0);
-    return sampled.map((t) => {
+    const chartData = sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       schemes.forEach((s, i) => {
         const rows = s.data.rows;
@@ -32,6 +30,7 @@ export function NavGrowthCard({ schemes }: Props) {
       });
       return row;
     });
+    return { chartData, commonStart };
   }, [schemes]);
 
   return (
@@ -47,9 +46,31 @@ export function NavGrowthCard({ schemes }: Props) {
             <XAxis dataKey="date" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} minTickGap={40} />
             <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} width={54} />
             <Tooltip
-              contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
-              formatter={(v: number, name) => [fmtNum(v), name]}
+              cursor={{ stroke: "var(--border)" }}
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12, padding: "8px 10px", minWidth: 220 }}>
+                    <div className="text-[11px] text-muted-foreground">Rebased ₹100 measured</div>
+                    <div className="text-foreground font-medium">
+                      {fmtDateShort(commonStart)} → {label}
+                    </div>
+                    <div className="mt-1.5 space-y-0.5">
+                      {payload.map((p) => (
+                        <div key={String(p.dataKey)} className="flex items-center justify-between gap-4">
+                          <span className="flex items-center gap-1.5 truncate max-w-[200px]">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color as string }} />
+                            <span className="text-foreground/90 truncate">{p.name}</span>
+                          </span>
+                          <span className="num font-medium">₹{fmtNum(p.value as number)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }}
             />
+
             <Legend wrapperStyle={{ fontSize: 11 }} formatter={(v) => <span className="text-muted-foreground">{v}</span>} />
             {schemes.map((s, i) => (
               <Line
