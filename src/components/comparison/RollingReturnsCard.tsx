@@ -288,6 +288,50 @@ export function RollingReturnsCard({ schemes }: Props) {
                 <td className="text-right font-medium">{s.current == null ? "—" : `${fmtNum(s.current)}%`}</td>
               </tr>
             ))}
+            {showPeer && schemes.length >= 2 && peerStats.avg && (
+              <tr className="border-t border-border/60 bg-accent/10">
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: AVG_COLOR }} />
+                    <span className="text-muted-foreground">Peer Average</span>
+                  </div>
+                </td>
+                <td className="text-right">{peerStats.avg.count}</td>
+                <td className="text-right">{fmtNum(peerStats.avg.min)}%</td>
+                <td className="text-right">{fmtNum(peerStats.avg.mean)}%</td>
+                <td className="text-right">{fmtNum(peerStats.avg.median)}%</td>
+                <td className="text-right">{fmtNum(peerStats.avg.max)}%</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right font-medium">{fmtNum(peerStats.avg.current)}%</td>
+              </tr>
+            )}
+            {showPeer && schemes.length >= 2 && peerStats.med && (
+              <tr className="bg-accent/10">
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: MED_COLOR }} />
+                    <span className="text-muted-foreground">Peer Median</span>
+                  </div>
+                </td>
+                <td className="text-right">{peerStats.med.count}</td>
+                <td className="text-right">{fmtNum(peerStats.med.min)}%</td>
+                <td className="text-right">{fmtNum(peerStats.med.mean)}%</td>
+                <td className="text-right">{fmtNum(peerStats.med.median)}%</td>
+                <td className="text-right">{fmtNum(peerStats.med.max)}%</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right font-medium">{fmtNum(peerStats.med.current)}%</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
