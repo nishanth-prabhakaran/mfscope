@@ -64,7 +64,12 @@ function Home() {
   const startT = startDate ? startDate.getTime() : null;
   const MIN_ROWS = 30;
 
-  const { schemes, excluded, earliestCommon, benchmarkRows } = useMemo(() => {
+  const { schemes, excluded, earliestCommon, benchmarkRows } = useMemo<{
+    schemes: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }>;
+    excluded: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }>;
+    earliestCommon: Date | null;
+    benchmarkRows: import("@/types/mf").NavRow[] | undefined;
+  }>(() => {
     const kept: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }> = [];
     const skipped: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }> = [];
     let maxFirst = 0;
