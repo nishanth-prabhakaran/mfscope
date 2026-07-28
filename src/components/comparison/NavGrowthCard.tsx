@@ -10,19 +10,17 @@ interface Props {
 
 /** Normalise every fund to 100 at earliest common date for a fair growth-of-100 view. */
 export function NavGrowthCard({ schemes }: Props) {
-  const chartData = useMemo(() => {
-    if (!schemes.length) return [];
+  const { chartData, commonStart } = useMemo(() => {
+    if (!schemes.length) return { chartData: [] as Record<string, number | string>[], commonStart: 0 };
     const commonStart = Math.max(...schemes.map((s) => s.data.rows[0]?.t ?? 0));
     const bases = schemes.map((s) => s.data.rows.find((r) => r.t >= commonStart)?.nav ?? 1);
-    // Union of times >= commonStart
     const times = new Set<number>();
     for (const s of schemes) for (const r of s.data.rows) if (r.t >= commonStart) times.add(r.t);
     const sorted = [...times].sort((a, b) => a - b);
     const stride = Math.max(1, Math.floor(sorted.length / 500));
     const sampled = sorted.filter((_, i) => i % stride === 0);
-    // Prep index maps
     const lastIdx: number[] = schemes.map(() => 0);
-    return sampled.map((t) => {
+    const chartData = sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       schemes.forEach((s, i) => {
         const rows = s.data.rows;
@@ -32,6 +30,7 @@ export function NavGrowthCard({ schemes }: Props) {
       });
       return row;
     });
+    return { chartData, commonStart };
   }, [schemes]);
 
   return (
