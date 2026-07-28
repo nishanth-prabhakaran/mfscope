@@ -436,3 +436,55 @@ export function starRating(score: number): number {
   if (score >= 40) return 2;
   return 1;
 }
+
+// ---------- Correlation & annual returns ----------
+export function correlation(a: number[], b: number[]): number {
+  const n = a.length;
+  if (n < 2 || n !== b.length) return 0;
+  const ma = mean(a), mb = mean(b);
+  const sa = stddev(a), sb = stddev(b);
+  if (!sa || !sb) return 0;
+  return a.reduce((s, v, i) => s + (v - ma) * (b[i] - mb), 0) / ((n - 1) * sa * sb);
+}
+
+export function correlationMatrix(schemes: { code: number; name: string; data: NormalizedScheme }[]): CorrelationCell[] {
+  const out: CorrelationCell[] = [];
+  const rets = schemes.map((s) => ({ ...s, daily: dailyLogReturns(s.data.rows) }));
+  for (let i = 0; i < rets.length; i++) {
+    for (let j = i + 1; j < rets.length; j++) {
+      const a = rets[i], b = rets[j];
+      const minLen = Math.min(a.daily.length, b.daily.length);
+      if (minLen < 10) continue;
+      const sliceA = a.daily.slice(-minLen);
+      const sliceB = b.daily.slice(-minLen);
+      const value = correlation(sliceA, sliceB);
+      out.push({
+        codeA: a.code, nameA: a.name,
+        codeB: b.code, nameB: b.name,
+        value, overlap: Math.abs(value) > 0.85,
+      });
+    }
+  }
+  return out;
+}
+
+export function annualReturns(rows: NavRow[]): AnnualReturn[] {
+  if (rows.length < 2) return [];
+  const byYear = new Map<number, { first: NavRow | null; last: NavRow | null }>();
+  for (const r of rows) {
+    const year = new Date(r.t).getUTCFullYear();
+    const entry = byYear.get(year);
+    if (!entry) {
+      byYear.set(year, { first: r, last: r });
+    } else {
+      entry.last = r;
+    }
+  }
+  const out: AnnualReturn[] = [];
+  for (const [year, { first, last }] of byYear) {
+    if (first && last && first !== last && first.nav > 0 && last.nav > 0) {
+      out.push({ year, value: last.nav / first.nav - 1 });
+    }
+  }
+  return out.sort((a, b) => a.year - b.year);
+}
