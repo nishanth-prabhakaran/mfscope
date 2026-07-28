@@ -56,22 +56,40 @@ function Home() {
   const errored = queries.filter((q) => q.error).length;
 
   const startT = startDate ? startDate.getTime() : null;
+  const MIN_ROWS = 30;
 
-  const schemes = useMemo(
-    () =>
-      funds
-        .map((f, i) => {
-          const q = queries[i];
-          if (!q?.data) return null;
-          const data = startT
-            ? { ...q.data, rows: q.data.rows.filter((r) => r.t >= startT) }
-            : q.data;
-          if (!data.rows.length) return null;
-          return { code: f.schemeCode, name: f.schemeName, data };
-        })
-        .filter((x): x is { code: number; name: string; data: NonNullable<typeof x>["data"] } => !!x),
-    [funds, queries, startT],
-  );
+  const { schemes, excluded, earliestCommon } = useMemo(() => {
+    const kept: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }> = [];
+    const skipped: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }> = [];
+    let maxFirst = 0;
+    let anyLoaded = false;
+
+    funds.forEach((f, i) => {
+      const q = queries[i];
+      if (!q?.data) return;
+      anyLoaded = true;
+      const full = q.data;
+      const inception = full.rows[0]?.t ?? null;
+      if (inception != null) maxFirst = Math.max(maxFirst, inception);
+      const rows = startT ? full.rows.filter((r) => r.t >= startT) : full.rows;
+      if (!rows.length) {
+        skipped.push({ code: f.schemeCode, name: f.schemeName, inception, reason: "no-data" });
+        return;
+      }
+      if (rows.length < MIN_ROWS) {
+        skipped.push({ code: f.schemeCode, name: f.schemeName, inception, reason: "too-few" });
+        return;
+      }
+      kept.push({ code: f.schemeCode, name: f.schemeName, data: { ...full, rows } });
+    });
+
+    return {
+      schemes: kept,
+      excluded: skipped,
+      earliestCommon: anyLoaded && maxFirst ? new Date(maxFirst) : null,
+    };
+  }, [funds, queries, startT]);
+
 
 
   return (
@@ -209,6 +227,58 @@ function Home() {
             <span className="text-sm">{errored} fund(s) failed to load. Try again shortly.</span>
           </Card>
         )}
+
+        {hydrated && !loading && excluded.length > 0 && (
+          <Card className="p-4 mb-4 border-amber-500/40 bg-amber-500/10">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium">
+                  {excluded.length} fund{excluded.length > 1 ? "s" : ""} excluded from analysis
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {startDate
+                    ? "These funds have insufficient NAV history after your chosen start date."
+                    : "These funds don't have enough NAV history to compute reliable metrics."}
+                </div>
+                <ul className="mt-2 space-y-1 text-xs">
+                  {excluded.map((e) => (
+                    <li key={e.code} className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
+                      <span className="text-foreground/90 truncate max-w-[420px]">{e.name}</span>
+                      {e.inception && (
+                        <span className="num">
+                          · inception {format(new Date(e.inception), "dd MMM yyyy")}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {startDate && earliestCommon && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => setStartDate(earliestCommon)}
+                    >
+                      Use earliest common date ({format(earliestCommon, "dd MMM yyyy")})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => setStartDate(undefined)}
+                    >
+                      Clear start date
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
+
 
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
