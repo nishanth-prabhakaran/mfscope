@@ -11,6 +11,16 @@ import { Download, FileImage, Eye, EyeOff } from "lucide-react";
 import { toPng } from "html-to-image";
 
 const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
+const AVG_COLOR = "#f5b642";
+const MED_COLOR = "#22d3ee";
+
+function median(arr: number[]) {
+  if (!arr.length) return NaN;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
@@ -19,6 +29,7 @@ interface Props {
 export function RollingReturnsCard({ schemes }: Props) {
   const [period, setPeriod] = useState<RollingYears>(3);
   const [hidden, setHidden] = useState<Set<number>>(new Set());
+  const [showPeer, setShowPeer] = useState(true);
   const chartRef = useMemo(() => ({ current: null as HTMLDivElement | null }), []);
 
   const rolling = useMemo(() => {
@@ -39,15 +50,41 @@ export function RollingReturnsCard({ schemes }: Props) {
     const sorted = [...times].sort((a, b) => a - b);
     const stride = Math.max(1, Math.floor(sorted.length / 400));
     const sampled = sorted.filter((_, i) => i % stride === 0);
+    const visible = rolling.filter((r) => !hidden.has(r.code));
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       for (const r of rolling) {
         const p = r.series.find((x) => x.t === t);
         if (p) row[`s${r.code}`] = +(p.cagr * 100).toFixed(2);
       }
+      // Peer aggregates across currently visible funds (need >=2)
+      const vals: number[] = [];
+      for (const r of visible) {
+        const p = r.series.find((x) => x.t === t);
+        if (p) vals.push(p.cagr * 100);
+      }
+      if (vals.length >= 2) {
+        row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+        row.peerMed = +median(vals).toFixed(2);
+      }
       return row;
     });
-  }, [rolling]);
+  }, [rolling, hidden]);
+
+  // Peer aggregate summary stats
+  const peerStats = useMemo(() => {
+    const avgs = chartData.map((r) => r.peerAvg).filter((v): v is number => typeof v === "number");
+    const meds = chartData.map((r) => r.peerMed).filter((v): v is number => typeof v === "number");
+    const s = (arr: number[]) => {
+      if (!arr.length) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+      const med = sorted[Math.floor(sorted.length / 2)];
+      return { count: arr.length, min: sorted[0], max: sorted[sorted.length - 1], mean, median: med, current: arr[arr.length - 1] };
+    };
+    return { avg: s(avgs), med: s(meds) };
+  }, [chartData]);
+
 
   const toggle = (code: number) => {
     setHidden((h) => {
@@ -99,6 +136,15 @@ export function RollingReturnsCard({ schemes }: Props) {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setShowPeer((v) => !v)}
+            className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
+              showPeer ? "border-border/60 bg-accent/40 text-foreground" : "border-border/40 text-muted-foreground hover:text-foreground"
+            }`}
+            title="Overlay peer average & median across your selected funds"
+          >
+            {showPeer ? "Peer lines: On" : "Peer lines: Off"}
+          </button>
           <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-3.5 w-3.5" /> CSV</Button>
           <Button variant="outline" size="sm" onClick={exportPng}><FileImage className="h-3.5 w-3.5" /> PNG</Button>
         </div>
@@ -148,6 +194,32 @@ export function RollingReturnsCard({ schemes }: Props) {
                   />
                 )
               ))}
+              {showPeer && schemes.length >= 2 && (
+                <Line
+                  type="monotone"
+                  dataKey="peerAvg"
+                  name="Peer Average"
+                  stroke={AVG_COLOR}
+                  strokeWidth={2.2}
+                  strokeDasharray="6 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              )}
+              {showPeer && schemes.length >= 2 && (
+                <Line
+                  type="monotone"
+                  dataKey="peerMed"
+                  name="Peer Median"
+                  stroke={MED_COLOR}
+                  strokeWidth={2.2}
+                  strokeDasharray="2 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -216,6 +288,50 @@ export function RollingReturnsCard({ schemes }: Props) {
                 <td className="text-right font-medium">{s.current == null ? "—" : `${fmtNum(s.current)}%`}</td>
               </tr>
             ))}
+            {showPeer && schemes.length >= 2 && peerStats.avg && (
+              <tr className="border-t border-border/60 bg-accent/10">
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: AVG_COLOR }} />
+                    <span className="text-muted-foreground">Peer Average</span>
+                  </div>
+                </td>
+                <td className="text-right">{peerStats.avg.count}</td>
+                <td className="text-right">{fmtNum(peerStats.avg.min)}%</td>
+                <td className="text-right">{fmtNum(peerStats.avg.mean)}%</td>
+                <td className="text-right">{fmtNum(peerStats.avg.median)}%</td>
+                <td className="text-right">{fmtNum(peerStats.avg.max)}%</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right font-medium">{fmtNum(peerStats.avg.current)}%</td>
+              </tr>
+            )}
+            {showPeer && schemes.length >= 2 && peerStats.med && (
+              <tr className="bg-accent/10">
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: MED_COLOR }} />
+                    <span className="text-muted-foreground">Peer Median</span>
+                  </div>
+                </td>
+                <td className="text-right">{peerStats.med.count}</td>
+                <td className="text-right">{fmtNum(peerStats.med.min)}%</td>
+                <td className="text-right">{fmtNum(peerStats.med.mean)}%</td>
+                <td className="text-right">{fmtNum(peerStats.med.median)}%</td>
+                <td className="text-right">{fmtNum(peerStats.med.max)}%</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right">—</td>
+                <td className="text-right font-medium">{fmtNum(peerStats.med.current)}%</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
