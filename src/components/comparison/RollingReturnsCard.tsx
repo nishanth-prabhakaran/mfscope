@@ -136,6 +136,15 @@ export function RollingReturnsCard({ schemes }: Props) {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setShowPeer((v) => !v)}
+            className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
+              showPeer ? "border-border/60 bg-accent/40 text-foreground" : "border-border/40 text-muted-foreground hover:text-foreground"
+            }`}
+            title="Overlay peer average & median across your selected funds"
+          >
+            {showPeer ? "Peer lines: On" : "Peer lines: Off"}
+          </button>
           <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-3.5 w-3.5" /> CSV</Button>
           <Button variant="outline" size="sm" onClick={exportPng}><FileImage className="h-3.5 w-3.5" /> PNG</Button>
         </div>
