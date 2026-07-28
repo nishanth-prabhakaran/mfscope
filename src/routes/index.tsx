@@ -64,12 +64,7 @@ function Home() {
   const startT = startDate ? startDate.getTime() : null;
   const MIN_ROWS = 30;
 
-  const { schemes, excluded, earliestCommon, benchmarkRows } = useMemo<{
-    schemes: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }>;
-    excluded: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }>;
-    earliestCommon: Date | null;
-    benchmarkRows: import("@/types/mf").NavRow[] | undefined;
-  }>(() => {
+  const { schemes, excluded, earliestCommon } = useMemo(() => {
     const kept: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }> = [];
     const skipped: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }> = [];
     let maxFirst = 0;
@@ -94,17 +89,17 @@ function Home() {
       kept.push({ code: f.schemeCode, name: f.schemeName, data: { ...full, rows } });
     });
 
-    const benchRows = benchmarkQuery.data
-      ? (startT ? benchmarkQuery.data.rows.filter((r) => r.t >= startT) : benchmarkQuery.data.rows)
-      : undefined;
-
     return {
       schemes: kept,
       excluded: skipped,
       earliestCommon: anyLoaded && maxFirst ? new Date(maxFirst) : null,
-      benchmarkRows,
     };
-  }, [funds, queries, startT, benchmarkQuery.data]);
+  }, [funds, queries, startT]);
+
+  const benchmarkRows: NavRow[] | undefined = useMemo(() => {
+    if (!benchmarkQuery.data) return undefined;
+    return startT ? benchmarkQuery.data.rows.filter((r) => r.t >= startT) : benchmarkQuery.data.rows;
+  }, [benchmarkQuery.data, startT]);
 
 
 
