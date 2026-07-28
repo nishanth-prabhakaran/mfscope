@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  benchmarkRows?: import("@/types/mf").NavRow[];
 }
 
 interface Scored {
@@ -20,9 +21,9 @@ interface Scored {
   rollingMean: number; rollingStd: number; positivePct: number; maxDD: number;
 }
 
-export function ScoreAndRankCard({ schemes }: Props) {
+export function ScoreAndRankCard({ schemes, benchmarkRows }: Props) {
   const scored: Scored[] = useMemo(() => schemes.map((s, i) => {
-    const risk = calculateRisk(s.data.rows);
+    const risk = calculateRisk(s.data.rows, 0.065, benchmarkRows);
     // Prefer 5Y rolling; fall back to 3Y then 1Y.
     const long = calculateRollingReturns(s.data.rows, 5);
     const src = long.length ? long : calculateRollingReturns(s.data.rows, 3);

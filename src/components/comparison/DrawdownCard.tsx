@@ -17,9 +17,10 @@ function medianOf(arr: number[]) {
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  benchmarkRows?: import("@/types/mf").NavRow[];
 }
 
-export function DrawdownCard({ schemes }: Props) {
+export function DrawdownCard({ schemes, benchmarkRows }: Props) {
   const [showPeer, setShowPeer] = useState(true);
   const dd = useMemo(() => schemes.map((s) => {
     const series = drawdownSeries(s.data.rows);

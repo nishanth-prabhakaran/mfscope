@@ -1,4 +1,4 @@
-import type { NavRow, RiskMetrics, RollingStats, RollingYears, DrawdownPoint } from "@/types/mf";
+import type { NavRow, RiskMetrics, RollingStats, RollingYears, DrawdownPoint, NormalizedScheme, CorrelationCell, AnnualReturn } from "@/types/mf";
 
 const DAY = 86_400_000;
 const YEAR_DAYS = 365.25;
@@ -138,15 +138,68 @@ export function longestRecoveryDays(rows: NavRow[]): number | null {
   return longest || null;
 }
 
-// ---------- Risk metrics ----------
-export function calculateRisk(rows: NavRow[], riskFree = 0.065): RiskMetrics {
-  if (rows.length < 30) {
-    return {
-      annualReturn: 0, cagr: 0, volatility: 0, downsideVol: 0, sharpe: 0, sortino: 0,
-      calmar: 0, maxDrawdown: 0, avgDrawdown: 0, ulcerIndex: 0, skewness: 0, kurtosis: 0,
-      var95: 0, cvar95: 0, recoveryDays: null,
-    };
+// ---------- Benchmark alignment & relative metrics ----------
+/** Align two NAV series to common dates and return paired log returns. */
+export function alignedReturns(fundRows: NavRow[], benchRows: NavRow[]): { fund: number[]; bench: number[] } {
+  const fund: number[] = [];
+  const bench: number[] = [];
+  let j = 0;
+  for (let i = 1; i < fundRows.length; i++) {
+    const t = fundRows[i].t;
+    while (j < benchRows.length - 1 && benchRows[j + 1].t <= t) j++;
+    if (j > 0 && benchRows[j].t >= fundRows[i - 1].t) {
+      const f0 = fundRows[i - 1].nav, f1 = fundRows[i].nav;
+      const b0 = benchRows[j - 1]?.nav ?? benchRows[0].nav;
+      const b1 = benchRows[j].nav;
+      if (f0 > 0 && f1 > 0 && b0 > 0 && b1 > 0) {
+        fund.push(Math.log(f1 / f0));
+        bench.push(Math.log(b1 / b0));
+      }
+    }
   }
+  return { fund, bench };
+}
+
+export function calculateBeta(fundRows: NavRow[], benchRows: NavRow[]): number {
+  const { fund, bench } = alignedReturns(fundRows, benchRows);
+  if (fund.length < 10) return 0;
+  const cov = covariance(fund, bench);
+  const varB = variance(bench);
+  return varB ? cov / varB : 0;
+}
+
+export function calculateAlpha(fundRows: NavRow[], benchRows: NavRow[], riskFree = 0.065): number {
+  const { fund, bench } = alignedReturns(fundRows, benchRows);
+  if (fund.length < 10) return 0;
+  const meanF = mean(fund) * TRADING_DAYS;
+  const meanB = mean(bench) * TRADING_DAYS;
+  const beta = calculateBeta(fundRows, benchRows);
+  return meanF - (riskFree + beta * (meanB - riskFree));
+}
+
+export function calculateTrackingError(fundRows: NavRow[], benchRows: NavRow[]): number {
+  const { fund, bench } = alignedReturns(fundRows, benchRows);
+  if (fund.length < 10) return 0;
+  const diffs = fund.map((f, i) => f - bench[i]);
+  return stddev(diffs) * Math.sqrt(TRADING_DAYS);
+}
+
+function covariance(a: number[], b: number[]): number {
+  const n = a.length;
+  if (n < 2 || n !== b.length) return 0;
+  const ma = mean(a), mb = mean(b);
+  return a.reduce((s, v, i) => s + (v - ma) * (b[i] - mb), 0) / (n - 1);
+}
+
+
+// ---------- Risk metrics ----------
+export function calculateRisk(rows: NavRow[], riskFree = 0.065, benchmarkRows?: NavRow[]): RiskMetrics {
+  const empty = {
+    annualReturn: 0, cagr: 0, volatility: 0, downsideVol: 0, sharpe: 0, sortino: 0,
+    calmar: 0, maxDrawdown: 0, avgDrawdown: 0, ulcerIndex: 0, skewness: 0, kurtosis: 0,
+    var95: 0, cvar95: 0, recoveryDays: null, alpha: 0, beta: 0, trackingError: 0, informationRatio: 0,
+  };
+  if (rows.length < 30) return empty;
   const first = rows[0], last = rows[rows.length - 1];
   const years = (last.t - first.t) / (YEAR_DAYS * DAY);
   const cagr = calculateCAGR(first.nav, last.nav, years);
@@ -171,11 +224,17 @@ export function calculateRisk(rows: NavRow[], riskFree = 0.065): RiskMetrics {
   const tailCount = Math.max(1, Math.floor(0.05 * sortedDaily.length));
   const cvar95 = -mean(sortedDaily.slice(0, tailCount)) * Math.sqrt(TRADING_DAYS);
 
+  const beta = benchmarkRows && benchmarkRows.length ? calculateBeta(rows, benchmarkRows) : 0;
+  const alpha = benchmarkRows && benchmarkRows.length ? calculateAlpha(rows, benchmarkRows, riskFree) : 0;
+  const trackingError = benchmarkRows && benchmarkRows.length ? calculateTrackingError(rows, benchmarkRows) : 0;
+  const informationRatio = trackingError ? alpha / trackingError : 0;
+
   return {
     annualReturn, cagr, volatility: vol, downsideVol: downside,
     sharpe, sortino, calmar, maxDrawdown: mdd, avgDrawdown: avgDD, ulcerIndex: ulcer,
     skewness: skewness(daily), kurtosis: kurtosis(daily),
     var95, cvar95, recoveryDays: longestRecoveryDays(rows),
+    alpha, beta, trackingError, informationRatio,
   };
 }
 
@@ -376,4 +435,56 @@ export function starRating(score: number): number {
   if (score >= 55) return 3;
   if (score >= 40) return 2;
   return 1;
+}
+
+// ---------- Correlation & annual returns ----------
+export function correlation(a: number[], b: number[]): number {
+  const n = a.length;
+  if (n < 2 || n !== b.length) return 0;
+  const ma = mean(a), mb = mean(b);
+  const sa = stddev(a), sb = stddev(b);
+  if (!sa || !sb) return 0;
+  return a.reduce((s, v, i) => s + (v - ma) * (b[i] - mb), 0) / ((n - 1) * sa * sb);
+}
+
+export function correlationMatrix(schemes: { code: number; name: string; data: NormalizedScheme }[]): CorrelationCell[] {
+  const out: CorrelationCell[] = [];
+  const rets = schemes.map((s) => ({ ...s, daily: dailyLogReturns(s.data.rows) }));
+  for (let i = 0; i < rets.length; i++) {
+    for (let j = i + 1; j < rets.length; j++) {
+      const a = rets[i], b = rets[j];
+      const minLen = Math.min(a.daily.length, b.daily.length);
+      if (minLen < 10) continue;
+      const sliceA = a.daily.slice(-minLen);
+      const sliceB = b.daily.slice(-minLen);
+      const value = correlation(sliceA, sliceB);
+      out.push({
+        codeA: a.code, nameA: a.name,
+        codeB: b.code, nameB: b.name,
+        value, overlap: Math.abs(value) > 0.85,
+      });
+    }
+  }
+  return out;
+}
+
+export function annualReturns(rows: NavRow[]): AnnualReturn[] {
+  if (rows.length < 2) return [];
+  const byYear = new Map<number, { first: NavRow | null; last: NavRow | null }>();
+  for (const r of rows) {
+    const year = new Date(r.t).getUTCFullYear();
+    const entry = byYear.get(year);
+    if (!entry) {
+      byYear.set(year, { first: r, last: r });
+    } else {
+      entry.last = r;
+    }
+  }
+  const out: AnnualReturn[] = [];
+  for (const [year, { first, last }] of byYear) {
+    if (first && last && first !== last && first.nav > 0 && last.nav > 0) {
+      out.push({ year, value: last.nav / first.nav - 1 });
+    }
+  }
+  return out.sort((a, b) => a.year - b.year);
 }

@@ -18,9 +18,14 @@ import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparison
 import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
 import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
+import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
+import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
+import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useBenchmark } from "@/hooks/useBenchmark";
+import type { BenchmarkKey, NavRow } from "@/types/mf";
 
 
 export const Route = createFileRoute("/")({
@@ -49,11 +54,12 @@ function Home() {
   const hydrated = useHydrated();
   const { funds, add, remove, clear, has } = useSelection();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [benchmarkKey, setBenchmarkKey] = useState<BenchmarkKey | undefined>(undefined);
   const queries = useSchemes(funds.map((f) => f.schemeCode));
+  const benchmarkQuery = useBenchmark(benchmarkKey);
 
-
-  const loading = queries.some((q) => q.isLoading);
-  const errored = queries.filter((q) => q.error).length;
+  const loading = queries.some((q) => q.isLoading) || benchmarkQuery.isLoading;
+  const errored = queries.filter((q) => q.error).length + (benchmarkQuery.error ? 1 : 0);
 
   const startT = startDate ? startDate.getTime() : null;
   const MIN_ROWS = 30;
@@ -89,6 +95,11 @@ function Home() {
       earliestCommon: anyLoaded && maxFirst ? new Date(maxFirst) : null,
     };
   }, [funds, queries, startT]);
+
+  const benchmarkRows: NavRow[] | undefined = useMemo(() => {
+    if (!benchmarkQuery.data) return undefined;
+    return startT ? benchmarkQuery.data.rows.filter((r) => r.t >= startT) : benchmarkQuery.data.rows;
+  }, [benchmarkQuery.data, startT]);
 
 
 
@@ -192,6 +203,13 @@ function Home() {
                 <X className="h-3 w-3" /> Clear
               </Button>
             )}
+            <div className="ml-auto">
+              <BenchmarkSelector
+                value={benchmarkKey}
+                onChange={setBenchmarkKey}
+                fundNames={funds.map((f) => f.schemeName)}
+              />
+            </div>
           </div>
 
           {hydrated && funds.length > 0 && (
@@ -283,7 +301,7 @@ function Home() {
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
           <div className="space-y-6">
-            <RollingReturnsCard schemes={schemes} />
+            <RollingReturnsCard schemes={schemes} benchmarkRows={benchmarkRows} />
 
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full overflow-x-auto flex justify-start">
@@ -293,13 +311,17 @@ function Home() {
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
                 <TabsTrigger value="scores">Scores & Ranks</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
+                <TabsTrigger value="diversify">Diversify</TabsTrigger>
+                <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
-              <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} /></TabsContent>
-              <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} /></TabsContent>
-              <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} /></TabsContent>
-              <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} /></TabsContent>
-              <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} /></TabsContent>
+              <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
               <TabsContent value="calc" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
+              <TabsContent value="diversify" className="mt-4"><CorrelationMatrixCard schemes={schemes} /></TabsContent>
+              <TabsContent value="annual" className="mt-4"><AnnualReturnsCard schemes={schemes} /></TabsContent>
             </Tabs>
           </div>
         )}

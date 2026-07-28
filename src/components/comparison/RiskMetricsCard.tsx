@@ -6,10 +6,11 @@ import { colorFor, fmtNum, fmtPct } from "@/lib/format";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  benchmarkRows?: import("@/types/mf").NavRow[];
 }
 
-export function RiskMetricsCard({ schemes }: Props) {
-  const rows = useMemo(() => schemes.map((s, i) => ({ ...s, i, risk: calculateRisk(s.data.rows) })), [schemes]);
+export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
+  const rows = useMemo(() => schemes.map((s, i) => ({ ...s, i, risk: calculateRisk(s.data.rows, 0.065, benchmarkRows) })), [schemes, benchmarkRows]);
 
   const metrics: Array<{ key: keyof ReturnType<typeof calculateRisk>; label: string; fmt: (v: number) => string; higherBetter?: boolean }> = [
     { key: "cagr", label: "CAGR", fmt: (v) => fmtPct(v), higherBetter: true },
