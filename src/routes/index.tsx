@@ -92,11 +92,12 @@ function Home() {
             </div>
             <div>
               <div className="font-display text-lg font-semibold tracking-tight leading-tight">
-                Fundlens
+                AlphaScope
               </div>
               <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
                 Mutual Fund Research Terminal
               </div>
+
             </div>
           </div>
           <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
