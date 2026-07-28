@@ -77,13 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Fundlens · Indian Mutual Fund Research Terminal" },
+      { title: "AlphaScope · Indian Mutual Fund Research Terminal" },
       { name: "description", content: "Compare Indian mutual funds using rolling returns, risk analytics, drawdown and consistency scoring." },
-      { name: "author", content: "Fundlens" },
-      { property: "og:title", content: "Fundlens · Indian Mutual Fund Research Terminal" },
+      { name: "author", content: "AlphaScope" },
+      { property: "og:title", content: "AlphaScope · Indian Mutual Fund Research Terminal" },
       { property: "og:description", content: "Rolling returns, risk analytics and consistency scoring for Indian mutual funds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
