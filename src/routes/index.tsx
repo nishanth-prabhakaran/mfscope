@@ -1,9 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { LineChart, Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { LineChart, Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3, CalendarIcon, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
 import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
@@ -16,6 +21,7 @@ import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
