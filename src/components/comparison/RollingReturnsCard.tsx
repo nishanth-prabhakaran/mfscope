@@ -194,6 +194,32 @@ export function RollingReturnsCard({ schemes }: Props) {
                   />
                 )
               ))}
+              {showPeer && schemes.length >= 2 && (
+                <Line
+                  type="monotone"
+                  dataKey="peerAvg"
+                  name="Peer Average"
+                  stroke={AVG_COLOR}
+                  strokeWidth={2.2}
+                  strokeDasharray="6 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              )}
+              {showPeer && schemes.length >= 2 && (
+                <Line
+                  type="monotone"
+                  dataKey="peerMed"
+                  name="Peer Median"
+                  stroke={MED_COLOR}
+                  strokeWidth={2.2}
+                  strokeDasharray="2 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         )}
