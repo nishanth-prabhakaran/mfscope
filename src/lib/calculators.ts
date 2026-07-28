@@ -51,7 +51,7 @@ export function findNavAt(rows: NavRow[], t: number): NavRow | null {
 }
 
 // ---------- Rolling returns ----------
-export interface RollingSeriesPoint { t: number; cagr: number }
+export interface RollingSeriesPoint { t: number; cagr: number; startT: number }
 
 export function calculateRollingReturns(rows: NavRow[], years: RollingYears): RollingSeriesPoint[] {
   if (rows.length < 2) return [];
@@ -65,7 +65,7 @@ export function calculateRollingReturns(rows: NavRow[], years: RollingYears): Ro
     const start = findNavAt(rows, end.t - windowMs);
     if (!start) continue;
     const cagr = calculateCAGR(start.nav, end.nav, years);
-    out.push({ t: end.t, cagr });
+    out.push({ t: end.t, cagr, startT: start.t });
   }
   return out;
 }
