@@ -203,6 +203,13 @@ function Home() {
                 <X className="h-3 w-3" /> Clear
               </Button>
             )}
+            <div className="ml-auto">
+              <BenchmarkSelector
+                value={benchmarkKey}
+                onChange={setBenchmarkKey}
+                fundNames={funds.map((f) => f.schemeName)}
+              />
+            </div>
           </div>
 
           {hydrated && funds.length > 0 && (
