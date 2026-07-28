@@ -18,9 +18,14 @@ import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparison
 import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
 import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
+import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
+import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
+import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useBenchmark } from "@/hooks/useBenchmark";
+import type { BenchmarkKey } from "@/types/mf";
 
 
 export const Route = createFileRoute("/")({
