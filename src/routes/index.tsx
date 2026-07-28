@@ -228,6 +228,58 @@ function Home() {
           </Card>
         )}
 
+        {hydrated && !loading && excluded.length > 0 && (
+          <Card className="p-4 mb-4 border-amber-500/40 bg-amber-500/10">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium">
+                  {excluded.length} fund{excluded.length > 1 ? "s" : ""} excluded from analysis
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {startDate
+                    ? "These funds have insufficient NAV history after your chosen start date."
+                    : "These funds don't have enough NAV history to compute reliable metrics."}
+                </div>
+                <ul className="mt-2 space-y-1 text-xs">
+                  {excluded.map((e) => (
+                    <li key={e.code} className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
+                      <span className="text-foreground/90 truncate max-w-[420px]">{e.name}</span>
+                      {e.inception && (
+                        <span className="num">
+                          · inception {format(new Date(e.inception), "dd MMM yyyy")}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {startDate && earliestCommon && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => setStartDate(earliestCommon)}
+                    >
+                      Use earliest common date ({format(earliestCommon, "dd MMM yyyy")})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => setStartDate(undefined)}
+                    >
+                      Clear start date
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
+
+
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
           <div className="space-y-6">
