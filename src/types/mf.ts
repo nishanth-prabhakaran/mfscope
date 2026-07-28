@@ -80,4 +80,5 @@ export interface RiskMetrics {
 export interface DrawdownPoint {
   t: number;
   dd: number; // negative or 0
+  peakT: number; // timestamp of running peak that this dd is measured from
 }
