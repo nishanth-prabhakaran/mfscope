@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { correlationMatrix } from "@/lib/calculators";
-import { formatPct } from "@/lib/format";
+import { fmtPct } from "@/lib/format";
 import type { NormalizedScheme } from "@/types/mf";
 import { GitMerge, AlertTriangle } from "lucide-react";
 
