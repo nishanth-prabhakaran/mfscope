@@ -29,6 +29,7 @@ interface Props {
 export function RollingReturnsCard({ schemes }: Props) {
   const [period, setPeriod] = useState<RollingYears>(3);
   const [hidden, setHidden] = useState<Set<number>>(new Set());
+  const [showPeer, setShowPeer] = useState(true);
   const chartRef = useMemo(() => ({ current: null as HTMLDivElement | null }), []);
 
   const rolling = useMemo(() => {
@@ -49,15 +50,41 @@ export function RollingReturnsCard({ schemes }: Props) {
     const sorted = [...times].sort((a, b) => a - b);
     const stride = Math.max(1, Math.floor(sorted.length / 400));
     const sampled = sorted.filter((_, i) => i % stride === 0);
+    const visible = rolling.filter((r) => !hidden.has(r.code));
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       for (const r of rolling) {
         const p = r.series.find((x) => x.t === t);
         if (p) row[`s${r.code}`] = +(p.cagr * 100).toFixed(2);
       }
+      // Peer aggregates across currently visible funds (need >=2)
+      const vals: number[] = [];
+      for (const r of visible) {
+        const p = r.series.find((x) => x.t === t);
+        if (p) vals.push(p.cagr * 100);
+      }
+      if (vals.length >= 2) {
+        row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+        row.peerMed = +median(vals).toFixed(2);
+      }
       return row;
     });
-  }, [rolling]);
+  }, [rolling, hidden]);
+
+  // Peer aggregate summary stats
+  const peerStats = useMemo(() => {
+    const avgs = chartData.map((r) => r.peerAvg).filter((v): v is number => typeof v === "number");
+    const meds = chartData.map((r) => r.peerMed).filter((v): v is number => typeof v === "number");
+    const s = (arr: number[]) => {
+      if (!arr.length) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+      const med = sorted[Math.floor(sorted.length / 2)];
+      return { count: arr.length, min: sorted[0], max: sorted[sorted.length - 1], mean, median: med, current: arr[arr.length - 1] };
+    };
+    return { avg: s(avgs), med: s(meds) };
+  }, [chartData]);
+
 
   const toggle = (code: number) => {
     setHidden((h) => {
