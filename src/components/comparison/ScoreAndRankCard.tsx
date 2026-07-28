@@ -53,7 +53,7 @@ export function ScoreAndRankCard({ schemes }: Props) {
     });
 
     return {
-      code: s.schemeCode ?? s.code, name: s.name, i,
+      code: s.code, name: s.name, i,
       overall, consistency, risk,
       rollingMean: stats.mean, rollingStd: stats.std,
       positivePct: stats.positivePct, maxDD,
