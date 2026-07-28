@@ -131,12 +131,58 @@ function Home() {
         {/* Search + chips */}
         <Card className="p-5 mb-6">
           <FundSearch onPick={add} isSelected={has} disabled={funds.length >= 10} />
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              Analysis start date
+            </span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 justify-start text-left font-normal gap-2",
+                    !startDate && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {startDate ? format(startDate, "dd MMM yyyy") : "Optional — use full history"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  captionLayout="dropdown"
+                  fromYear={2000}
+                  toYear={new Date().getFullYear()}
+                  disabled={(d) => d > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            {startDate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStartDate(undefined)}
+                className="h-8 gap-1 text-xs text-muted-foreground"
+              >
+                <X className="h-3 w-3" /> Clear
+              </Button>
+            )}
+          </div>
+
           {hydrated && funds.length > 0 && (
             <div className="mt-4">
               <FundChips funds={funds} onRemove={remove} onClear={clear} />
             </div>
           )}
         </Card>
+
 
         {/* Empty state */}
         {hydrated && funds.length === 0 && <EmptyState />}
