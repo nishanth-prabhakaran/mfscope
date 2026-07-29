@@ -1,20 +1,25 @@
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Card } from "@/components/ui/card";
-import type { NormalizedScheme } from "@/types/mf";
+import type { NormalizedScheme, NavRow } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum } from "@/lib/format";
+import { findNavAt } from "@/lib/calculators";
+
+const BENCH_COLOR = "#a78bfa";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
-  benchmarkRows?: import("@/types/mf").NavRow[];
+  benchmarkRows?: NavRow[];
+  benchmarkLabel?: string;
 }
 
 /** Normalise every fund to 100 at earliest common date for a fair growth-of-100 view. */
-export function NavGrowthCard({ schemes, benchmarkRows }: Props) {
+export function NavGrowthCard({ schemes, benchmarkRows, benchmarkLabel }: Props) {
   const { chartData, commonStart } = useMemo(() => {
     if (!schemes.length) return { chartData: [] as Record<string, number | string>[], commonStart: 0 };
     const commonStart = Math.max(...schemes.map((s) => s.data.rows[0]?.t ?? 0));
     const bases = schemes.map((s) => s.data.rows.find((r) => r.t >= commonStart)?.nav ?? 1);
+    const benchBase = benchmarkRows?.length ? (findNavAt(benchmarkRows, commonStart)?.nav ?? benchmarkRows.find((r) => r.t >= commonStart)?.nav ?? 0) : 0;
     const times = new Set<number>();
     for (const s of schemes) for (const r of s.data.rows) if (r.t >= commonStart) times.add(r.t);
     const sorted = [...times].sort((a, b) => a - b);
@@ -29,10 +34,14 @@ export function NavGrowthCard({ schemes, benchmarkRows }: Props) {
         const nav = rows[lastIdx[i]]?.nav;
         if (nav && bases[i]) row[`s${s.code}`] = +((nav / bases[i]) * 100).toFixed(2);
       });
+      if (benchmarkRows && benchBase) {
+        const b = findNavAt(benchmarkRows, t);
+        if (b) row.bench = +((b.nav / benchBase) * 100).toFixed(2);
+      }
       return row;
     });
     return { chartData, commonStart };
-  }, [schemes]);
+  }, [schemes, benchmarkRows]);
 
   return (
     <Card className="p-5">
@@ -86,6 +95,19 @@ export function NavGrowthCard({ schemes, benchmarkRows }: Props) {
                 connectNulls
               />
             ))}
+            {benchmarkRows && benchmarkRows.length > 0 && (
+              <Line
+                type="monotone"
+                dataKey="bench"
+                name={benchmarkLabel ? `${benchmarkLabel} (Benchmark)` : "Benchmark"}
+                stroke={BENCH_COLOR}
+                strokeWidth={2}
+                strokeDasharray="5 3"
+                dot={false}
+                isAnimationActive={false}
+                connectNulls
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
