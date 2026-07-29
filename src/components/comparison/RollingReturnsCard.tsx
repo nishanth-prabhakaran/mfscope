@@ -261,6 +261,19 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
                   connectNulls
                 />
               )}
+              {benchmarkRows && benchmarkRows.length > 0 && benchSeries.length > 0 && (
+                <Line
+                  type="monotone"
+                  dataKey="bench"
+                  name={benchmarkLabel ? `${benchmarkLabel} (Benchmark)` : "Benchmark"}
+                  stroke={BENCH_COLOR}
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         )}
