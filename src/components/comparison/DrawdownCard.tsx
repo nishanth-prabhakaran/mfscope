@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Line } from "recharts";
 import { Card } from "@/components/ui/card";
 import { drawdownSeries, maxDrawdown, longestRecoveryDays, mean } from "@/lib/calculators";
-import type { NormalizedScheme } from "@/types/mf";
+import type { NormalizedScheme, NavRow } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum, fmtPct } from "@/lib/format";
 
 const AVG_COLOR = "#f5b642";
 const MED_COLOR = "#22d3ee";
+const BENCH_COLOR = "#a78bfa";
 
 function medianOf(arr: number[]) {
   if (!arr.length) return NaN;
@@ -17,10 +18,11 @@ function medianOf(arr: number[]) {
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
-  benchmarkRows?: import("@/types/mf").NavRow[];
+  benchmarkRows?: NavRow[];
+  benchmarkLabel?: string;
 }
 
-export function DrawdownCard({ schemes, benchmarkRows }: Props) {
+export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) {
   const [showPeer, setShowPeer] = useState(true);
   const dd = useMemo(() => schemes.map((s) => {
     const series = drawdownSeries(s.data.rows);
@@ -34,12 +36,18 @@ export function DrawdownCard({ schemes, benchmarkRows }: Props) {
     };
   }), [schemes]);
 
+  const benchDd = useMemo(
+    () => (benchmarkRows && benchmarkRows.length ? drawdownSeries(benchmarkRows) : []),
+    [benchmarkRows],
+  );
+
   const chartData = useMemo(() => {
     const times = new Set<number>();
     for (const r of dd) for (const p of r.series) times.add(p.t);
     const sorted = [...times].sort((a, b) => a - b);
     const stride = Math.max(1, Math.floor(sorted.length / 400));
     const sampled = sorted.filter((_, i) => i % stride === 0);
+    const benchMap = new Map(benchDd.map((p) => [p.t, p.dd * 100]));
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       const vals: number[] = [];
@@ -55,9 +63,18 @@ export function DrawdownCard({ schemes, benchmarkRows }: Props) {
         row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
         row.peerMed = +medianOf(vals).toFixed(2);
       }
+      if (benchMap.size) {
+        let bv = benchMap.get(t);
+        if (bv == null) {
+          for (let d = 1; d <= 5 && bv == null; d++) {
+            bv = benchMap.get(t - d * 86_400_000) ?? benchMap.get(t + d * 86_400_000);
+          }
+        }
+        if (bv != null) row.bench = +bv.toFixed(2);
+      }
       return row;
     });
-  }, [dd]);
+  }, [dd, benchDd]);
 
   const peer = useMemo(() => {
     const avgs = chartData.map((r) => r.peerAvg).filter((v): v is number => typeof v === "number");
@@ -161,6 +178,9 @@ export function DrawdownCard({ schemes, benchmarkRows }: Props) {
             )}
             {showPeer && schemes.length >= 2 && (
               <Line type="monotone" dataKey="peerMed" name="Peer Median" stroke={MED_COLOR} strokeWidth={2} strokeDasharray="2 4" dot={false} isAnimationActive={false} connectNulls />
+            )}
+            {benchmarkRows && benchmarkRows.length > 0 && (
+              <Line type="monotone" dataKey="bench" name={benchmarkLabel ? `${benchmarkLabel} (Benchmark)` : "Benchmark"} stroke={BENCH_COLOR} strokeWidth={2} strokeDasharray="5 3" dot={false} isAnimationActive={false} connectNulls />
             )}
           </AreaChart>
         </ResponsiveContainer>

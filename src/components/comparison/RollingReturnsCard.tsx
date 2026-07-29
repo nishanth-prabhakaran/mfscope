@@ -4,7 +4,7 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { calculateRollingReturns, rollingStats } from "@/lib/calculators";
-import type { NormalizedScheme, RollingYears, RollingStats } from "@/types/mf";
+import type { NormalizedScheme, RollingYears, RollingStats, NavRow } from "@/types/mf";
 import { colorFor, csvEscape, downloadFile, fmtDateShort, fmtNum } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Download, FileImage, Eye, EyeOff } from "lucide-react";
@@ -13,6 +13,7 @@ import { toPng } from "html-to-image";
 const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
 const AVG_COLOR = "#f5b642";
 const MED_COLOR = "#22d3ee";
+const BENCH_COLOR = "#a78bfa";
 
 function median(arr: number[]) {
   if (!arr.length) return NaN;
@@ -24,10 +25,11 @@ function median(arr: number[]) {
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
-  benchmarkRows?: import("@/types/mf").NavRow[];
+  benchmarkRows?: NavRow[];
+  benchmarkLabel?: string;
 }
 
-export function RollingReturnsCard({ schemes, benchmarkRows }: Props) {
+export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: Props) {
   const [period, setPeriod] = useState<RollingYears>(3);
   const [hidden, setHidden] = useState<Set<number>>(new Set());
   const [showPeer, setShowPeer] = useState(true);
@@ -44,6 +46,11 @@ export function RollingReturnsCard({ schemes, benchmarkRows }: Props) {
     return rolling.map((r) => ({ ...rollingStats(r.series, period), code: r.code, name: r.name }));
   }, [rolling, period]);
 
+  const benchSeries = useMemo(
+    () => (benchmarkRows && benchmarkRows.length ? calculateRollingReturns(benchmarkRows, period) : []),
+    [benchmarkRows, period],
+  );
+
   // Build unified chart data by date. Sample to keep it fast.
   const chartData = useMemo(() => {
     const times = new Set<number>();
@@ -52,6 +59,7 @@ export function RollingReturnsCard({ schemes, benchmarkRows }: Props) {
     const stride = Math.max(1, Math.floor(sorted.length / 400));
     const sampled = sorted.filter((_, i) => i % stride === 0);
     const visible = rolling.filter((r) => !hidden.has(r.code));
+    const benchMap = new Map(benchSeries.map((p) => [p.t, p.cagr * 100]));
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       for (const r of rolling) {
@@ -68,9 +76,20 @@ export function RollingReturnsCard({ schemes, benchmarkRows }: Props) {
         row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
         row.peerMed = +median(vals).toFixed(2);
       }
+      // Benchmark rolling CAGR at nearest available window (within 10 days)
+      if (benchMap.size) {
+        let bv = benchMap.get(t);
+        if (bv == null) {
+          for (let d = 1; d <= 10 && bv == null; d++) {
+            bv = benchMap.get(t - d * 86_400_000) ?? benchMap.get(t + d * 86_400_000);
+          }
+        }
+        if (bv != null) row.bench = +bv.toFixed(2);
+      }
       return row;
     });
-  }, [rolling, hidden]);
+  }, [rolling, hidden, benchSeries]);
+
 
   // Peer aggregate summary stats
   const peerStats = useMemo(() => {
@@ -237,6 +256,19 @@ export function RollingReturnsCard({ schemes, benchmarkRows }: Props) {
                   stroke={MED_COLOR}
                   strokeWidth={2.2}
                   strokeDasharray="2 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              )}
+              {benchmarkRows && benchmarkRows.length > 0 && benchSeries.length > 0 && (
+                <Line
+                  type="monotone"
+                  dataKey="bench"
+                  name={benchmarkLabel ? `${benchmarkLabel} (Benchmark)` : "Benchmark"}
+                  stroke={BENCH_COLOR}
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
                   dot={false}
                   isAnimationActive={false}
                   connectNulls
