@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Line } from "recharts";
 import { Card } from "@/components/ui/card";
 import { drawdownSeries, maxDrawdown, longestRecoveryDays, mean } from "@/lib/calculators";
-import type { NormalizedScheme } from "@/types/mf";
+import type { NormalizedScheme, NavRow } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum, fmtPct } from "@/lib/format";
 
 const AVG_COLOR = "#f5b642";
 const MED_COLOR = "#22d3ee";
+const BENCH_COLOR = "#a78bfa";
 
 function medianOf(arr: number[]) {
   if (!arr.length) return NaN;
@@ -17,10 +18,11 @@ function medianOf(arr: number[]) {
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
-  benchmarkRows?: import("@/types/mf").NavRow[];
+  benchmarkRows?: NavRow[];
+  benchmarkLabel?: string;
 }
 
-export function DrawdownCard({ schemes, benchmarkRows }: Props) {
+export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) {
   const [showPeer, setShowPeer] = useState(true);
   const dd = useMemo(() => schemes.map((s) => {
     const series = drawdownSeries(s.data.rows);
