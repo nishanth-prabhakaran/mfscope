@@ -25,10 +25,11 @@ function median(arr: number[]) {
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
-  benchmarkRows?: import("@/types/mf").NavRow[];
+  benchmarkRows?: NavRow[];
+  benchmarkLabel?: string;
 }
 
-export function RollingReturnsCard({ schemes, benchmarkRows }: Props) {
+export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: Props) {
   const [period, setPeriod] = useState<RollingYears>(3);
   const [hidden, setHidden] = useState<Set<number>>(new Set());
   const [showPeer, setShowPeer] = useState(true);
