@@ -179,6 +179,9 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
             {showPeer && schemes.length >= 2 && (
               <Line type="monotone" dataKey="peerMed" name="Peer Median" stroke={MED_COLOR} strokeWidth={2} strokeDasharray="2 4" dot={false} isAnimationActive={false} connectNulls />
             )}
+            {benchmarkRows && benchmarkRows.length > 0 && (
+              <Line type="monotone" dataKey="bench" name={benchmarkLabel ? `${benchmarkLabel} (Benchmark)` : "Benchmark"} stroke={BENCH_COLOR} strokeWidth={2} strokeDasharray="5 3" dot={false} isAnimationActive={false} connectNulls />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>
