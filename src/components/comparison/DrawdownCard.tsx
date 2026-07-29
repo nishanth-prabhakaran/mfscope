@@ -36,12 +36,18 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
     };
   }), [schemes]);
 
+  const benchDd = useMemo(
+    () => (benchmarkRows && benchmarkRows.length ? drawdownSeries(benchmarkRows) : []),
+    [benchmarkRows],
+  );
+
   const chartData = useMemo(() => {
     const times = new Set<number>();
     for (const r of dd) for (const p of r.series) times.add(p.t);
     const sorted = [...times].sort((a, b) => a - b);
     const stride = Math.max(1, Math.floor(sorted.length / 400));
     const sampled = sorted.filter((_, i) => i % stride === 0);
+    const benchMap = new Map(benchDd.map((p) => [p.t, p.dd * 100]));
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       const vals: number[] = [];
@@ -57,9 +63,18 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
         row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
         row.peerMed = +medianOf(vals).toFixed(2);
       }
+      if (benchMap.size) {
+        let bv = benchMap.get(t);
+        if (bv == null) {
+          for (let d = 1; d <= 5 && bv == null; d++) {
+            bv = benchMap.get(t - d * 86_400_000) ?? benchMap.get(t + d * 86_400_000);
+          }
+        }
+        if (bv != null) row.bench = +bv.toFixed(2);
+      }
       return row;
     });
-  }, [dd]);
+  }, [dd, benchDd]);
 
   const peer = useMemo(() => {
     const avgs = chartData.map((r) => r.peerAvg).filter((v): v is number => typeof v === "number");
