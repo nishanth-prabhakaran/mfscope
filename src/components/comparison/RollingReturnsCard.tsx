@@ -4,7 +4,7 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { calculateRollingReturns, rollingStats } from "@/lib/calculators";
-import type { NormalizedScheme, RollingYears, RollingStats } from "@/types/mf";
+import type { NormalizedScheme, RollingYears, RollingStats, NavRow } from "@/types/mf";
 import { colorFor, csvEscape, downloadFile, fmtDateShort, fmtNum } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Download, FileImage, Eye, EyeOff } from "lucide-react";
@@ -13,6 +13,7 @@ import { toPng } from "html-to-image";
 const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
 const AVG_COLOR = "#f5b642";
 const MED_COLOR = "#22d3ee";
+const BENCH_COLOR = "#a78bfa";
 
 function median(arr: number[]) {
   if (!arr.length) return NaN;
