@@ -46,6 +46,11 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
     return rolling.map((r) => ({ ...rollingStats(r.series, period), code: r.code, name: r.name }));
   }, [rolling, period]);
 
+  const benchSeries = useMemo(
+    () => (benchmarkRows && benchmarkRows.length ? calculateRollingReturns(benchmarkRows, period) : []),
+    [benchmarkRows, period],
+  );
+
   // Build unified chart data by date. Sample to keep it fast.
   const chartData = useMemo(() => {
     const times = new Set<number>();
@@ -54,6 +59,7 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
     const stride = Math.max(1, Math.floor(sorted.length / 400));
     const sampled = sorted.filter((_, i) => i % stride === 0);
     const visible = rolling.filter((r) => !hidden.has(r.code));
+    const benchMap = new Map(benchSeries.map((p) => [p.t, p.cagr * 100]));
     return sampled.map((t) => {
       const row: Record<string, number | string> = { t, date: fmtDateShort(t) };
       for (const r of rolling) {
@@ -70,9 +76,20 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
         row.peerAvg = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
         row.peerMed = +median(vals).toFixed(2);
       }
+      // Benchmark rolling CAGR at nearest available window (within 10 days)
+      if (benchMap.size) {
+        let bv = benchMap.get(t);
+        if (bv == null) {
+          for (let d = 1; d <= 10 && bv == null; d++) {
+            bv = benchMap.get(t - d * 86_400_000) ?? benchMap.get(t + d * 86_400_000);
+          }
+        }
+        if (bv != null) row.bench = +bv.toFixed(2);
+      }
       return row;
     });
-  }, [rolling, hidden]);
+  }, [rolling, hidden, benchSeries]);
+
 
   // Peer aggregate summary stats
   const peerStats = useMemo(() => {
