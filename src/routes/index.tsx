@@ -132,7 +132,7 @@ function Home() {
           <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> MFAPI · IndexedDB cached</span>
             <span className="rounded-full border border-border/60 px-2.5 py-1 num">
-              {funds.length}/10 selected
+              {hydrated ? `${funds.length}/10 selected` : "0/10 selected"}
             </span>
           </div>
         </div>
