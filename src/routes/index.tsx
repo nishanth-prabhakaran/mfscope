@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { LineChart, Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3, CalendarIcon, X } from "lucide-react";
+import { Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3, CalendarIcon, X } from "lucide-react";
+import fundscopeLogo from "@/assets/fundscope-logo.png.asset.json";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -116,8 +117,15 @@ function Home() {
       <header className="sticky top-0 z-30 border-b border-border/50 glass">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl gradient-brand">
-              <LineChart className="h-5 w-5 text-primary-foreground" />
+            <div className="relative flex h-9 w-9 items-center justify-center">
+              <img
+                src={fundscopeLogo.url}
+                alt="FundScope"
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+                loading="eager"
+              />
             </div>
             <div>
               <div className="font-display text-lg font-semibold tracking-tight leading-tight">
