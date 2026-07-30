@@ -2,7 +2,7 @@ import { get, set } from "idb-keyval";
 import type { BenchmarkData, BenchmarkKey } from "@/types/mf";
 import { fetchBenchmark } from "./benchmarkFetch.functions";
 
-const BENCH_KEY = (key: BenchmarkKey) => `benchmark:${key}:v2`;
+const BENCH_KEY = (key: BenchmarkKey) => `benchmark:${key}:v3`;
 const BENCH_TTL = 24 * 60 * 60 * 1000;
 
 interface Cached<T> { at: number; data: T }
