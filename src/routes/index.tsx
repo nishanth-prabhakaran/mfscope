@@ -31,13 +31,13 @@ import type { BenchmarkKey, NavRow } from "@/types/mf";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MFscope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
+      { title: "FundScope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
       {
         name: "description",
         content:
           "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
       },
-      { property: "og:title", content: "MFscope · Mutual Fund Research Terminal" },
+      { property: "og:title", content: "FundScope · Mutual Fund Research Terminal" },
       {
         property: "og:description",
         content:
@@ -121,7 +121,7 @@ function Home() {
             </div>
             <div>
               <div className="font-display text-lg font-semibold tracking-tight leading-tight">
-                MFscope
+                FundScope
               </div>
               <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
                 Indian Mutual Fund Research Terminal
