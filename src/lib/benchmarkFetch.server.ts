@@ -14,7 +14,9 @@ interface YahooChartResult {
 
 function yahooUrl(symbol: string): string {
   const encoded = encodeURIComponent(symbol);
-  return `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=max&includeAdjustedClose=true`;
+  const now = Math.floor(Date.now() / 1000);
+  // range=max is unreliable for indices (returns ~1y); use explicit period bounds.
+  return `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&period1=0&period2=${now}&includeAdjustedClose=true`;
 }
 
 export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<BenchmarkData> {
