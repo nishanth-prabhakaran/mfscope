@@ -1,4 +1,4 @@
-# RupeeScope — Suggested Next Features
+# MFscope — Suggested Next Features
 
 Based on the current build (side-by-side comparison, rolling CAGR, risk metrics, drawdown, SIP/lumpsim, scoring, peer avg/med lines, optional start date), here are the highest-impact features worth adding next.
 
@@ -95,4 +95,4 @@ Based on the current build (side-by-side comparison, rolling CAGR, risk metrics,
 
 ---
 
-Which phase should we build first? I recommend starting with **Phase 1 (Benchmark overlay + Correlation + Calendar-year returns)** because they turn RupeeScope from a chart viewer into a true research terminal.
+Which phase should we build first? I recommend starting with **Phase 1 (Benchmark overlay + Correlation + Calendar-year returns)** because they turn MFscope from a chart viewer into a true research terminal.

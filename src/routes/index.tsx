@@ -31,13 +31,13 @@ import type { BenchmarkKey, NavRow } from "@/types/mf";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "RupeeScope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
+      { title: "MFscope · Rolling Returns & Risk Terminal for Indian Mutual Funds" },
       {
         name: "description",
         content:
           "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
       },
-      { property: "og:title", content: "RupeeScope · Mutual Fund Research Terminal" },
+      { property: "og:title", content: "MFscope · Mutual Fund Research Terminal" },
       {
         property: "og:description",
         content:
@@ -121,7 +121,7 @@ function Home() {
             </div>
             <div>
               <div className="font-display text-lg font-semibold tracking-tight leading-tight">
-                RupeeScope
+                MFscope
               </div>
               <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
                 Indian Mutual Fund Research Terminal
@@ -132,7 +132,7 @@ function Home() {
           <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> MFAPI · IndexedDB cached</span>
             <span className="rounded-full border border-border/60 px-2.5 py-1 num">
-              {funds.length}/10 selected
+              {hydrated ? `${funds.length}/10 selected` : "0/10 selected"}
             </span>
           </div>
         </div>
