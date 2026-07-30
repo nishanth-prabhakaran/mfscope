@@ -14,7 +14,9 @@ interface YahooChartResult {
 
 function yahooUrl(symbol: string): string {
   const encoded = encodeURIComponent(symbol);
-  return `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=max&includeAdjustedClose=true`;
+  const now = Math.floor(Date.now() / 1000);
+  // range=max is unreliable for indices (returns ~1y); use explicit period bounds.
+  return `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&period1=0&period2=${now}&includeAdjustedClose=true`;
 }
 
 export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<BenchmarkData> {
@@ -35,13 +37,19 @@ export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<Benchm
   }
   const timestamps = result.timestamp ?? [];
   const closes = result.indicators?.quote?.[0]?.close ?? [];
-  const rows: NavRow[] = [];
+  // Yahoo timestamps are exchange market-open times (e.g. 03:45 UTC).
+  // Fund NAV rows use UTC midnight, so normalize to the same day boundary
+  // otherwise chart overlays never line up.
+  const byDay = new Map<number, number>();
   for (let i = 0; i < timestamps.length; i++) {
     const nav = closes[i];
     if (nav != null && nav > 0) {
-      rows.push({ t: timestamps[i] * 1000, nav });
+      const d = new Date(timestamps[i] * 1000);
+      const day = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+      byDay.set(day, nav);
     }
   }
+  const rows: NavRow[] = [...byDay.entries()].map(([t, nav]) => ({ t, nav }));
   rows.sort((a, b) => a.t - b.t);
   return { key, label: bench.label, rows };
 }
