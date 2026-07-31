@@ -19,6 +19,8 @@ import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparison
 import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
 import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
+import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
+import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
 import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
 import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
@@ -319,6 +321,8 @@ function Home() {
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
                 <TabsTrigger value="scores">Scores & Ranks</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
+                <TabsTrigger value="projection">Projection</TabsTrigger>
+                <TabsTrigger value="retirement">Retirement</TabsTrigger>
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
@@ -328,11 +332,22 @@ function Home() {
               <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
               <TabsContent value="calc" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
+              <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
+              <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
               <TabsContent value="diversify" className="mt-4"><CorrelationMatrixCard schemes={schemes} /></TabsContent>
               <TabsContent value="annual" className="mt-4"><AnnualReturnsCard schemes={schemes} /></TabsContent>
             </Tabs>
           </div>
         )}
+
+        {/* Standalone planners when nothing is selected */}
+        {hydrated && !loading && schemes.length === 0 && (
+          <div className="space-y-6">
+            <ProjectionCalculatorCard schemes={[]} />
+            <RetirementCalculatorCard />
+          </div>
+        )}
+
 
         <footer className="mt-16 pt-8 border-t border-border/40 text-xs text-muted-foreground">
           <p>
