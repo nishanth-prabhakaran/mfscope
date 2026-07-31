@@ -317,6 +317,7 @@ function Home() {
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full overflow-x-auto flex justify-start">
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
+                <TabsTrigger value="benchmark">vs Benchmark</TabsTrigger>
                 <TabsTrigger value="returns">Returns</TabsTrigger>
                 <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
