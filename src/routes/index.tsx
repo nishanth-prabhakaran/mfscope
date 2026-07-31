@@ -23,6 +23,7 @@ import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalc
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
 import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
+import { BenchmarkComparisonCard } from "@/components/comparison/BenchmarkComparisonCard";
 import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
