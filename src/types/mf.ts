@@ -95,6 +95,8 @@ export interface Benchmark {
   key: BenchmarkKey;
   label: string;
   yahooSymbol: string;
+  /** When Yahoo has no history for the index, use this MFAPI index-fund scheme as a proxy. */
+  mfapiProxyCode?: number;
   categoryHint: string[];
 }
 
