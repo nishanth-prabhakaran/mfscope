@@ -19,7 +19,7 @@ export function defaultBenchmarkFor(fundName: string): BenchmarkKey {
   const lower = fundName.toLowerCase();
   if (lower.includes("small cap")) return "nifty250smallcap";
   if (lower.includes("mid cap")) return "nifty150midcap";
-  if (lower.includes("large & mid") || lower.includes("large and mid")) return "nifty100";
+  if (lower.includes("large & mid") || lower.includes("large and mid") || lower.includes("largemid")) return "niftylargemid250";
   if (lower.includes("flexi cap") || lower.includes("multi cap") || lower.includes("value") || lower.includes("balanced")) return "nifty500";
   return "nifty50";
 }
