@@ -23,6 +23,7 @@ import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalc
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
 import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
+import { BenchmarkComparisonCard } from "@/components/comparison/BenchmarkComparisonCard";
 import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
@@ -316,6 +317,7 @@ function Home() {
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full overflow-x-auto flex justify-start">
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
+                <TabsTrigger value="benchmark">vs Benchmark</TabsTrigger>
                 <TabsTrigger value="returns">Returns</TabsTrigger>
                 <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
@@ -327,6 +329,7 @@ function Home() {
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
               <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="benchmark" className="mt-4"><BenchmarkComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
               <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>

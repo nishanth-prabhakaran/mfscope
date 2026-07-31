@@ -89,12 +89,14 @@ export interface DrawdownPoint {
 
 // ---------- Benchmarks ----------
 
-export type BenchmarkKey = "nifty50" | "nifty100" | "nifty150midcap" | "nifty250smallcap" | "sensex" | "nifty500" | "niftynext50";
+export type BenchmarkKey = "nifty50" | "nifty100" | "nifty150midcap" | "nifty250smallcap" | "sensex" | "nifty500" | "niftynext50" | "niftylargemid250";
 
 export interface Benchmark {
   key: BenchmarkKey;
   label: string;
   yahooSymbol: string;
+  /** When Yahoo has no history for the index, use this MFAPI index-fund scheme as a proxy. */
+  mfapiProxyCode?: number;
   categoryHint: string[];
 }
 

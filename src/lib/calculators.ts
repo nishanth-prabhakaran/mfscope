@@ -488,3 +488,116 @@ export function annualReturns(rows: NavRow[]): AnnualReturn[] {
   }
   return out.sort((a, b) => a.year - b.year);
 }
+
+// ---------- Benchmark relative performance ----------
+export interface BenchmarkComparison {
+  fundCagr: number;
+  benchCagr: number;
+  excessCagr: number;
+  alpha: number;
+  beta: number;
+  rSquared: number;
+  trackingError: number;
+  informationRatio: number;
+  upCapture: number;      // %
+  downCapture: number;    // %
+  captureSpread: number;  // up - down
+  battingAverage: number; // % of months beating the index
+  bestMonthDiff: number;  // decimal
+  worstMonthDiff: number; // decimal
+  outperformYears: number;
+  totalYears: number;
+  months: number;
+}
+
+/** Month-end NAV rows. */
+export function monthEndRows(rows: NavRow[]): NavRow[] {
+  const byMonth = new Map<string, NavRow>();
+  for (const r of rows) {
+    const d = new Date(r.t);
+    byMonth.set(`${d.getUTCFullYear()}-${d.getUTCMonth()}`, r);
+  }
+  return [...byMonth.values()].sort((a, b) => a.t - b.t);
+}
+
+/** Aligned monthly simple returns for fund and benchmark. */
+export function alignedMonthlyReturns(fundRows: NavRow[], benchRows: NavRow[]): { t: number; f: number; b: number }[] {
+  const f = monthEndRows(fundRows);
+  const out: { t: number; f: number; b: number }[] = [];
+  for (let i = 1; i < f.length; i++) {
+    const prevB = findNavAt(benchRows, f[i - 1].t);
+    const curB = findNavAt(benchRows, f[i].t);
+    if (!prevB || !curB || prevB.nav <= 0 || curB.nav <= 0 || prevB.t === curB.t) continue;
+    out.push({ t: f[i].t, f: f[i].nav / f[i - 1].nav - 1, b: curB.nav / prevB.nav - 1 });
+  }
+  return out;
+}
+
+export function compareToBenchmark(fundRows: NavRow[], benchRows: NavRow[], riskFree = 0.065): BenchmarkComparison | null {
+  if (fundRows.length < 30 || benchRows.length < 30) return null;
+  // Restrict both to their overlapping window.
+  const from = Math.max(fundRows[0].t, benchRows[0].t);
+  const to = Math.min(fundRows[fundRows.length - 1].t, benchRows[benchRows.length - 1].t);
+  const f = fundRows.filter((r) => r.t >= from && r.t <= to);
+  const b = benchRows.filter((r) => r.t >= from && r.t <= to);
+  if (f.length < 30 || b.length < 30) return null;
+
+  const years = (to - from) / (YEAR_DAYS * DAY);
+  const fundCagr = calculateCAGR(f[0].nav, f[f.length - 1].nav, years);
+  const benchCagr = calculateCAGR(b[0].nav, b[b.length - 1].nav, years);
+
+  const beta = calculateBeta(f, b);
+  const alpha = calculateAlpha(f, b, riskFree);
+  const trackingError = calculateTrackingError(f, b);
+  const informationRatio = trackingError ? (fundCagr - benchCagr) / trackingError : 0;
+  const pair = alignedReturns(f, b);
+  const r = correlation(pair.fund, pair.bench);
+  const rSquared = r * r;
+
+  const monthly = alignedMonthlyReturns(f, b);
+  const up = monthly.filter((m) => m.b > 0);
+  const down = monthly.filter((m) => m.b < 0);
+  const geo = (xs: number[]) => (xs.length ? xs.reduce((a, x) => a * (1 + x), 1) ** (1 / xs.length) - 1 : 0);
+  const upCapture = up.length ? (geo(up.map((m) => m.f)) / geo(up.map((m) => m.b))) * 100 : 0;
+  const downCapture = down.length ? (geo(down.map((m) => m.f)) / geo(down.map((m) => m.b))) * 100 : 0;
+  const diffs = monthly.map((m) => m.f - m.b);
+  const battingAverage = monthly.length ? (diffs.filter((d) => d > 0).length / monthly.length) * 100 : 0;
+
+  const fy = annualReturns(f);
+  const by = new Map(annualReturns(b).map((a) => [a.year, a.value]));
+  let outperformYears = 0, totalYears = 0;
+  for (const y of fy) {
+    const bv = by.get(y.year);
+    if (bv == null) continue;
+    totalYears++;
+    if (y.value > bv) outperformYears++;
+  }
+
+  return {
+    fundCagr, benchCagr, excessCagr: fundCagr - benchCagr,
+    alpha, beta, rSquared, trackingError, informationRatio,
+    upCapture, downCapture, captureSpread: upCapture - downCapture,
+    battingAverage,
+    bestMonthDiff: diffs.length ? Math.max(...diffs) : 0,
+    worstMonthDiff: diffs.length ? Math.min(...diffs) : 0,
+    outperformYears, totalYears, months: monthly.length,
+  };
+}
+
+/** Cumulative relative performance (fund / benchmark, rebased to 100). */
+export function relativeStrengthSeries(fundRows: NavRow[], benchRows: NavRow[]): { t: number; rel: number }[] {
+  if (!fundRows.length || !benchRows.length) return [];
+  const from = Math.max(fundRows[0].t, benchRows[0].t);
+  const rows = fundRows.filter((r) => r.t >= from);
+  if (!rows.length) return [];
+  const b0 = findNavAt(benchRows, rows[0].t);
+  if (!b0) return [];
+  const base = rows[0].nav / b0.nav;
+  const out: { t: number; rel: number }[] = [];
+  for (const r of rows) {
+    const bn = findNavAt(benchRows, r.t);
+    if (!bn || bn.nav <= 0) continue;
+    out.push({ t: r.t, rel: (r.nav / bn.nav / base) * 100 });
+  }
+  return out;
+}

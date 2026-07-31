@@ -19,9 +19,31 @@ function yahooUrl(symbol: string): string {
   return `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&period1=0&period2=${now}&includeAdjustedClose=true`;
 }
 
+interface MfapiResponse { data?: { date: string; nav: string }[] }
+
+/** Some NSE indices have no Yahoo history; fall back to a tracking index fund's NAV. */
+async function fetchFromMfapi(code: number): Promise<NavRow[]> {
+  const res = await fetch(`https://api.mfapi.in/mf/${code}`);
+  if (!res.ok) throw new Error(`Benchmark proxy fetch failed: ${res.status}`);
+  const json = (await res.json()) as MfapiResponse;
+  const rows: NavRow[] = [];
+  for (const r of json.data ?? []) {
+    const [d, m, y] = r.date.split("-").map(Number);
+    const nav = Number(r.nav);
+    if (nav > 0) rows.push({ t: Date.UTC(y, m - 1, d), nav });
+  }
+  rows.sort((a, b) => a.t - b.t);
+  return rows;
+}
+
 export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<BenchmarkData> {
   const bench = benchmarkByKey(key);
   if (!bench) throw new Error("Unknown benchmark " + key);
+
+  if (bench.mfapiProxyCode) {
+    const rows = await fetchFromMfapi(bench.mfapiProxyCode);
+    if (rows.length > 30) return { key, label: bench.label, rows };
+  }
 
   const res = await fetch(yahooUrl(bench.yahooSymbol), {
     headers: {
