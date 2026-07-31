@@ -89,7 +89,7 @@ export interface DrawdownPoint {
 
 // ---------- Benchmarks ----------
 
-export type BenchmarkKey = "nifty50" | "nifty100" | "nifty150midcap" | "nifty250smallcap" | "sensex" | "nifty500" | "niftynext50";
+export type BenchmarkKey = "nifty50" | "nifty100" | "nifty150midcap" | "nifty250smallcap" | "sensex" | "nifty500" | "niftynext50" | "niftylargemid250";
 
 export interface Benchmark {
   key: BenchmarkKey;
