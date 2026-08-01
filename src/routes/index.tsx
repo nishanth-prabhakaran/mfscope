@@ -323,8 +323,6 @@ function Home() {
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
                 <TabsTrigger value="scores">Scores & Ranks</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
-                <TabsTrigger value="projection">Projection</TabsTrigger>
-                <TabsTrigger value="retirement">Retirement</TabsTrigger>
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
@@ -334,9 +332,19 @@ function Home() {
               <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
-              <TabsContent value="calc" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
-              <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
-              <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
+              <TabsContent value="calc" className="mt-4">
+                <Tabs defaultValue="backtest" className="w-full">
+                  <TabsList className="w-full overflow-x-auto flex justify-start">
+                    <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
+                    <TabsTrigger value="projection">Investment Projection</TabsTrigger>
+                    <TabsTrigger value="retirement">Retirement</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="backtest" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
+                  <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
+                  <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
+                </Tabs>
+              </TabsContent>
+
               <TabsContent value="diversify" className="mt-4"><CorrelationMatrixCard schemes={schemes} /></TabsContent>
               <TabsContent value="annual" className="mt-4"><AnnualReturnsCard schemes={schemes} /></TabsContent>
             </Tabs>
