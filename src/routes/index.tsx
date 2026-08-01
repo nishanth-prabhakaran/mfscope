@@ -21,6 +21,8 @@ import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
 import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
+import { SwpCalculatorCard } from "@/components/comparison/SwpCalculatorCard";
+import { PortfolioModeCard } from "@/components/comparison/PortfolioModeCard";
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
 import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
 import { BenchmarkComparisonCard } from "@/components/comparison/BenchmarkComparisonCard";
@@ -322,6 +324,7 @@ function Home() {
                 <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
                 <TabsTrigger value="growth">Growth of ₹100</TabsTrigger>
                 <TabsTrigger value="scores">Scores & Ranks</TabsTrigger>
+                <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
@@ -332,15 +335,18 @@ function Home() {
               <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="portfolio" className="mt-4"><PortfolioModeCard schemes={schemes} /></TabsContent>
               <TabsContent value="calc" className="mt-4">
                 <Tabs defaultValue="backtest" className="w-full">
                   <TabsList className="w-full overflow-x-auto flex justify-start">
                     <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
                     <TabsTrigger value="projection">Investment Projection</TabsTrigger>
+                    <TabsTrigger value="swp">SWP</TabsTrigger>
                     <TabsTrigger value="retirement">Retirement</TabsTrigger>
                   </TabsList>
                   <TabsContent value="backtest" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
                   <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
+                  <TabsContent value="swp" className="mt-4"><SwpCalculatorCard schemes={schemes} /></TabsContent>
                   <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
                 </Tabs>
               </TabsContent>
@@ -355,6 +361,7 @@ function Home() {
         {hydrated && !loading && schemes.length === 0 && (
           <div className="space-y-6">
             <ProjectionCalculatorCard schemes={[]} />
+            <SwpCalculatorCard schemes={[]} />
             <RetirementCalculatorCard />
           </div>
         )}
