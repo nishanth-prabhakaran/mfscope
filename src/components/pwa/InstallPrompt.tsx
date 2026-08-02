@@ -21,7 +21,7 @@ export function InstallButton({ className }: { className?: string }) {
         onClick={() => (pwa.canInstall ? void pwa.install() : setOpen(true))}
       >
         <Download className="h-3.5 w-3.5" />
-        <span className="hidden xs:inline">Install</span>
+        <span className="hidden sm:inline">Install</span>
       </Button>
       <IosInstructions open={open} onOpenChange={setOpen} />
     </>
