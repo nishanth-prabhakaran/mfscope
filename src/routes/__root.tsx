@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "FundScope · Indian Mutual Fund Research Terminal" },
       { name: "description", content: "Compare Indian mutual funds using rolling returns, risk analytics, drawdown and consistency scoring." },
       { name: "author", content: "FundScope" },

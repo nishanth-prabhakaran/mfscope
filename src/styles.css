@@ -130,6 +130,12 @@
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  /* Standalone (installed) app: respect device safe areas */
+  @media (display-mode: standalone) {
+    body { padding-bottom: env(safe-area-inset-bottom); }
   }
   h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
   .font-mono, code, pre { font-family: var(--font-mono); }
