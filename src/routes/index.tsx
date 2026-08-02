@@ -27,6 +27,7 @@ import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
 import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
 import { BenchmarkComparisonCard } from "@/components/comparison/BenchmarkComparisonCard";
 import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
+import { InstallButton } from "@/components/pwa/InstallPrompt";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -120,9 +121,9 @@ function Home() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/50 glass">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 md:px-6">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3 md:px-6">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center">
               <img
                 src={fundscopeLogo.url}
                 alt="FundScope"
@@ -132,38 +133,40 @@ function Home() {
                 loading="eager"
               />
             </div>
-            <div>
-              <div className="font-display text-lg font-semibold tracking-tight leading-tight">
+            <div className="min-w-0">
+              <div className="font-display truncate text-base sm:text-lg font-semibold tracking-tight leading-tight">
                 FundScope
               </div>
-              <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
+              <div className="truncate text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
                 Indian Mutual Fund Research Terminal
               </div>
 
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> MFAPI · IndexedDB cached</span>
-            <span className="rounded-full border border-border/60 px-2.5 py-1 num">
-              {hydrated ? `${funds.length}/10 selected` : "0/10 selected"}
+          <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground sm:gap-4">
+            <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> MFAPI · IndexedDB cached</span>
+            <span className="rounded-full border border-border/60 px-2 py-1 num text-[11px] sm:px-2.5 sm:text-xs">
+              {hydrated ? `${funds.length}/10` : "0/10"}
+              <span className="hidden sm:inline"> selected</span>
             </span>
+            <InstallButton className="h-8 gap-1.5 px-2.5 text-xs" />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-4 py-8 md:px-6">
+      <main className="mx-auto max-w-[1400px] px-3 py-5 sm:px-4 sm:py-8 md:px-6">
         {/* Hero */}
-        <section className="mb-8">
+        <section className="mb-5 sm:mb-8">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground">
-              <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            <div className="inline-flex items-start gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[11px] sm:text-xs text-muted-foreground">
+              <TrendingUp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
               Beyond point-to-point returns — rolling CAGR across full history
             </div>
-            <h1 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-[1.05] tracking-tight">
+            <h1 className="mt-3 font-display text-[1.75rem] leading-[1.1] sm:text-4xl md:text-5xl font-semibold sm:leading-[1.05] tracking-tight">
               Research Indian mutual funds like a{" "}
               <span className="text-gradient-brand">portfolio analyst</span>.
             </h1>
-            <p className="mt-3 text-muted-foreground max-w-2xl">
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl">
               Compare up to 10 funds side-by-side. Rolling returns, consistency scoring, drawdowns,
               Sharpe & Sortino, SIP and lumpsum backtests — all computed live from MFAPI historical NAVs.
             </p>
@@ -171,7 +174,7 @@ function Home() {
         </section>
 
         {/* Search + chips */}
-        <Card className="p-5 mb-6">
+        <Card className="p-3.5 sm:p-5 mb-5 sm:mb-6">
           <FundSearch onPick={add} isSelected={has} disabled={funds.length >= 10} />
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -216,7 +219,7 @@ function Home() {
                 <X className="h-3 w-3" /> Clear
               </Button>
             )}
-            <div className="ml-auto">
+            <div className="w-full sm:ml-auto sm:w-auto">
               <BenchmarkSelector
                 value={benchmarkKey}
                 onChange={setBenchmarkKey}
@@ -275,7 +278,7 @@ function Home() {
                 <ul className="mt-2 space-y-1 text-xs">
                   {excluded.map((e) => (
                     <li key={e.code} className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
-                      <span className="text-foreground/90 truncate max-w-[420px]">{e.name}</span>
+                      <span className="text-foreground/90 truncate max-w-[220px] sm:max-w-[420px]">{e.name}</span>
                       {e.inception && (
                         <span className="num">
                           · inception {format(new Date(e.inception), "dd MMM yyyy")}
@@ -317,7 +320,7 @@ function Home() {
             <RollingReturnsCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} />
 
             <Tabs defaultValue="risk" className="w-full">
-              <TabsList className="w-full overflow-x-auto flex justify-start">
+              <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
                 <TabsTrigger value="benchmark">vs Benchmark</TabsTrigger>
                 <TabsTrigger value="returns">Returns</TabsTrigger>
@@ -338,7 +341,7 @@ function Home() {
               <TabsContent value="portfolio" className="mt-4"><PortfolioModeCard schemes={schemes} /></TabsContent>
               <TabsContent value="calc" className="mt-4">
                 <Tabs defaultValue="backtest" className="w-full">
-                  <TabsList className="w-full overflow-x-auto flex justify-start">
+                  <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
                     <TabsTrigger value="projection">Investment Projection</TabsTrigger>
                     <TabsTrigger value="swp">SWP</TabsTrigger>
@@ -387,7 +390,7 @@ function EmptyState() {
   ];
   const { add } = useSelection();
   return (
-    <Card className="p-8 text-center border-dashed">
+    <Card className="p-5 sm:p-8 text-center border-dashed">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
         <BarChart3 className="h-7 w-7" />
       </div>
