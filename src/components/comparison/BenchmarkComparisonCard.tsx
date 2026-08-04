@@ -46,15 +46,37 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
     );
   }
 
+  const rank = (key: "fundCagr" | "excessCagr" | "alpha" | "informationRatio" | "upCapture" | "battingAverage" | "downCapture", higherBetter = true) => {
+    const sorted = rows
+      .filter((r) => r.c && Number.isFinite(r.c[key] as number))
+      .map((r) => ({ code: r.code, v: r.c![key] as number }))
+      .sort((a, b) => (higherBetter ? b.v - a.v : a.v - b.v));
+    return { best: sorted[0]?.code ?? -1, second: sorted[1]?.code ?? -1 };
+  };
+  const cls = (r: { best: number; second: number }, code: number) =>
+    r.best === code ? "text-success font-semibold" : r.second === code ? "text-info font-medium" : "";
+
+  const rFund = rank("fundCagr");
+  const rExcess = rank("excessCagr");
+  const rAlpha = rank("alpha");
+  const rIR = rank("informationRatio");
+  const rUp = rank("upCapture");
+  const rDown = rank("downCapture", false);
+  const rBat = rank("battingAverage");
+
   return (
     <Card className="p-5">
-      <div>
-        <h3 className="font-display text-lg font-semibold">
-          vs Benchmark {benchmarkLabel ? <span className="text-muted-foreground font-normal">· {benchmarkLabel}</span> : null}
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Measured over each fund&apos;s overlapping history with the index. Alpha and beta are annualised; capture ratios use monthly returns.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold">
+            vs Benchmark {benchmarkLabel ? <span className="text-muted-foreground font-normal">· {benchmarkLabel}</span> : null}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Measured over each fund&apos;s overlapping history with the index. Alpha and beta are annualised; capture ratios use monthly returns.
+          </p>
+          <RankLegend className="mt-2" />
+        </div>
+        <MetricGlossaryButton />
       </div>
 
       <div className="mt-4 overflow-x-auto">
@@ -62,18 +84,18 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
           <thead className="text-muted-foreground">
             <tr className="border-b border-border/60">
               <th className="text-left font-medium py-2 pr-3">Fund</th>
-              <th className="text-right font-medium">Fund CAGR</th>
-              <th className="text-right font-medium">Index CAGR</th>
-              <th className="text-right font-medium">Excess</th>
-              <th className="text-right font-medium">Alpha</th>
-              <th className="text-right font-medium">Beta</th>
-              <th className="text-right font-medium">R²</th>
-              <th className="text-right font-medium">Tracking Err</th>
-              <th className="text-right font-medium">Info Ratio</th>
-              <th className="text-right font-medium">Up capture</th>
-              <th className="text-right font-medium">Down capture</th>
-              <th className="text-right font-medium">Batting avg</th>
-              <th className="text-right font-medium">Years beaten</th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Fund CAGR<MetricInfo id="fundCagr" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Index CAGR<MetricInfo id="benchCagr" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Excess<MetricInfo id="excessCagr" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Alpha<MetricInfo id="alpha" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Beta<MetricInfo id="beta" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">R²<MetricInfo id="rSquared" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Tracking Err<MetricInfo id="trackingError" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Info Ratio<MetricInfo id="informationRatio" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Up capture<MetricInfo id="upCapture" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Down capture<MetricInfo id="downCapture" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Batting avg<MetricInfo id="battingAverage" /></span></th>
+              <th className="text-right font-medium"><span className="inline-flex items-center gap-1">Years beaten<MetricInfo id="outperformYears" /></span></th>
             </tr>
           </thead>
           <tbody>
@@ -87,19 +109,19 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
                 </td>
                 {row.c ? (
                   <>
-                    <td className="text-right">{fmtPct(row.c.fundCagr)}</td>
+                    <td className={`text-right ${cls(rFund, row.code)}`}>{fmtPct(row.c.fundCagr)}</td>
                     <td className="text-right text-muted-foreground">{fmtPct(row.c.benchCagr)}</td>
-                    <td className={`text-right font-medium ${row.c.excessCagr >= 0 ? "text-success" : "text-destructive-foreground"}`}>
+                    <td className={`text-right font-medium ${cls(rExcess, row.code) || (row.c.excessCagr >= 0 ? "text-success" : "text-destructive-foreground")}`}>
                       {fmtPct(row.c.excessCagr)}
                     </td>
-                    <td className={`text-right ${row.c.alpha >= 0 ? "text-success" : "text-destructive-foreground"}`}>{fmtPct(row.c.alpha)}</td>
+                    <td className={`text-right ${cls(rAlpha, row.code) || (row.c.alpha >= 0 ? "text-success" : "text-destructive-foreground")}`}>{fmtPct(row.c.alpha)}</td>
                     <td className="text-right">{fmtNum(row.c.beta)}</td>
                     <td className="text-right">{fmtNum(row.c.rSquared)}</td>
                     <td className="text-right">{fmtPct(row.c.trackingError)}</td>
-                    <td className="text-right">{fmtNum(row.c.informationRatio)}</td>
-                    <td className="text-right">{fmtPctRaw(row.c.upCapture, 0)}</td>
-                    <td className="text-right">{fmtPctRaw(row.c.downCapture, 0)}</td>
-                    <td className="text-right">{fmtPctRaw(row.c.battingAverage, 0)}</td>
+                    <td className={`text-right ${cls(rIR, row.code)}`}>{fmtNum(row.c.informationRatio)}</td>
+                    <td className={`text-right ${cls(rUp, row.code)}`}>{fmtPctRaw(row.c.upCapture, 0)}</td>
+                    <td className={`text-right ${cls(rDown, row.code)}`}>{fmtPctRaw(row.c.downCapture, 0)}</td>
+                    <td className={`text-right ${cls(rBat, row.code)}`}>{fmtPctRaw(row.c.battingAverage, 0)}</td>
                     <td className="text-right">{row.c.totalYears ? `${row.c.outperformYears}/${row.c.totalYears}` : "—"}</td>
                   </>
                 ) : (
@@ -110,6 +132,7 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
           </tbody>
         </table>
       </div>
+
 
       <div className="mt-6">
         <div className="text-xs text-muted-foreground mb-2">
