@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { calculateRisk } from "@/lib/calculators";
 import type { NormalizedScheme } from "@/types/mf";
 import { colorFor, fmtNum, fmtPct } from "@/lib/format";
+import { MetricGlossaryButton, MetricInfo, RankLegend } from "./MetricInfo";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
@@ -29,24 +30,27 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
     { key: "cvar95", label: "CVaR (95%)", fmt: (v) => fmtPct(v), higherBetter: false },
   ];
 
-  const bestOf = (key: keyof ReturnType<typeof calculateRisk>, higherBetter?: boolean): number | null => {
-    if (higherBetter == null) return null;
-    let best = -Infinity, worst = Infinity, bestCode = -1;
-    for (const r of rows) {
-      const v = r.risk[key] as number;
-      if (!Number.isFinite(v)) continue;
-      if (higherBetter ? v > best : v < worst) { best = higherBetter ? v : best; worst = higherBetter ? worst : v; bestCode = r.code; }
-    }
-    return bestCode;
+  /** Returns fund codes ranked best → second best for a metric. */
+  const rankOf = (key: keyof ReturnType<typeof calculateRisk>, higherBetter?: boolean): { best: number; second: number } => {
+    if (higherBetter == null) return { best: -1, second: -1 };
+    const sorted = rows
+      .map((r) => ({ code: r.code, v: r.risk[key] as number }))
+      .filter((x) => Number.isFinite(x.v))
+      .sort((a, b) => (higherBetter ? b.v - a.v : a.v - b.v));
+    return { best: sorted[0]?.code ?? -1, second: sorted[1]?.code ?? -1 };
   };
 
   return (
     <Card className="p-5">
-      <div>
-        <h3 className="font-display text-lg font-semibold">Risk Analytics</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Full-history risk-adjusted metrics on daily NAV (risk-free = 6.5%).
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold">Risk Analytics</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Full-history risk-adjusted metrics on daily NAV (risk-free = 6.5%).
+          </p>
+          <RankLegend className="mt-2" />
+        </div>
+        <MetricGlossaryButton />
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-xs num">
@@ -65,15 +69,24 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
           </thead>
           <tbody>
             {metrics.map((m) => {
-              const bestCode = bestOf(m.key, m.higherBetter);
+              const rank = rankOf(m.key, m.higherBetter);
               return (
                 <tr key={m.key} className="border-b border-border/30 last:border-0">
-                  <td className="py-2 pr-3 text-muted-foreground">{m.label}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      {m.label}
+                      <MetricInfo id={m.key as string} />
+                    </span>
+                  </td>
                   {rows.map((r) => {
                     const v = r.risk[m.key] as number;
-                    const isBest = r.code === bestCode;
+                    const isBest = r.code === rank.best;
+                    const isSecond = r.code === rank.second;
                     return (
-                      <td key={r.code} className={`text-right py-2 pl-3 ${isBest ? "text-success font-medium" : ""}`}>
+                      <td
+                        key={r.code}
+                        className={`text-right py-2 pl-3 ${isBest ? "text-success font-medium" : isSecond ? "text-info" : ""}`}
+                      >
                         {m.fmt(v)}
                       </td>
                     );
@@ -87,3 +100,4 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
     </Card>
   );
 }
+

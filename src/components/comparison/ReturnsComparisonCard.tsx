@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { periodReturn, RETURN_PERIODS } from "@/lib/calculators";
 import type { NormalizedScheme } from "@/types/mf";
 import { colorFor, fmtPct } from "@/lib/format";
+import { MetricGlossaryButton, MetricInfo, RankLegend } from "./MetricInfo";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
@@ -16,20 +17,27 @@ export function ReturnsComparisonCard({ schemes, benchmarkRows }: Props) {
       values: RETURN_PERIODS.map((p) => ({ label: p.label, v: periodReturn(s.data.rows, p.months) })),
     })), [schemes]);
 
-  const bestByPeriod = RETURN_PERIODS.map((_, pi) => {
-    let bestV = -Infinity, bestCode = -1;
-    for (const r of rows) {
-      const v = r.values[pi].v;
-      if (v != null && v > bestV) { bestV = v; bestCode = r.code; }
-    }
-    return bestCode;
-  });
+  // best + second best fund code for each period
+  const ranksByPeriod = useMemo(() => RETURN_PERIODS.map((_, pi) => {
+    const sorted = rows
+      .map((r) => ({ code: r.code, v: r.values[pi].v }))
+      .filter((x): x is { code: number; v: number } => x.v != null && Number.isFinite(x.v))
+      .sort((a, b) => b.v - a.v);
+    return { best: sorted[0]?.code ?? -1, second: sorted[1]?.code ?? -1 };
+  }), [rows]);
 
   return (
     <Card className="p-5">
-      <div>
-        <h3 className="font-display text-lg font-semibold">Point-to-Point Returns</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">Trailing returns across standard periods (CAGR for ≥1Y).</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold flex items-center gap-1.5">
+            Point-to-Point Returns
+            <MetricInfo id="periodReturn" />
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Trailing returns across standard periods (CAGR for ≥1Y).</p>
+          <RankLegend className="mt-2" />
+        </div>
+        <MetricGlossaryButton />
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-xs num">
@@ -51,13 +59,18 @@ export function ReturnsComparisonCard({ schemes, benchmarkRows }: Props) {
                   </div>
                 </td>
                 {r.values.map((v, i) => {
-                  const isBest = bestByPeriod[i] === r.code && v.v != null;
+                  const isBest = ranksByPeriod[i].best === r.code && v.v != null;
+                  const isSecond = ranksByPeriod[i].second === r.code && v.v != null;
                   const positive = v.v != null && v.v >= 0;
                   return (
                     <td
                       key={v.label}
                       className={`text-right py-2 pl-3 ${
-                        isBest ? "text-success font-semibold" : positive ? "" : "text-destructive-foreground"
+                        isBest
+                          ? "text-success font-semibold"
+                          : isSecond
+                            ? "text-info font-medium"
+                            : positive ? "" : "text-destructive-foreground"
                       }`}
                     >
                       {fmtPct(v.v)}
@@ -72,3 +85,4 @@ export function ReturnsComparisonCard({ schemes, benchmarkRows }: Props) {
     </Card>
   );
 }
+
