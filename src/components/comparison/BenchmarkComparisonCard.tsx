@@ -6,6 +6,7 @@ import {
 import { compareToBenchmark, relativeStrengthSeries } from "@/lib/calculators";
 import type { NavRow, NormalizedScheme } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum, fmtPct, fmtPctRaw } from "@/lib/format";
+import { MetricGlossaryButton, MetricInfo, RankLegend } from "./MetricInfo";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
