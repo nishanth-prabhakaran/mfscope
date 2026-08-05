@@ -343,11 +343,13 @@ function Home() {
                 <Tabs defaultValue="backtest" className="w-full">
                   <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
+                    <TabsTrigger value="goal">Goal Planner</TabsTrigger>
                     <TabsTrigger value="projection">Investment Projection</TabsTrigger>
                     <TabsTrigger value="swp">SWP</TabsTrigger>
                     <TabsTrigger value="retirement">Retirement</TabsTrigger>
                   </TabsList>
                   <TabsContent value="backtest" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
+                  <TabsContent value="goal" className="mt-4"><GoalPlannerCard schemes={schemes} /></TabsContent>
                   <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
                   <TabsContent value="swp" className="mt-4"><SwpCalculatorCard schemes={schemes} /></TabsContent>
                   <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
@@ -363,9 +365,11 @@ function Home() {
         {/* Standalone planners when nothing is selected */}
         {hydrated && !loading && schemes.length === 0 && (
           <div className="space-y-6">
+            <GoalPlannerCard schemes={[]} />
             <ProjectionCalculatorCard schemes={[]} />
             <SwpCalculatorCard schemes={[]} />
             <RetirementCalculatorCard />
+
           </div>
         )}
 
