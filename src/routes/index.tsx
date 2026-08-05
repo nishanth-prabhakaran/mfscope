@@ -21,6 +21,7 @@ import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
 import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
+import { GoalPlannerCard } from "@/components/comparison/GoalPlannerCard";
 import { SwpCalculatorCard } from "@/components/comparison/SwpCalculatorCard";
 import { PortfolioModeCard } from "@/components/comparison/PortfolioModeCard";
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
