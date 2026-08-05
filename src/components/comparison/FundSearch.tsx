@@ -23,22 +23,54 @@ export function FundSearch({ onPick, isSelected, disabled }: Props) {
   const filtered = useMemo(() => {
     if (!data) return [];
     const query = q.trim().toLowerCase();
-    if (query.length < 2 && category === "All") return [];
-    const out: Array<{ code: number; name: string; amc: string; cat: string | null }> = [];
+    const tokens = query.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0 && category === "All") return [];
+
+    // Normalise a scheme name so duplicate listings collapse to one entry.
+    const dedupeKey = (name: string) =>
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\b(plan|option|scheme|fund)\b/g, " ")
+        .replace(/\bidcw\b/g, "dividend")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const seen = new Map<string, { code: number; name: string; amc: string; cat: string | null; score: number }>();
+
     for (const s of data) {
       const name = s.schemeName;
       const lower = name.toLowerCase();
       if (!lower.includes("direct") || !lower.includes("growth")) continue;
       const cat = guessCategory(name);
       if (category !== "All" && cat !== category) continue;
+
+      const amc = guessAmc(name);
+      const haystack = `${lower} ${amc.toLowerCase()}`;
+      if (tokens.length && !tokens.every((t) => haystack.includes(t))) continue;
+
+      // Rank: prefix match on the scheme name scores highest, then earlier match position.
+      let score = 0;
       if (query) {
-        if (!(lower.includes(query) || guessAmc(name).toLowerCase().includes(query))) continue;
+        if (lower.startsWith(query)) score += 100;
+        else if (lower.includes(query)) score += 50;
+        const idx = lower.indexOf(tokens[0]);
+        score += idx >= 0 ? Math.max(0, 30 - idx / 4) : 0;
       }
-      out.push({ code: s.schemeCode, name, amc: guessAmc(name), cat });
-      if (out.length >= 60) break;
+      score += Math.max(0, 20 - name.length / 12);
+
+      const key = dedupeKey(name);
+      const prev = seen.get(key);
+      if (!prev || score > prev.score || (score === prev.score && s.schemeCode < prev.code)) {
+        seen.set(key, { code: s.schemeCode, name, amc, cat, score });
+      }
     }
-    return out;
+
+    return Array.from(seen.values())
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+      .slice(0, 60);
   }, [data, q, category]);
+
 
   return (
     <div className="relative w-full">
