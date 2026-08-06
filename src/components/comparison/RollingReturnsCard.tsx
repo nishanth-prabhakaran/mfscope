@@ -134,7 +134,7 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
   };
 
   return (
-    <Card className="p-5 card-glow">
+    <Card className="p-4 sm:p-5 card-glow">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display text-lg font-semibold">Rolling CAGR Returns</h3>

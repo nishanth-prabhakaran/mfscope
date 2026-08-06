@@ -38,7 +38,7 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
 
   if (!benchmarkRows?.length) {
     return (
-      <Card className="p-5">
+      <Card className="p-4 sm:p-5">
         <h3 className="font-display text-lg font-semibold">vs Benchmark</h3>
         <p className="text-sm text-muted-foreground mt-2">
           Pick a benchmark index above to see alpha, beta, capture ratios and outperformance for each fund.
@@ -66,8 +66,8 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
   const rBat = rank("battingAverage");
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Card className="p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
           <h3 className="font-display text-lg font-semibold">
             vs Benchmark {benchmarkLabel ? <span className="text-muted-foreground font-normal">· {benchmarkLabel}</span> : null}

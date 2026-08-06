@@ -72,7 +72,7 @@ export function ScoreAndRankCard({ schemes, benchmarkRows }: Props) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <Card className="p-5">
+      <Card className="p-4 sm:p-5">
         <div>
           <h3 className="font-display text-lg font-semibold">Fund Rating & Consistency</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -142,7 +142,7 @@ export function ScoreAndRankCard({ schemes, benchmarkRows }: Props) {
         </div>
       </Card>
 
-      <Card className="p-5">
+      <Card className="p-4 sm:p-5">
         <div>
           <h3 className="font-display text-lg font-semibold">Fund Rankings</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Winner in each dimension.</p>

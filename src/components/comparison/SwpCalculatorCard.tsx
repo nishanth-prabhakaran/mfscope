@@ -44,7 +44,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
   );
 
   return (
-    <Card className="p-5">
+    <Card className="p-4 sm:p-5">
       <div>
         <h3 className="font-display text-lg font-semibold">SWP Calculator</h3>
         <p className="text-xs text-muted-foreground mt-0.5">

@@ -32,7 +32,7 @@ export function CalculatorsCard({ schemes }: Props) {
     [schemes, lumpsum, startT]);
 
   return (
-    <Card className="p-5">
+    <Card className="p-4 sm:p-5">
       <div>
         <h3 className="font-display text-lg font-semibold">Investment Calculators</h3>
         <p className="text-xs text-muted-foreground mt-0.5">Backtest SIP and Lumpsum investments on real NAV history.</p>
