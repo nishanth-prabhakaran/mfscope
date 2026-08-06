@@ -88,10 +88,10 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
   }, [chartData]);
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Card className="p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-display text-lg font-semibold">Drawdown Analysis</h3>
+          <h3 className="font-display text-base sm:text-lg font-semibold">Drawdown Analysis</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             How deep and how long each fund fell from its peak.
           </p>
@@ -107,7 +107,7 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
         </button>
       </div>
 
-      <div className="mt-4 h-[300px]">
+      <div className="mt-4 h-[240px] sm:h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
             <defs>

@@ -44,9 +44,9 @@ export function SwpCalculatorCard({ schemes }: Props) {
   );
 
   return (
-    <Card className="p-5">
+    <Card className="p-4 sm:p-5">
       <div>
-        <h3 className="font-display text-lg font-semibold">SWP Calculator</h3>
+        <h3 className="font-display text-base sm:text-lg font-semibold">SWP Calculator</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           Systematic Withdrawal Plan — how long a corpus lasts while you draw a monthly income from it.
         </p>
@@ -79,7 +79,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
             <Stat label="Sustainable monthly" value={fmtInr(proj.sustainableMonthly)} />
           </div>
 
-          <div className="mt-5 h-[300px]">
+          <div className="mt-5 h-[240px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={proj.rows} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
                 <defs>

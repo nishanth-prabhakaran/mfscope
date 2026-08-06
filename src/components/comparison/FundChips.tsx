@@ -21,7 +21,7 @@ export function FundChips({ funds, onRemove, onClear }: Props) {
             className="h-2 w-2 rounded-full shrink-0"
             style={{ backgroundColor: colorFor(i) }}
           />
-          <span className="truncate max-w-[240px] md:max-w-[320px]">{f.schemeName}</span>
+          <span className="truncate max-w-[190px] sm:max-w-[240px] md:max-w-[320px]">{f.schemeName}</span>
           <button
             onClick={() => onRemove(f.schemeCode)}
             className="ml-1 rounded-full p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive-foreground"

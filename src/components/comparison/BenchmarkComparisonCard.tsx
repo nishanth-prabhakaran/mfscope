@@ -38,8 +38,8 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
 
   if (!benchmarkRows?.length) {
     return (
-      <Card className="p-5">
-        <h3 className="font-display text-lg font-semibold">vs Benchmark</h3>
+      <Card className="p-4 sm:p-5">
+        <h3 className="font-display text-base sm:text-lg font-semibold">vs Benchmark</h3>
         <p className="text-sm text-muted-foreground mt-2">
           Pick a benchmark index above to see alpha, beta, capture ratios and outperformance for each fund.
         </p>
@@ -66,10 +66,10 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
   const rBat = rank("battingAverage");
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Card className="p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-display text-lg font-semibold">
+          <h3 className="font-display text-base sm:text-lg font-semibold">
             vs Benchmark {benchmarkLabel ? <span className="text-muted-foreground font-normal">· {benchmarkLabel}</span> : null}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -139,7 +139,7 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
         <div className="text-xs text-muted-foreground mb-2">
           Relative strength — fund vs index, rebased to 100. Rising = beating the index.
         </div>
-        <div className="h-[300px]">
+        <div className="h-[240px] sm:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />

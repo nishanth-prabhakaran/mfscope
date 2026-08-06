@@ -32,9 +32,9 @@ export function RetirementCalculatorCard() {
   ], [r]);
 
   return (
-    <Card className="p-5">
+    <Card className="p-4 sm:p-5">
       <div>
-        <h3 className="font-display text-lg font-semibold">Retirement Calculator</h3>
+        <h3 className="font-display text-base sm:text-lg font-semibold">Retirement Calculator</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           NISM-style planning: inflation-indexed expenses, corpus required at retirement, and the SIP needed to get there.
         </p>
@@ -68,7 +68,7 @@ export function RetirementCalculatorCard() {
         <Stat label="Corpus lasts till age" value={r.corpusLastsTillAge != null ? `${r.corpusLastsTillAge}` : "—"} />
       </div>
 
-      <div className="mt-6 h-[320px]">
+      <div className="mt-6 h-[250px] sm:h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
             <defs>

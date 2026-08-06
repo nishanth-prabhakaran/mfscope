@@ -40,9 +40,9 @@ export function GoalPlannerCard({ schemes }: Props) {
 
   return (
     <Card className="p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-display text-lg font-semibold">Goal-based SIP Planner</h3>
+          <h3 className="font-display text-base sm:text-lg font-semibold">Goal-based SIP Planner</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Set a goal in today's cost, and see the inflation-adjusted target plus the monthly SIP needed to get there.
           </p>
@@ -137,7 +137,7 @@ export function GoalPlannerCard({ schemes }: Props) {
         </p>
       </div>
 
-      <div className="mt-5 h-[300px]">
+      <div className="mt-5 h-[240px] sm:h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={res.rows} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
             <defs>

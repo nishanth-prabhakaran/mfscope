@@ -54,10 +54,10 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
   );
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Card className="p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-display text-lg font-semibold">Investment Projection</h3>
+          <h3 className="font-display text-base sm:text-lg font-semibold">Investment Projection</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Project a lumpsum + step-up SIP forward, with conservative / base / optimistic scenarios and inflation-adjusted value.
           </p>
@@ -97,7 +97,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
         <Stat label="Multiple" value={`${fmtNum(base.multiple, 2)}x`} />
       </div>
 
-      <div className="mt-6 h-[320px]">
+      <div className="mt-6 h-[250px] sm:h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
             <defs>

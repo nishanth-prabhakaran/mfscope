@@ -134,21 +134,21 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
   };
 
   return (
-    <Card className="p-5 card-glow">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="font-display text-lg font-semibold">Rolling CAGR Returns</h3>
+    <Card className="p-4 sm:p-5 card-glow">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="font-display text-base sm:text-lg font-semibold">Rolling CAGR Returns</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Every possible {period}-year rolling window across the full NAV history.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-end sm:overflow-visible sm:px-0 sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
           <div className="flex gap-1 rounded-lg border border-border/60 p-1 bg-card/60">
             {PERIODS.map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                className={`shrink-0 px-2.5 py-1 text-xs rounded-md transition-colors ${
                   period === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -158,7 +158,7 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
           </div>
           <button
             onClick={() => setShowPeer((v) => !v)}
-            className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
+            className={`whitespace-nowrap px-2.5 py-1 text-xs rounded-md border transition-colors ${
               showPeer ? "border-border/60 bg-accent/40 text-foreground" : "border-border/40 text-muted-foreground hover:text-foreground"
             }`}
             title="Overlay peer average & median across your selected funds"
@@ -170,7 +170,8 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
         </div>
       </div>
 
-      <div ref={(el) => { chartRef.current = el; }} className="mt-4 h-[380px] w-full">
+
+      <div ref={(el) => { chartRef.current = el; }} className="mt-4 h-[280px] sm:h-[380px] w-full">
         {chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Not enough history for a {period}-year rolling window.
