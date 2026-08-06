@@ -73,7 +73,7 @@ export function PortfolioModeCard({ schemes }: Props) {
             Blend the selected funds into one portfolio, set allocations and see combined returns, risk and drawdown.
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {MODES.map((m) => (
             <Button
               key={m.key}
