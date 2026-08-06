@@ -34,7 +34,7 @@ export function RetirementCalculatorCard() {
   return (
     <Card className="p-4 sm:p-5">
       <div>
-        <h3 className="font-display text-lg font-semibold">Retirement Calculator</h3>
+        <h3 className="font-display text-base sm:text-lg font-semibold">Retirement Calculator</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           NISM-style planning: inflation-indexed expenses, corpus required at retirement, and the SIP needed to get there.
         </p>

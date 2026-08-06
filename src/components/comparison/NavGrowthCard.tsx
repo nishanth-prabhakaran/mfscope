@@ -46,7 +46,7 @@ export function NavGrowthCard({ schemes, benchmarkRows, benchmarkLabel }: Props)
   return (
     <Card className="p-4 sm:p-5">
       <div>
-        <h3 className="font-display text-lg font-semibold">Growth of ₹100</h3>
+        <h3 className="font-display text-base sm:text-lg font-semibold">Growth of ₹100</h3>
         <p className="text-xs text-muted-foreground mt-0.5">NAV rebased to 100 at the earliest common date.</p>
       </div>
       <div className="mt-4 h-[250px] sm:h-[320px]">

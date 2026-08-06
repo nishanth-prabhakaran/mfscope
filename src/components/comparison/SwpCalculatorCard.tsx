@@ -46,7 +46,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
   return (
     <Card className="p-4 sm:p-5">
       <div>
-        <h3 className="font-display text-lg font-semibold">SWP Calculator</h3>
+        <h3 className="font-display text-base sm:text-lg font-semibold">SWP Calculator</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           Systematic Withdrawal Plan — how long a corpus lasts while you draw a monthly income from it.
         </p>

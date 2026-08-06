@@ -74,7 +74,7 @@ export function ScoreAndRankCard({ schemes, benchmarkRows }: Props) {
     <div className="grid gap-5 lg:grid-cols-2">
       <Card className="p-4 sm:p-5">
         <div>
-          <h3 className="font-display text-lg font-semibold">Fund Rating & Consistency</h3>
+          <h3 className="font-display text-base sm:text-lg font-semibold">Fund Rating & Consistency</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Weighted score across rolling returns, drawdown, Sharpe, Sortino, volatility & consistency.
           </p>
@@ -144,7 +144,7 @@ export function ScoreAndRankCard({ schemes, benchmarkRows }: Props) {
 
       <Card className="p-4 sm:p-5">
         <div>
-          <h3 className="font-display text-lg font-semibold">Fund Rankings</h3>
+          <h3 className="font-display text-base sm:text-lg font-semibold">Fund Rankings</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Winner in each dimension.</p>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3">

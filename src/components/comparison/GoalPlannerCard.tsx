@@ -42,7 +42,7 @@ export function GoalPlannerCard({ schemes }: Props) {
     <Card className="p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-display text-lg font-semibold">Goal-based SIP Planner</h3>
+          <h3 className="font-display text-base sm:text-lg font-semibold">Goal-based SIP Planner</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Set a goal in today's cost, and see the inflation-adjusted target plus the monthly SIP needed to get there.
           </p>
