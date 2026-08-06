@@ -273,11 +273,11 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
                 <th className="py-2 pr-3 text-left font-medium min-w-[220px]">Fund</th>
                 <th className="py-2 px-2 text-right font-medium">Score</th>
                 <th className="py-2 px-2 text-right font-medium">
-                  <span className="inline-flex items-center gap-1">Avg {period}Y <MetricInfo id="rollingMean" /></span>
+                  Avg {period}Y
                 </th>
                 <th className="py-2 px-2 text-right font-medium">Min {period}Y</th>
                 <th className="py-2 px-2 text-right font-medium">
-                  <span className="inline-flex items-center gap-1">Consistency <MetricInfo id="consistencyScore" /></span>
+                  Consistency
                 </th>
                 <th className="py-2 px-2 text-right font-medium">
                   <span className="inline-flex items-center gap-1">Sharpe <MetricInfo id="sharpe" /></span>
