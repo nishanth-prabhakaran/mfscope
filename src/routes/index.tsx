@@ -18,6 +18,7 @@ import { RiskMetricsCard } from "@/components/comparison/RiskMetricsCard";
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
 import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
 import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
+import { TopFundsCard } from "@/components/comparison/TopFundsCard";
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
 import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
@@ -338,7 +339,12 @@ function Home() {
               <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
               <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
-              <TabsContent value="scores" className="mt-4"><ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="scores" className="mt-4">
+                <div className="space-y-6">
+                  <ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} />
+                  <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
+                </div>
+              </TabsContent>
               <TabsContent value="portfolio" className="mt-4"><PortfolioModeCard schemes={schemes} /></TabsContent>
               <TabsContent value="calc" className="mt-4">
                 <Tabs defaultValue="backtest" className="w-full">
@@ -366,6 +372,7 @@ function Home() {
         {/* Standalone planners when nothing is selected */}
         {hydrated && !loading && schemes.length === 0 && (
           <div className="space-y-6">
+            <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
             <GoalPlannerCard schemes={[]} />
             <ProjectionCalculatorCard schemes={[]} />
             <SwpCalculatorCard schemes={[]} />
