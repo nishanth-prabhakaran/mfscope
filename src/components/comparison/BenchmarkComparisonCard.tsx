@@ -139,7 +139,7 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
         <div className="text-xs text-muted-foreground mb-2">
           Relative strength — fund vs index, rebased to 100. Rising = beating the index.
         </div>
-        <div className="h-[300px]">
+        <div className="h-[240px] sm:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />

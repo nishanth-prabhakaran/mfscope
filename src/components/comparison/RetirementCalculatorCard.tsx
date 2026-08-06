@@ -68,7 +68,7 @@ export function RetirementCalculatorCard() {
         <Stat label="Corpus lasts till age" value={r.corpusLastsTillAge != null ? `${r.corpusLastsTillAge}` : "—"} />
       </div>
 
-      <div className="mt-6 h-[320px]">
+      <div className="mt-6 h-[250px] sm:h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
             <defs>

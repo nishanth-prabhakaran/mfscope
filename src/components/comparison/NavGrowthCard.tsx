@@ -49,7 +49,7 @@ export function NavGrowthCard({ schemes, benchmarkRows, benchmarkLabel }: Props)
         <h3 className="font-display text-lg font-semibold">Growth of ₹100</h3>
         <p className="text-xs text-muted-foreground mt-0.5">NAV rebased to 100 at the earliest common date.</p>
       </div>
-      <div className="mt-4 h-[320px]">
+      <div className="mt-4 h-[250px] sm:h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.35} />

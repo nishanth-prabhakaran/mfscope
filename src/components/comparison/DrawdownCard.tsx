@@ -107,7 +107,7 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
         </button>
       </div>
 
-      <div className="mt-4 h-[300px]">
+      <div className="mt-4 h-[240px] sm:h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
             <defs>

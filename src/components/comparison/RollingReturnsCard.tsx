@@ -170,7 +170,7 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
         </div>
       </div>
 
-      <div ref={(el) => { chartRef.current = el; }} className="mt-4 h-[380px] w-full">
+      <div ref={(el) => { chartRef.current = el; }} className="mt-4 h-[280px] sm:h-[380px] w-full">
         {chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Not enough history for a {period}-year rolling window.

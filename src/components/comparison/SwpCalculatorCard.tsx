@@ -79,7 +79,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
             <Stat label="Sustainable monthly" value={fmtInr(proj.sustainableMonthly)} />
           </div>
 
-          <div className="mt-5 h-[300px]">
+          <div className="mt-5 h-[240px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={proj.rows} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
                 <defs>

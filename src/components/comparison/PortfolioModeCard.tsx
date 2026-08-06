@@ -143,7 +143,7 @@ export function PortfolioModeCard({ schemes }: Props) {
             <Stat label="Rebalances" value={`${series.rebalanceCount}`} />
           </div>
 
-          <div className="mt-6 h-[300px]">
+          <div className="mt-6 h-[240px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
                 <defs>
