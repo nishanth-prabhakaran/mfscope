@@ -338,7 +338,7 @@ function Home() {
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
-              <TabsContent value="deepdive" className="mt-4"><FundDeepDiveCard schemes={schemes.map((s) => ({ code: s.code, name: s.name }))} onAdd={add} isSelected={has} canAdd={funds.length < 10} /></TabsContent>
+              <TabsContent value="deepdive" className="mt-4"><FundDeepDiveCard schemes={schemes.map((s) => ({ code: s.code, name: s.name }))} onAdd={(code, name) => add({ code, name })} isSelected={has} canAdd={funds.length < 10} /></TabsContent>
               <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
 
               <TabsContent value="benchmark" className="mt-4"><BenchmarkComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
