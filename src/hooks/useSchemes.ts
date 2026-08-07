@@ -1,5 +1,5 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { fetchScheme, fetchSchemeList } from "@/lib/mfapi";
+import { fetchScheme, fetchSchemeList } from "@/lib/finapi";
 
 export function useSchemeList() {
   return useQuery({
