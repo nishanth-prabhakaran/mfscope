@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, Plus, Check, RefreshCw } from "lucide-react";
-import { fetchScheme } from "@/lib/mfapi";
+import { fetchScheme } from "@/lib/finapi";
 import { useSchemeList } from "@/hooks/useSchemes";
 import { CATEGORIES, guessAmc, guessCategory } from "@/lib/categories";
 import {

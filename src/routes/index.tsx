@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
+          "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by FinAPI.",
       },
       { property: "og:title", content: "FundScope · Mutual Fund Research Terminal" },
       {
@@ -146,7 +146,7 @@ function Home() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground sm:gap-4">
-            <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> MFAPI · IndexedDB cached</span>
+            <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> FinAPI · IndexedDB cached</span>
             <span className="rounded-full border border-border/60 px-2 py-1 num text-[11px] sm:px-2.5 sm:text-xs">
               {hydrated ? `${funds.length}/10` : "0/10"}
               <span className="hidden sm:inline"> selected</span>
@@ -170,7 +170,7 @@ function Home() {
             </h1>
             <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl">
               Compare up to 10 funds side-by-side. Rolling returns, consistency scoring, drawdowns,
-              Sharpe & Sortino, SIP and lumpsum backtests — all computed live from MFAPI historical NAVs.
+              Sharpe & Sortino, SIP and lumpsum backtests — all computed live from FinAPI historical NAVs.
             </p>
           </div>
         </section>
@@ -384,7 +384,7 @@ function Home() {
 
         <footer className="mt-16 pt-8 border-t border-border/40 text-xs text-muted-foreground">
           <p>
-            Data source: <a className="underline hover:text-foreground" href="https://api.mfapi.in" target="_blank" rel="noreferrer">MFAPI</a>.
+            Data source: <a className="underline hover:text-foreground" href="https://finapi.upvaly.com" target="_blank" rel="noreferrer">FinAPI</a>.
             Calculations for research/education only — not investment advice.
           </p>
         </footer>

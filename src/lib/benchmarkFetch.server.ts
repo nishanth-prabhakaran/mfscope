@@ -19,18 +19,25 @@ function yahooUrl(symbol: string): string {
   return `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&period1=0&period2=${now}&includeAdjustedClose=true`;
 }
 
-interface MfapiResponse { data?: { date: string; nav: string }[] }
+interface FinApiNavResponse {
+  data?: { navHistory?: { navDate: string; nav: number | string }[] };
+  message?: string;
+}
 
 /** Some NSE indices have no Yahoo history; fall back to a tracking index fund's NAV. */
-async function fetchFromMfapi(code: number): Promise<NavRow[]> {
-  const res = await fetch(`https://api.mfapi.in/mf/${code}`);
+async function fetchFromProxyFund(code: number): Promise<NavRow[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const res = await fetch(
+    `https://finapi.upvaly.com/api/mf/scheme-code/${code}/nav?startDate=1990-01-01&endDate=${today}`,
+    { headers: { Accept: "application/json" } },
+  );
   if (!res.ok) throw new Error(`Benchmark proxy fetch failed: ${res.status}`);
-  const json = (await res.json()) as MfapiResponse;
+  const json = (await res.json()) as FinApiNavResponse;
   const rows: NavRow[] = [];
-  for (const r of json.data ?? []) {
-    const [d, m, y] = r.date.split("-").map(Number);
+  for (const r of json.data?.navHistory ?? []) {
+    const [y, m, d] = r.navDate.split("-").map(Number);
     const nav = Number(r.nav);
-    if (nav > 0) rows.push({ t: Date.UTC(y, m - 1, d), nav });
+    if (nav > 0 && Number.isFinite(y)) rows.push({ t: Date.UTC(y, m - 1, d), nav });
   }
   rows.sort((a, b) => a.t - b.t);
   return rows;
@@ -40,8 +47,8 @@ export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<Benchm
   const bench = benchmarkByKey(key);
   if (!bench) throw new Error("Unknown benchmark " + key);
 
-  if (bench.mfapiProxyCode) {
-    const rows = await fetchFromMfapi(bench.mfapiProxyCode);
+  if (bench.proxySchemeCode) {
+    const rows = await fetchFromProxyFund(bench.proxySchemeCode);
     if (rows.length > 30) return { key, label: bench.label, rows };
   }
 

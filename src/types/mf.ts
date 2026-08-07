@@ -5,11 +5,6 @@ export interface SchemeListItem {
   isinDivReinvestment: string | null;
 }
 
-export interface NavPoint {
-  date: string; // dd-mm-yyyy from API
-  nav: string;
-}
-
 export interface SchemeMeta {
   fund_house: string;
   scheme_type: string;
@@ -18,12 +13,6 @@ export interface SchemeMeta {
   scheme_name: string;
   isin_growth: string | null;
   isin_div_reinvestment: string | null;
-}
-
-export interface SchemeDetail {
-  meta: SchemeMeta;
-  data: NavPoint[];
-  status?: string;
 }
 
 // Normalised NAV row for calculations
@@ -95,8 +84,8 @@ export interface Benchmark {
   key: BenchmarkKey;
   label: string;
   yahooSymbol: string;
-  /** When Yahoo has no history for the index, use this MFAPI index-fund scheme as a proxy. */
-  mfapiProxyCode?: number;
+  /** When Yahoo has no history for the index, use this index-fund scheme as a proxy. */
+  proxySchemeCode?: number;
   categoryHint: string[];
 }
 
