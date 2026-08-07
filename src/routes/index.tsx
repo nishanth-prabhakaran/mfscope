@@ -384,7 +384,7 @@ function Home() {
 
         <footer className="mt-16 pt-8 border-t border-border/40 text-xs text-muted-foreground">
           <p>
-            Data source: <a className="underline hover:text-foreground" href="https://api.mfapi.in" target="_blank" rel="noreferrer">MFAPI</a>.
+            Data source: <a className="underline hover:text-foreground" href="https://finapi.upvaly.com" target="_blank" rel="noreferrer">FinAPI</a>.
             Calculations for research/education only — not investment advice.
           </p>
         </footer>
