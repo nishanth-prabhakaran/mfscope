@@ -19,6 +19,8 @@ import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparison
 import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
 import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { TopFundsCard } from "@/components/comparison/TopFundsCard";
+import { FundDeepDiveCard } from "@/components/comparison/FundDeepDiveCard";
+
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
 import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
