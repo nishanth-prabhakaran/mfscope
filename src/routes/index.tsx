@@ -323,7 +323,9 @@ function Home() {
 
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <TabsTrigger value="deepdive">Fund Deep Dive</TabsTrigger>
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
+
                 <TabsTrigger value="benchmark">vs Benchmark</TabsTrigger>
                 <TabsTrigger value="returns">Returns</TabsTrigger>
                 <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
