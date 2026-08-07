@@ -19,6 +19,8 @@ import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparison
 import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
 import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
 import { TopFundsCard } from "@/components/comparison/TopFundsCard";
+import { FundDeepDiveCard } from "@/components/comparison/FundDeepDiveCard";
+
 import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
 import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
 import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
@@ -323,7 +325,9 @@ function Home() {
 
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <TabsTrigger value="deepdive">Fund Deep Dive</TabsTrigger>
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
+
                 <TabsTrigger value="benchmark">vs Benchmark</TabsTrigger>
                 <TabsTrigger value="returns">Returns</TabsTrigger>
                 <TabsTrigger value="drawdown">Drawdown</TabsTrigger>
@@ -334,7 +338,9 @@ function Home() {
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
+              <TabsContent value="deepdive" className="mt-4"><FundDeepDiveCard schemes={schemes.map((s) => ({ code: s.code, name: s.name }))} onAdd={(code, name) => add({ schemeCode: code, schemeName: name })} isSelected={has} canAdd={funds.length < 10} /></TabsContent>
               <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+
               <TabsContent value="benchmark" className="mt-4"><BenchmarkComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
               <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
