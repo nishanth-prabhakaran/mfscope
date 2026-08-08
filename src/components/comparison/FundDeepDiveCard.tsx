@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -25,9 +32,17 @@ import {
   stripHtml,
   prettyMetricName,
   type RiskMetricBlock,
+  type DetailRollingRow,
 } from "@/lib/finapiDetail";
 import { fmtNum, fmtPctRaw, colorFor } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { fetchScheme } from "@/lib/finapi";
+import { calculateRollingReturns, rollingStats } from "@/lib/calculators";
+import type { RollingYears } from "@/types/mf";
+
+/** Vendor-published windows stop at 10Y. We fill in 12Y/15Y ourselves from raw NAV
+ *  history when there's enough history to support them, clearly flagged as such. */
+const LOCAL_FILL_PERIODS: RollingYears[] = [12, 15];
 
 interface Props {
   schemes: { code: number; name: string }[];
@@ -141,6 +156,46 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
   const activeCode = active?.code ?? null;
   const { data, isLoading, isError, error } = useSchemeDetail(activeCode);
 
+  // Fetch raw NAV history for the active fund so we can compute 12Y/15Y rolling
+  // stats locally — the vendor factsheet API only publishes windows up to 10Y.
+  const { data: navScheme } = useQuery({
+    queryKey: ["scheme", activeCode],
+    queryFn: () => fetchScheme(activeCode as number),
+    enabled: activeCode != null,
+    staleTime: 6 * 60 * 60 * 1000,
+    gcTime: 12 * 60 * 60 * 1000,
+  });
+
+  const publishedTimeframes = useMemo(
+    () => new Set((data?.rollingReturns ?? []).map((r) => r.timeframe.toUpperCase())),
+    [data?.rollingReturns],
+  );
+
+  const locallyComputedRolling = useMemo<(DetailRollingRow & { computed: true })[]>(() => {
+    const rows = navScheme?.rows;
+    if (!rows?.length) return [];
+    const out: (DetailRollingRow & { computed: true })[] = [];
+    for (const years of LOCAL_FILL_PERIODS) {
+      if (publishedTimeframes.has(`${years}Y`)) continue; // don't duplicate vendor data
+      const series = calculateRollingReturns(rows, years);
+      if (!series.length) continue; // not enough NAV history for this window yet
+      const stats = rollingStats(series, years);
+      if (!stats.count) continue;
+      out.push({
+        timeframe: `${years}Y`,
+        averageReturn: stats.mean,
+        medianReturn: stats.median,
+        minReturn: stats.min,
+        maxReturn: stats.max,
+        standardDeviation: stats.std,
+        positiveRatio: stats.positivePct,
+        consistencyScore: undefined,
+        computed: true,
+      });
+    }
+    return out;
+  }, [navScheme?.rows, publishedTimeframes]);
+
   const rankData = useMemo(
     () =>
       sortTimeframes(data?.ranks).map((r) => ({
@@ -182,10 +237,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
             Fund Deep Dive
           </CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
-            Full factsheet from FinAPI — portfolio, holdings, category ranks, peer set and fund-house lineup.
+            Full factsheet from FinAPI — portfolio, holdings, category ranks, peer set and
+            fund-house lineup.
           </p>
         </div>
-        <Select value={activeCode ? String(activeCode) : ""} onValueChange={(v) => setCode(Number(v))}>
+        <Select
+          value={activeCode ? String(activeCode) : ""}
+          onValueChange={(v) => setCode(Number(v))}
+        >
           <SelectTrigger className="w-full sm:w-[320px]">
             <SelectValue placeholder="Pick a fund" />
           </SelectTrigger>
@@ -213,8 +272,8 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
             <div>
               <p className="font-medium">Factsheet unavailable for this scheme</p>
               <p className="text-xs text-muted-foreground">
-                {(error as Error)?.message ?? "The data source did not return details."} NAV-based analytics in
-                other tabs still work.
+                {(error as Error)?.message ?? "The data source did not return details."} NAV-based
+                analytics in other tabs still work.
               </p>
             </div>
           </div>
@@ -243,7 +302,13 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                 ) : null}
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {[data.schemeCategoryLabel, data.schemeStructure, data.schemeRisk, data.planName, data.optionName]
+                {[
+                  data.schemeCategoryLabel,
+                  data.schemeStructure,
+                  data.schemeRisk,
+                  data.planName,
+                  data.optionName,
+                ]
                   .filter(Boolean)
                   .map((t) => (
                     <Badge key={t as string} variant="secondary" className="text-[11px]">
@@ -265,7 +330,10 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                 hint={data.latestNavDate}
               />
               <Stat label="AUM (₹ Cr)" value={data.aum ?? "—"} />
-              <Stat label="Expense ratio" value={data.expenseRatio ? `${data.expenseRatio}%` : "—"} />
+              <Stat
+                label="Expense ratio"
+                value={data.expenseRatio ? `${data.expenseRatio}%` : "—"}
+              />
               <Stat label="Exit load" value={data.exitLoadMessage ?? "—"} />
               <Stat label="Inception" value={data.inceptionDate ?? "—"} />
               <Stat
@@ -300,8 +368,15 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                   <>
                     <div className="h-[240px] w-full sm:h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={rankData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.35} />
+                        <BarChart
+                          data={rankData}
+                          margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="var(--border)"
+                            opacity={0.35}
+                          />
                           <XAxis
                             dataKey="timeframe"
                             tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
@@ -320,14 +395,23 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                               fontSize: 12,
                               color: "var(--popover-foreground)",
                             }}
-                            labelStyle={{ color: "var(--popover-foreground)", fontWeight: 600, marginBottom: 4 }}
+                            labelStyle={{
+                              color: "var(--popover-foreground)",
+                              fontWeight: 600,
+                              marginBottom: 4,
+                            }}
                             itemStyle={{ color: "var(--popover-foreground)" }}
-                            formatter={(v: number, n: string) => [`${fmtNum(v)}%`, n === "fund" ? "Fund" : "Category avg"]}
+                            formatter={(v: number, n: string) => [
+                              `${fmtNum(v)}%`,
+                              n === "fund" ? "Fund" : "Category avg",
+                            ]}
                           />
                           <Legend
                             wrapperStyle={{ fontSize: 11 }}
                             formatter={(v) => (
-                              <span className="text-muted-foreground">{v === "fund" ? "Fund" : "Category avg"}</span>
+                              <span className="text-muted-foreground">
+                                {v === "fund" ? "Fund" : "Category avg"}
+                              </span>
                             )}
                           />
                           <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]}>
@@ -364,7 +448,10 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                         </thead>
                         <tbody>
                           {rankData.map((r) => (
-                            <tr key={r.timeframe} className="border-b border-border/30 last:border-0">
+                            <tr
+                              key={r.timeframe}
+                              className="border-b border-border/30 last:border-0"
+                            >
                               <td className="py-2 pr-3 uppercase">{r.timeframe}</td>
                               <td
                                 className={cn(
@@ -387,12 +474,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                     </div>
                   </>
                 ) : (
-                  <p className="py-6 text-center text-sm text-muted-foreground">No category rank data published.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    No category rank data published.
+                  </p>
                 )}
 
-                {data.rollingReturns?.length ? (
+                {data.rollingReturns?.length || locallyComputedRolling.length ? (
                   <div className="overflow-x-auto">
-                    <h4 className="mb-2 text-sm font-semibold">Published rolling-return stats</h4>
+                    <h4 className="mb-2 text-sm font-semibold">Rolling-return stats</h4>
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-border/50 text-muted-foreground">
@@ -407,24 +496,70 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                         </tr>
                       </thead>
                       <tbody>
-                        {sortTimeframes(data.rollingReturns).map((r) => (
-                          <tr key={r.timeframe} className="border-b border-border/30 last:border-0">
-                            <td className="py-1.5 pr-3 uppercase">{r.timeframe}</td>
-                            <td className="py-1.5 px-2 text-right tabular-nums">{fmtPctRaw(r.averageReturn)}</td>
-                            <td className="py-1.5 px-2 text-right tabular-nums">{fmtPctRaw(r.medianReturn)}</td>
-                            <td className="py-1.5 px-2 text-right tabular-nums text-destructive">
-                              {fmtPctRaw(r.minReturn)}
-                            </td>
-                            <td className="py-1.5 px-2 text-right tabular-nums text-success">
-                              {fmtPctRaw(r.maxReturn)}
-                            </td>
-                            <td className="py-1.5 px-2 text-right tabular-nums">{fmtNum(r.standardDeviation)}</td>
-                            <td className="py-1.5 px-2 text-right tabular-nums">{fmtPctRaw(r.positiveRatio, 1)}</td>
-                            <td className="py-1.5 pl-2 text-right tabular-nums">{fmtNum(r.consistencyScore, 1)}</td>
-                          </tr>
-                        ))}
+                        {sortTimeframes([
+                          ...(data.rollingReturns ?? []),
+                          ...locallyComputedRolling,
+                        ]).map((r) => {
+                          const isComputed = Boolean((r as { computed?: boolean }).computed);
+                          return (
+                            <tr
+                              key={r.timeframe}
+                              className="border-b border-border/30 last:border-0"
+                            >
+                              <td className="py-1.5 pr-3 uppercase">
+                                {r.timeframe}
+                                {isComputed && (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <button
+                                        type="button"
+                                        aria-label={`${r.timeframe} is computed locally, not vendor-published`}
+                                        className="ml-1 align-middle"
+                                      >
+                                        <Info className="inline h-3 w-3 text-muted-foreground" />
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-72 text-xs leading-relaxed">
+                                      The factsheet provider only publishes rolling stats up to 10Y.
+                                      This {r.timeframe} row is calculated locally from the fund's
+                                      own NAV history, the same way the Rolling CAGR chart does.
+                                    </PopoverContent>
+                                  </Popover>
+                                )}
+                              </td>
+                              <td className="py-1.5 px-2 text-right tabular-nums">
+                                {fmtPctRaw(r.averageReturn)}
+                              </td>
+                              <td className="py-1.5 px-2 text-right tabular-nums">
+                                {fmtPctRaw(r.medianReturn)}
+                              </td>
+                              <td className="py-1.5 px-2 text-right tabular-nums text-destructive">
+                                {fmtPctRaw(r.minReturn)}
+                              </td>
+                              <td className="py-1.5 px-2 text-right tabular-nums text-success">
+                                {fmtPctRaw(r.maxReturn)}
+                              </td>
+                              <td className="py-1.5 px-2 text-right tabular-nums">
+                                {fmtNum(r.standardDeviation)}
+                              </td>
+                              <td className="py-1.5 px-2 text-right tabular-nums">
+                                {fmtPctRaw(r.positiveRatio, 1)}
+                              </td>
+                              <td className="py-1.5 pl-2 text-right tabular-nums">
+                                {isComputed ? "—" : fmtNum(r.consistencyScore, 1)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
+                    {locallyComputedRolling.length > 0 && (
+                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                        <Info className="mr-1 inline h-3 w-3 align-text-bottom" />
+                        Rows marked <Info className="mx-0.5 inline h-3 w-3 align-text-bottom" /> are
+                        computed locally from NAV history (not published by the factsheet provider).
+                      </p>
+                    )}
                   </div>
                 ) : null}
               </TabsContent>
@@ -432,7 +567,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
               {/* Risk */}
               <TabsContent value="risk" className="mt-4 space-y-3">
                 {data.riskMetrics && Object.keys(data.riskMetrics).length ? (
-                  Object.entries(data.riskMetrics).map(([k, v]) => <RiskBlock key={k} name={k} block={v} />)
+                  Object.entries(data.riskMetrics).map(([k, v]) => (
+                    <RiskBlock key={k} name={k} block={v} />
+                  ))
                 ) : (
                   <p className="py-6 text-center text-sm text-muted-foreground">
                     No category-relative risk metrics published for this scheme.
@@ -484,9 +621,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                           <div key={s.sector} className="flex items-center gap-3">
                             <span className="w-40 shrink-0 truncate text-xs">{s.sector}</span>
                             <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(w, 100)}%` }} />
+                              <div
+                                className="h-full rounded-full bg-primary"
+                                style={{ width: `${Math.min(w, 100)}%` }}
+                              />
                             </div>
-                            <span className="w-14 shrink-0 text-right text-xs tabular-nums">{fmtNum(w)}%</span>
+                            <span className="w-14 shrink-0 text-right text-xs tabular-nums">
+                              {fmtNum(w)}%
+                            </span>
                           </div>
                         );
                       })}
@@ -494,7 +636,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                   </div>
                 ) : null}
                 {!alloc.length && !mcap.length && !data.sectors?.length && (
-                  <p className="py-6 text-center text-sm text-muted-foreground">No portfolio disclosure available.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    No portfolio disclosure available.
+                  </p>
                 )}
               </TabsContent>
 
@@ -517,7 +661,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                           return (
                             <tr key={h.name} className="border-b border-border/30 last:border-0">
                               <td className="max-w-[220px] truncate py-2 pr-3">{h.name}</td>
-                              <td className="py-2 px-2 text-right font-medium tabular-nums">{h.weightage ?? "—"}%</td>
+                              <td className="py-2 px-2 text-right font-medium tabular-nums">
+                                {h.weightage ?? "—"}%
+                              </td>
                               <td className="py-2 px-2 text-right tabular-nums text-muted-foreground">
                                 {h.marketValue ?? "—"}
                               </td>
@@ -542,7 +688,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                     )}
                   </div>
                 ) : (
-                  <p className="py-6 text-center text-sm text-muted-foreground">Holdings not disclosed via the API.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    Holdings not disclosed via the API.
+                  </p>
                 )}
               </TabsContent>
 
@@ -567,17 +715,28 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                           const pc = Number(p.schemeCode);
                           const already = isSelected?.(pc);
                           return (
-                            <tr key={p.schemeCode} className="border-b border-border/30 last:border-0">
+                            <tr
+                              key={p.schemeCode}
+                              className="border-b border-border/30 last:border-0"
+                            >
                               <td className="max-w-[240px] truncate py-2 pr-3">
                                 {p.schemeNameShort || p.schemeName}
                               </td>
-                              <td className="py-2 px-2 text-right tabular-nums text-muted-foreground">{p.aum ?? "—"}</td>
+                              <td className="py-2 px-2 text-right tabular-nums text-muted-foreground">
+                                {p.aum ?? "—"}
+                              </td>
                               <td className="py-2 px-2 text-right tabular-nums text-muted-foreground">
                                 {p.expenseRatio ?? "—"}
                               </td>
-                              <td className="py-2 px-2 text-right tabular-nums">{p.returns?.["1y"] ?? "—"}</td>
-                              <td className="py-2 px-2 text-right tabular-nums">{p.returns?.["3y"] ?? "—"}</td>
-                              <td className="py-2 px-2 text-right tabular-nums">{p.returns?.["5y"] ?? "—"}</td>
+                              <td className="py-2 px-2 text-right tabular-nums">
+                                {p.returns?.["1y"] ?? "—"}
+                              </td>
+                              <td className="py-2 px-2 text-right tabular-nums">
+                                {p.returns?.["3y"] ?? "—"}
+                              </td>
+                              <td className="py-2 px-2 text-right tabular-nums">
+                                {p.returns?.["5y"] ?? "—"}
+                              </td>
                               <td className="py-2 pl-2 text-right">
                                 {onAdd && Number.isFinite(pc) && (
                                   <Button
@@ -587,7 +746,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                                     disabled={already || canAdd === false}
                                     onClick={() => onAdd(pc, p.schemeName)}
                                   >
-                                    {already ? "Added" : <><Plus className="mr-1 h-3 w-3" />Compare</>}
+                                    {already ? (
+                                      "Added"
+                                    ) : (
+                                      <>
+                                        <Plus className="mr-1 h-3 w-3" />
+                                        Compare
+                                      </>
+                                    )}
                                   </Button>
                                 )}
                               </td>
@@ -598,7 +764,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                     </table>
                   </div>
                 ) : (
-                  <p className="py-6 text-center text-sm text-muted-foreground">No peer set published.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    No peer set published.
+                  </p>
                 )}
               </TabsContent>
 
@@ -624,13 +792,22 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                           const fc = Number(f.schemeCode);
                           const already = isSelected?.(fc);
                           return (
-                            <tr key={f.schemeCode} className="border-b border-border/30 last:border-0">
+                            <tr
+                              key={f.schemeCode}
+                              className="border-b border-border/30 last:border-0"
+                            >
                               <td className="max-w-[240px] truncate py-2 pr-3">
                                 {f.schemeShortName || f.schemeName}
                               </td>
-                              <td className="py-2 px-2 text-right tabular-nums text-muted-foreground">{f.aum ?? "—"}</td>
-                              <td className="py-2 px-2 text-right tabular-nums">{f.returns?.["1y"] ?? "—"}</td>
-                              <td className="py-2 px-2 text-right tabular-nums">{f.returns?.["3y"] ?? "—"}</td>
+                              <td className="py-2 px-2 text-right tabular-nums text-muted-foreground">
+                                {f.aum ?? "—"}
+                              </td>
+                              <td className="py-2 px-2 text-right tabular-nums">
+                                {f.returns?.["1y"] ?? "—"}
+                              </td>
+                              <td className="py-2 px-2 text-right tabular-nums">
+                                {f.returns?.["3y"] ?? "—"}
+                              </td>
                               <td className="py-2 pl-2 text-right">
                                 {onAdd && Number.isFinite(fc) && (
                                   <Button
@@ -640,7 +817,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                                     disabled={already || canAdd === false}
                                     onClick={() => onAdd(fc, f.schemeName)}
                                   >
-                                    {already ? "Added" : <><Plus className="mr-1 h-3 w-3" />Compare</>}
+                                    {already ? (
+                                      "Added"
+                                    ) : (
+                                      <>
+                                        <Plus className="mr-1 h-3 w-3" />
+                                        Compare
+                                      </>
+                                    )}
                                   </Button>
                                 )}
                               </td>
@@ -651,7 +835,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                     </table>
                   </div>
                 ) : (
-                  <p className="py-6 text-center text-sm text-muted-foreground">No AMC lineup published.</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    No AMC lineup published.
+                  </p>
                 )}
               </TabsContent>
             </Tabs>

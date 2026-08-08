@@ -117,7 +117,10 @@ export interface SchemeDetail {
   moreFundsFromAmc?: { companyName?: string; schemeList?: AmcFundRow[] };
 }
 
-interface Cached<T> { at: number; data: T }
+interface Cached<T> {
+  at: number;
+  data: T;
+}
 
 export async function fetchSchemeDetail(code: number): Promise<SchemeDetail> {
   const key = KEY(code);
@@ -129,12 +132,29 @@ export async function fetchSchemeDetail(code: number): Promise<SchemeDetail> {
   if (!res.ok) throw new Error("Failed to load fund details");
   const json = (await res.json()) as { data?: SchemeDetail; message?: string };
   if (!json.data) throw new Error(json.message || "Fund details unavailable");
-  await set(key, { at: Date.now(), data: json.data } satisfies Cached<SchemeDetail>).catch(() => {});
+  await set(key, { at: Date.now(), data: json.data } satisfies Cached<SchemeDetail>).catch(
+    () => {},
+  );
   return json.data;
 }
 
 /** Order timeframes sensibly: 1W, 1M, 3M, 6M, YTD, 1Y, 2Y ... */
-const ORDER = ["1W", "1M", "3M", "6M", "YTD", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "15Y", "20Y"];
+const ORDER = [
+  "1W",
+  "1M",
+  "3M",
+  "6M",
+  "YTD",
+  "1Y",
+  "2Y",
+  "3Y",
+  "5Y",
+  "7Y",
+  "10Y",
+  "12Y",
+  "15Y",
+  "20Y",
+];
 export function sortTimeframes<T extends { timeframe: string }>(rows: T[] | undefined): T[] {
   return [...(rows ?? [])].sort((a, b) => {
     const ia = ORDER.indexOf(a.timeframe.toUpperCase());
@@ -150,7 +170,10 @@ export function num(v: string | number | undefined | null): number | null {
 }
 
 export function stripHtml(s: string | undefined): string {
-  return (s ?? "").replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").trim();
+  return (s ?? "")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .trim();
 }
 
 export function prettyMetricName(key: string): string {
