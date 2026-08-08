@@ -301,32 +301,54 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                     <div className="h-[240px] w-full sm:h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={rankData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                          <XAxis dataKey="timeframe" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                          <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.35} />
+                          <XAxis
+                            dataKey="timeframe"
+                            tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                            stroke="var(--border)"
+                          />
+                          <YAxis
+                            tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                            stroke="var(--border)"
+                          />
                           <Tooltip
+                            cursor={{ fill: "var(--muted)", opacity: 0.4 }}
                             contentStyle={{
-                              background: "hsl(var(--popover))",
-                              border: "1px solid hsl(var(--border))",
+                              background: "var(--popover)",
+                              border: "1px solid var(--border)",
                               borderRadius: 8,
                               fontSize: 12,
+                              color: "var(--popover-foreground)",
                             }}
+                            labelStyle={{ color: "var(--popover-foreground)", fontWeight: 600, marginBottom: 4 }}
+                            itemStyle={{ color: "var(--popover-foreground)" }}
                             formatter={(v: number, n: string) => [`${fmtNum(v)}%`, n === "fund" ? "Fund" : "Category avg"]}
                           />
-                          <Legend wrapperStyle={{ fontSize: 11 }} formatter={(v) => (v === "fund" ? "Fund" : "Category avg")} />
-                          <Bar dataKey="fund" radius={[3, 3, 0, 0]}>
+                          <Legend
+                            wrapperStyle={{ fontSize: 11 }}
+                            formatter={(v) => (
+                              <span className="text-muted-foreground">{v === "fund" ? "Fund" : "Category avg"}</span>
+                            )}
+                          />
+                          <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]}>
                             {rankData.map((d, i) => (
                               <Cell
                                 key={i}
                                 fill={
                                   d.category != null && d.fund != null && d.fund >= d.category
-                                    ? "hsl(var(--success))"
-                                    : "hsl(var(--primary))"
+                                    ? "var(--success)"
+                                    : "var(--primary)"
                                 }
                               />
                             ))}
                           </Bar>
-                          <Bar dataKey="category" fill="hsl(var(--muted-foreground))" opacity={0.45} radius={[3, 3, 0, 0]} />
+                          <Bar
+                            dataKey="category"
+                            name="category"
+                            fill="var(--muted-foreground)"
+                            opacity={0.6}
+                            radius={[3, 3, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
