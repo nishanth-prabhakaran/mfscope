@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, Plus, Check, RefreshCw } from "lucide-react";
 import { fetchScheme } from "@/lib/finapi";
 import { useSchemeList } from "@/hooks/useSchemes";
-import { CATEGORIES, guessAmc, guessCategory } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/categories";
 import {
   calculateRisk,
   calculateRollingReturns,
@@ -21,11 +21,10 @@ import {
 import { fmtNum } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MetricInfo } from "@/components/comparison/MetricInfo";
-import type { RollingYears, SchemeListItem } from "@/types/mf";
+import type { RollingYears } from "@/types/mf";
+import { buildUniverse, mapPool, CONCURRENCY, UNIVERSE_CAP } from "@/lib/universe";
 
 const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
-const UNIVERSE_CAP = 60;
-const CONCURRENCY = 8;
 
 interface Props {
   onAdd?: (f: { schemeCode: number; schemeName: string }) => void;
@@ -47,59 +46,6 @@ interface Ranked {
   volatility: number;
   maxDD: number;
   windows: number;
-}
-
-function dedupeKey(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\b(plan|option|scheme|fund)\b/g, " ")
-    .replace(/\bidcw\b/g, "dividend")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function buildUniverse(list: SchemeListItem[] | undefined, category: string) {
-  if (!list) return [];
-  const seen = new Map<string, { code: number; name: string; amc: string }>();
-  for (const s of list) {
-    const name = s.schemeName;
-    const lower = name.toLowerCase();
-    if (!lower.includes("direct") || !lower.includes("growth")) continue;
-    if (guessCategory(name) !== category) continue;
-    const key = dedupeKey(name);
-    const prev = seen.get(key);
-    if (!prev || s.schemeCode < prev.code) {
-      seen.set(key, { code: s.schemeCode, name, amc: guessAmc(name) });
-    }
-  }
-  // One entry per AMC keeps the leaderboard diverse and the fetch budget small.
-  const perAmc = new Map<string, { code: number; name: string; amc: string }>();
-  for (const f of seen.values()) {
-    const prev = perAmc.get(f.amc);
-    if (!prev || f.name.length < prev.name.length) perAmc.set(f.amc, f);
-  }
-  return Array.from(perAmc.values())
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, UNIVERSE_CAP);
-}
-
-async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>) {
-  const out: (R | null)[] = new Array(items.length).fill(null);
-  let cursor = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, async () => {
-      while (cursor < items.length) {
-        const i = cursor++;
-        try {
-          out[i] = await fn(items[i]);
-        } catch {
-          out[i] = null;
-        }
-      }
-    }),
-  );
-  return out;
 }
 
 export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {

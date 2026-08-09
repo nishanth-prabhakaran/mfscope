@@ -318,6 +318,31 @@ export function analyseFundRisk(
   };
 }
 
+// ---------------------------------------------------------------- suggestions
+
+/**
+ * Categories worth *screening* for each band. This only narrows where we look —
+ * every candidate is still re-banded from its own realised numbers afterwards,
+ * so an unusually tame small cap can still surface and a wild large cap can't
+ * sneak through on its label.
+ */
+export const SUITABLE_CATEGORIES: Record<RiskBand, Category[]> = {
+  1: ["Arbitrage"],
+  2: ["Arbitrage", "Balanced Advantage", "Aggressive Hybrid"],
+  3: ["Balanced Advantage", "Aggressive Hybrid", "Index", "Large Cap", "Flexi Cap"],
+  4: ["Large Cap", "Flexi Cap", "Large & Mid Cap", "Multi Cap", "ELSS", "Index"],
+  5: ["Flexi Cap", "Multi Cap", "Mid Cap", "Small Cap", "Focused"],
+};
+
+/**
+ * A candidate is worth showing when its realised band lands at or below the
+ * investor's band, but not so far below that it's a different product class.
+ */
+export function isSuggestable(fundBand: RiskBand, userBand: RiskBand): boolean {
+  const diff = fundBand - userBand;
+  return diff <= 0 && diff >= -1;
+}
+
 // ---------------------------------------------------------------- matching
 
 export type Verdict = "fit" | "stretch" | "mismatch" | "below";

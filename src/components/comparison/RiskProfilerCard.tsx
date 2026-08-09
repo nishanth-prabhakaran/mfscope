@@ -22,14 +22,18 @@ import {
   type Answers,
 } from "@/lib/riskProfile";
 import { useRiskProfile } from "@/hooks/useRiskProfile";
+import { ProfileSuggestionsCard } from "./ProfileSuggestionsCard";
 import { fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
+  onAdd?: (f: { schemeCode: number; schemeName: string }) => void;
+  isSelected?: (code: number) => boolean;
+  canAdd?: boolean;
 }
 
-export function RiskProfilerCard({ schemes }: Props) {
+export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: Props) {
   const { answers, setAnswers, completed, setCompleted, reset } = useRiskProfile();
   const [step, setStep] = useState(0);
   const [started, setStarted] = useState(false);
@@ -304,6 +308,13 @@ export function RiskProfilerCard({ schemes }: Props) {
           })}
         </div>
       )}
+
+      <ProfileSuggestionsCard
+        profile={profile!}
+        onAdd={onAdd}
+        isSelected={isSelected}
+        canAdd={canAdd}
+      />
 
       <p className="mt-4 flex gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
         <Info className="mt-0.5 h-3 w-3 shrink-0" />

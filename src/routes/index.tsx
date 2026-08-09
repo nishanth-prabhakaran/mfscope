@@ -183,7 +183,7 @@ function Home() {
         {/* Risk profiler — first decision aid for new investors */}
         {hydrated && (
           <div className="mb-4">
-            <RiskProfilerCard schemes={schemes} />
+            <RiskProfilerCard schemes={schemes} onAdd={add} isSelected={has} canAdd={funds.length < 10} />
           </div>
         )}
 
