@@ -19,6 +19,7 @@ import {
   QUESTIONS,
   evaluateGates,
   hasBlockingGate,
+  suitabilityScore,
   type Answers,
   type RiskBand,
 } from "./riskProfile";
@@ -482,5 +483,77 @@ describe("evaluateGates", () => {
     const withoutDebt = scoreProfile(clean);
     expect(withDebt.band).toBe(withoutDebt.band);
     expect(withDebt.capacityScore).toBeCloseTo(withoutDebt.capacityScore, 6);
+  });
+});
+
+// ---------------------------------------------------------------- shortlist ranking
+
+describe("suitabilityScore", () => {
+  const base = {
+    rollingMean: 13,
+    worstRolling: 4,
+    positivePct: 95,
+    volatility: 0.17,
+    maxDD: -0.35,
+    recoveryDays: 400,
+    expenseRatio: 1.0,
+  };
+
+  it("prefers the cheaper of two otherwise identical funds", () => {
+    const cheap = suitabilityScore({ ...base, expenseRatio: 0.3 });
+    const pricey = suitabilityScore({ ...base, expenseRatio: 2.0 });
+    expect(cheap).toBeGreaterThan(pricey);
+  });
+
+  it("weights cost more than past return", () => {
+    // A cheap fund with weaker past returns should still beat an expensive
+    // fund with stronger ones — the core behavioural fix.
+    const cheapWeaker = suitabilityScore({ ...base, expenseRatio: 0.3, rollingMean: 11 });
+    const dearStronger = suitabilityScore({ ...base, expenseRatio: 2.0, rollingMean: 15 });
+    expect(cheapWeaker).toBeGreaterThan(dearStronger);
+  });
+
+  it("penalises a worse downside even when the average is identical", () => {
+    const shallow = suitabilityScore({ ...base, worstRolling: 6, maxDD: -0.2 });
+    const deep = suitabilityScore({ ...base, worstRolling: -8, maxDD: -0.55 });
+    expect(shallow).toBeGreaterThan(deep);
+  });
+
+  it("scores a missing expense ratio neutrally, never favourably", () => {
+    const unknown = suitabilityScore({ ...base, expenseRatio: null });
+    const cheapest = suitabilityScore({ ...base, expenseRatio: 0.1 });
+    const dearest = suitabilityScore({ ...base, expenseRatio: 2.5 });
+    expect(unknown).toBeLessThan(cheapest);
+    expect(unknown).toBeGreaterThan(dearest);
+  });
+
+  it("still rewards higher returns when cost and risk match", () => {
+    expect(suitabilityScore({ ...base, rollingMean: 16 })).toBeGreaterThan(
+      suitabilityScore({ ...base, rollingMean: 9 }),
+    );
+  });
+
+  it("stays within 0-100 for extreme inputs", () => {
+    const awful = suitabilityScore({
+      rollingMean: -30,
+      worstRolling: -60,
+      positivePct: 0,
+      volatility: 0.9,
+      maxDD: -0.9,
+      recoveryDays: 5000,
+      expenseRatio: 5,
+    });
+    const ideal = suitabilityScore({
+      rollingMean: 40,
+      worstRolling: 25,
+      positivePct: 100,
+      volatility: 0.01,
+      maxDD: -0.01,
+      recoveryDays: 0,
+      expenseRatio: 0,
+    });
+    expect(awful).toBeGreaterThanOrEqual(0);
+    expect(ideal).toBeLessThanOrEqual(100);
+    expect(ideal).toBeGreaterThan(awful);
   });
 });

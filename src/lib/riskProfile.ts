@@ -346,6 +346,74 @@ export function analyseFundRisk(
   };
 }
 
+// ---------------------------------------------------------------- shortlist ranking
+
+export interface SuitabilityInput {
+  /** Mean rolling CAGR (%) at the investor's horizon window. */
+  rollingMean: number;
+  /** Worst rolling CAGR (%) at that window — the bad case, not the brochure case. */
+  worstRolling: number;
+  /** Share of rolling windows ending positive (%). */
+  positivePct: number;
+  volatility: number; // decimal
+  maxDD: number; // negative decimal
+  recoveryDays: number | null;
+  /** Annual expense ratio (%), null when the provider doesn't publish it. */
+  expenseRatio: number | null;
+}
+
+const clamp = (v: number) => Math.max(0, Math.min(100, v));
+
+/**
+ * Ranking for the BEGINNER shortlist. Deliberately not calculateOverallScore,
+ * which the Top Funds leaderboard uses.
+ *
+ * The leaderboard answers "what performed well?", a legitimate question, and
+ * weights past return at 30%. That is the wrong default here. Once candidates
+ * are filtered to the investor's risk band they are broadly similar on risk, so
+ * return becomes the de facto sort key — i.e. the shortlist would hand a
+ * first-time investor whatever won most recently. Category leadership does not
+ * persist, and chasing it is the single most expensive retail habit.
+ *
+ * So this scores:
+ *   - cost heavily, because the expense ratio is a certain, compounding
+ *     subtraction and the best available predictor of future relative return,
+ *     whereas past alpha is mostly noise;
+ *   - the downside (worst window, % positive windows, drawdown, recovery)
+ *     ahead of the average, because a beginner's real risk is abandoning the
+ *     plan during a fall;
+ *   - past return last, and via the *worst* window rather than the mean.
+ *
+ * Risk terms appear exactly once — calculateOverallScore counts Sharpe,
+ * Sortino, volatility and drawdown both directly and again inside
+ * calculateConsistencyScore, so its nominal weights understate risk.
+ */
+export function suitabilityScore(i: SuitabilityInput): number {
+  // Cost: 0.2% ≈ 95, 1.0% ≈ 75, 2.0% ≈ 50. Missing data scores neutrally
+  // rather than favourably, so an unknown fee can't win by default.
+  const cost = i.expenseRatio == null ? 55 : clamp(100 - i.expenseRatio * 25);
+
+  // Downside behaviour.
+  const worst = clamp(50 + i.worstRolling * 3); // -10%/yr worst window ≈ 20
+  const positive = clamp(i.positivePct);
+  const dd = clamp(100 - Math.abs(i.maxDD) * 200); // -25% ≈ 50
+  const recovery = clamp(i.recoveryDays == null ? 70 : 100 - i.recoveryDays / 12);
+  const vol = clamp(100 - i.volatility * 350);
+
+  // Return, deliberately the smallest term.
+  const ret = clamp((i.rollingMean / 18) * 100);
+
+  return Math.round(
+    cost * 0.25 +
+      worst * 0.16 +
+      positive * 0.1 +
+      dd * 0.1 +
+      recovery * 0.05 +
+      vol * 0.14 +
+      ret * 0.2,
+  );
+}
+
 // ---------------------------------------------------------------- gates
 
 /**

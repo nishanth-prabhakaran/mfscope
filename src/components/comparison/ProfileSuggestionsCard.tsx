@@ -8,20 +8,14 @@ import { buildUniverse, mapPool, CONCURRENCY } from "@/lib/universe";
 import {
   analyseFundRisk,
   isSuggestable,
+  suitabilityScore,
   SUITABLE_CATEGORIES,
   BANDS,
   type ProfileResult,
   type FundRisk,
 } from "@/lib/riskProfile";
-import {
-  calculateRollingReturns,
-  rollingStats,
-  calculateRisk,
-  calculateConsistencyScore,
-  calculateOverallScore,
-  drawdownSeries,
-  maxDrawdown,
-} from "@/lib/calculators";
+import { calculateRollingReturns, rollingStats, calculateRisk } from "@/lib/calculators";
+import { fetchSchemeDetail, num } from "@/lib/finapiDetail";
 import { fmtPct } from "@/lib/format";
 
 /** Per-category cap — several categories are screened, so keep each one small. */
@@ -41,8 +35,9 @@ interface Suggestion {
   code: number;
   name: string;
   amc: string;
-  overall: number;
-  consistency: number;
+  /** Suitability rank — cost- and downside-weighted, not the leaderboard score. */
+  score: number;
+  expenseRatio: number | null;
   fund: FundRisk;
 }
 
@@ -74,7 +69,15 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
         return { ...u, rows: data.rows };
       });
 
-      const out: Suggestion[] = [];
+      // Pass 1: filter to funds that fit the band, using NAV data only.
+      const candidates: {
+        code: number;
+        name: string;
+        amc: string;
+        fund: FundRisk;
+        stats: ReturnType<typeof rollingStats>;
+        risk: ReturnType<typeof calculateRisk>;
+      }[] = [];
       for (const item of loaded) {
         if (!item || item.rows.length < 250) continue;
 
@@ -84,35 +87,53 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
 
         const series = calculateRollingReturns(item.rows, profile.horizonWindow);
         if (series.length < 60) continue;
-        const stats = rollingStats(series, profile.horizonWindow);
-        const risk = calculateRisk(item.rows, 0.065);
-        const maxDD = maxDrawdown(drawdownSeries(item.rows));
 
-        const consistency = calculateConsistencyScore({
-          rollingStd: stats.std,
-          volatility: risk.volatility,
-          maxDD,
-          sharpe: risk.sharpe,
-          sortino: risk.sortino,
-          positivePct: stats.positivePct,
-          recoveryDays: risk.recoveryDays,
+        candidates.push({
+          code: item.code,
+          name: item.name,
+          amc: item.amc,
+          fund,
+          stats: rollingStats(series, profile.horizonWindow),
+          risk: calculateRisk(item.rows, 0.065),
         });
-        const overall = calculateOverallScore({
-          rollingMean: stats.mean,
-          consistency,
-          maxDD,
-          sharpe: risk.sharpe,
-          sortino: risk.sortino,
-          volatility: risk.volatility,
-          alpha: 0,
-        });
+      }
 
-        out.push({ code: item.code, name: item.name, amc: item.amc, overall, consistency, fund });
+      // Pass 2: fetch expense ratios only for survivors. Cost carries the
+      // single largest weight in the ranking, so it is worth the extra calls —
+      // but only for funds that actually made the cut.
+      const withCost = await mapPool(candidates, CONCURRENCY, async (c) => {
+        try {
+          const detail = await fetchSchemeDetail(c.code);
+          return { ...c, expenseRatio: num(detail.expenseRatio) };
+        } catch {
+          return { ...c, expenseRatio: null };
+        }
+      });
+
+      const out: Suggestion[] = [];
+      for (const c of withCost) {
+        if (!c) continue;
+        out.push({
+          code: c.code,
+          name: c.name,
+          amc: c.amc,
+          expenseRatio: c.expenseRatio,
+          fund: c.fund,
+          score: suitabilityScore({
+            rollingMean: c.stats.mean,
+            worstRolling: c.stats.min,
+            positivePct: c.stats.positivePct,
+            volatility: c.risk.volatility,
+            maxDD: c.fund.maxDrawdown,
+            recoveryDays: c.risk.recoveryDays,
+            expenseRatio: c.expenseRatio,
+          }),
+        });
       }
 
       // One per AMC keeps the shortlist varied rather than five funds from one house.
       const perAmc = new Map<string, Suggestion>();
-      for (const s of out.sort((a, b) => b.overall - a.overall)) {
+      for (const s of out.sort((a, b) => b.score - a.score)) {
         if (!perAmc.has(s.amc)) perAmc.set(s.amc, s);
       }
       return Array.from(perAmc.values()).slice(0, MAX_RESULTS);
@@ -187,13 +208,15 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
                       {s.fund.category ?? "Fund"} · {BANDS[s.fund.band].label}
                     </p>
                     <div className="mt-1.5 flex min-w-0 flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                      <span className="num">Volatility {fmtPct(s.fund.volatility, 1)}</span>
-                      <span className="num">Worst fall {fmtPct(s.fund.maxDrawdown, 1)}</span>
+                      <span className="num">
+                        Expense {s.expenseRatio != null ? `${s.expenseRatio.toFixed(2)}%` : "n/a"}
+                      </span>
                       {s.fund.worstAtHorizon != null && (
                         <span className="num">
-                          Worst {s.fund.horizonWindow}Y {s.fund.worstAtHorizon.toFixed(1)}%
+                          Worst {s.fund.horizonWindow}Y {s.fund.worstAtHorizon.toFixed(1)}%/yr
                         </span>
                       )}
+                      <span className="num">Worst fall {fmtPct(s.fund.maxDrawdown, 1)}</span>
                       {s.fund.positivePctAtHorizon != null && (
                         <span className="num">
                           {s.fund.positivePctAtHorizon.toFixed(0)}% windows positive
