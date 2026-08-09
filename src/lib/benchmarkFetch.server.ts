@@ -1,5 +1,6 @@
 import type { BenchmarkData, BenchmarkKey, NavRow } from "@/types/mf";
 import { benchmarkByKey } from "./benchmarks";
+import { fetchWithTimeout } from "./http";
 
 interface YahooChartResult {
   chart?: {
@@ -45,7 +46,7 @@ async function fetchFromFinapiIndex(indexName: string): Promise<NavRow[]> {
   const url =
     `https://finapi.upvaly.com/api/nifty-indices` +
     `?indexName=${encodeURIComponent(indexName)}&startDate=1990-01-01&endDate=${today}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`Index fetch failed: ${res.status}`);
   const json = (await res.json()) as FinApiIndexResponse;
 
@@ -78,7 +79,7 @@ async function fetchFromFinapiIndex(indexName: string): Promise<NavRow[]> {
 /** Some NSE indices have no Yahoo history; fall back to a tracking index fund's NAV. */
 async function fetchFromProxyFund(code: number): Promise<NavRow[]> {
   const today = new Date().toISOString().slice(0, 10);
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://finapi.upvaly.com/api/mf/scheme-code/${code}/nav?startDate=1990-01-01&endDate=${today}`,
     { headers: { Accept: "application/json" } },
   );
@@ -114,7 +115,7 @@ export async function fetchBenchmarkSeries(key: BenchmarkKey): Promise<Benchmark
     if (rows.length > 30) return { key, label: bench.label, rows };
   }
 
-  const res = await fetch(yahooUrl(bench.yahooSymbol), {
+  const res = await fetchWithTimeout(yahooUrl(bench.yahooSymbol), {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

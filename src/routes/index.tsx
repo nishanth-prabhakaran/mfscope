@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import {
   Sparkles,
   TrendingUp,
@@ -34,89 +35,89 @@ import type { BenchmarkKey, NavRow, RollingYears } from "@/types/mf";
 
 /* Tab contents are code-split: the initial bundle carried every chart, calculator
    and the 900-line deep-dive card even for someone who never opens those tabs. */
-const RollingReturnsCard = lazy(() =>
+const RollingReturnsCard = lazyWithRetry(() =>
   import("@/components/comparison/RollingReturnsCard").then((m) => ({
     default: m.RollingReturnsCard,
   })),
 );
-const NavGrowthCard = lazy(() =>
+const NavGrowthCard = lazyWithRetry(() =>
   import("@/components/comparison/NavGrowthCard").then((m) => ({ default: m.NavGrowthCard })),
 );
-const RiskMetricsCard = lazy(() =>
+const RiskMetricsCard = lazyWithRetry(() =>
   import("@/components/comparison/RiskMetricsCard").then((m) => ({ default: m.RiskMetricsCard })),
 );
-const DrawdownCard = lazy(() =>
+const DrawdownCard = lazyWithRetry(() =>
   import("@/components/comparison/DrawdownCard").then((m) => ({ default: m.DrawdownCard })),
 );
-const CorrelationMatrixCard = lazy(() =>
+const CorrelationMatrixCard = lazyWithRetry(() =>
   import("@/components/comparison/CorrelationMatrixCard").then((m) => ({
     default: m.CorrelationMatrixCard,
   })),
 );
-const ActiveShareCard = lazy(() =>
+const ActiveShareCard = lazyWithRetry(() =>
   import("@/components/comparison/ActiveShareCard").then((m) => ({ default: m.ActiveShareCard })),
 );
-const PortfolioOverlapCard = lazy(() =>
+const PortfolioOverlapCard = lazyWithRetry(() =>
   import("@/components/comparison/PortfolioOverlapCard").then((m) => ({
     default: m.PortfolioOverlapCard,
   })),
 );
-const CostComparisonCard = lazy(() =>
+const CostComparisonCard = lazyWithRetry(() =>
   import("@/components/comparison/CostComparisonCard").then((m) => ({
     default: m.CostComparisonCard,
   })),
 );
-const AnnualReturnsCard = lazy(() =>
+const AnnualReturnsCard = lazyWithRetry(() =>
   import("@/components/comparison/AnnualReturnsCard").then((m) => ({
     default: m.AnnualReturnsCard,
   })),
 );
-const BenchmarkComparisonCard = lazy(() =>
+const BenchmarkComparisonCard = lazyWithRetry(() =>
   import("@/components/comparison/BenchmarkComparisonCard").then((m) => ({
     default: m.BenchmarkComparisonCard,
   })),
 );
-const ScoreAndRankCard = lazy(() =>
+const ScoreAndRankCard = lazyWithRetry(() =>
   import("@/components/comparison/ScoreAndRankCard").then((m) => ({ default: m.ScoreAndRankCard })),
 );
-const CategoryPercentileCard = lazy(() =>
+const CategoryPercentileCard = lazyWithRetry(() =>
   import("@/components/comparison/CategoryPercentileCard").then((m) => ({
     default: m.CategoryPercentileCard,
   })),
 );
-const PortfolioModeCard = lazy(() =>
+const PortfolioModeCard = lazyWithRetry(() =>
   import("@/components/comparison/PortfolioModeCard").then((m) => ({
     default: m.PortfolioModeCard,
   })),
 );
-const CalculatorsCard = lazy(() =>
+const CalculatorsCard = lazyWithRetry(() =>
   import("@/components/comparison/CalculatorsCard").then((m) => ({ default: m.CalculatorsCard })),
 );
-const GoalPlannerCard = lazy(() =>
+const GoalPlannerCard = lazyWithRetry(() =>
   import("@/components/comparison/GoalPlannerCard").then((m) => ({ default: m.GoalPlannerCard })),
 );
-const ProjectionCalculatorCard = lazy(() =>
+const ProjectionCalculatorCard = lazyWithRetry(() =>
   import("@/components/comparison/ProjectionCalculatorCard").then((m) => ({
     default: m.ProjectionCalculatorCard,
   })),
 );
-const SwpCalculatorCard = lazy(() =>
+const SwpCalculatorCard = lazyWithRetry(() =>
   import("@/components/comparison/SwpCalculatorCard").then((m) => ({
     default: m.SwpCalculatorCard,
   })),
 );
-const RetirementCalculatorCard = lazy(() =>
+const RetirementCalculatorCard = lazyWithRetry(() =>
   import("@/components/comparison/RetirementCalculatorCard").then((m) => ({
     default: m.RetirementCalculatorCard,
   })),
 );
-const RollingSipCard = lazy(() =>
+const RollingSipCard = lazyWithRetry(() =>
   import("@/components/comparison/RollingSipCard").then((m) => ({ default: m.RollingSipCard })),
 );
-const FundDeepDiveCard = lazy(() =>
+const FundDeepDiveCard = lazyWithRetry(() =>
   import("@/components/comparison/FundDeepDiveCard").then((m) => ({ default: m.FundDeepDiveCard })),
 );
-const TopFundsCard = lazy(() =>
+const TopFundsCard = lazyWithRetry(() =>
   import("@/components/comparison/TopFundsCard").then((m) => ({ default: m.TopFundsCard })),
 );
 

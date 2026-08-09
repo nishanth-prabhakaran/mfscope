@@ -1,4 +1,5 @@
 import { get, set } from "idb-keyval";
+import { fetchWithTimeout } from "./http";
 
 const API_BASE = "https://finapi.upvaly.com/api";
 const KEY = (code: number) => `finapi:detail:${code}:v1`;
@@ -126,7 +127,7 @@ export async function fetchSchemeDetail(code: number): Promise<SchemeDetail> {
   const key = KEY(code);
   const hit = await get<Cached<SchemeDetail>>(key).catch(() => null);
   if (hit && Date.now() - hit.at < TTL) return hit.data;
-  const res = await fetch(`${API_BASE}/mf/scheme-code/${code}`, {
+  const res = await fetchWithTimeout(`${API_BASE}/mf/scheme-code/${code}`, {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) throw new Error("Failed to load fund details");

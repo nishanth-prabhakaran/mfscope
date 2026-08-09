@@ -1,4 +1,5 @@
 import { get, set } from "idb-keyval";
+import { fetchWithTimeout } from "./http";
 import type { NormalizedScheme, SchemeListItem, NavRow, SchemeMeta } from "@/types/mf";
 
 const API_BASE = "https://finapi.upvaly.com/api";
@@ -8,7 +9,10 @@ const LIST_TTL = 24 * 60 * 60 * 1000;
 const NAV_KEY = (code: number) => `finapi:nav:${code}:v1`;
 const NAV_TTL = 12 * 60 * 60 * 1000;
 
-interface Cached<T> { at: number; data: T }
+interface Cached<T> {
+  at: number;
+  data: T;
+}
 
 interface ApiEnvelope<T> {
   status?: string;
@@ -27,7 +31,10 @@ interface ApiListItem {
   schemeCategoryLabel?: string | null;
 }
 
-interface ApiNavPoint { navDate: string; nav: number | string }
+interface ApiNavPoint {
+  navDate: string;
+  nav: number | string;
+}
 
 interface ApiNavResponse {
   schemeCode: string | number;
@@ -40,16 +47,35 @@ interface ApiNavResponse {
   navHistory?: ApiNavPoint[];
 }
 
+/**
+ * Cache-first with stale-on-failure.
+ *
+ * The previous version returned cached data only inside the TTL and otherwise
+ * threw — so an expired entry plus a failed network call produced a dead card,
+ * even though perfectly usable data was sitting in IndexedDB. NAV history is
+ * append-only and slow-moving; day-old values are far better than nothing.
+ * Serving stale on failure turns a provider outage from a hard failure into a
+ * soft one, and makes the app usable offline.
+ */
 async function cached<T>(key: string, ttl: number, loader: () => Promise<T>): Promise<T> {
   const hit = await get<Cached<T>>(key).catch(() => null);
   if (hit && Date.now() - hit.at < ttl) return hit.data;
-  const data = await loader();
-  await set(key, { at: Date.now(), data } satisfies Cached<T>).catch(() => {});
-  return data;
+
+  try {
+    const data = await loader();
+    await set(key, { at: Date.now(), data } satisfies Cached<T>).catch(() => {});
+    return data;
+  } catch (err) {
+    if (hit) {
+      console.warn(`[finapi] serving stale cache for ${key} after fetch failure`, err);
+      return hit.data;
+    }
+    throw err;
+  }
 }
 
 async function getJson<T>(url: string, errorMessage: string): Promise<T> {
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(errorMessage);
   const json = (await res.json()) as ApiEnvelope<T>;
   if (json.data == null) throw new Error(json.message || errorMessage);
@@ -110,7 +136,10 @@ function toMeta(d: ApiNavResponse): SchemeMeta {
 
 export async function fetchScheme(code: number): Promise<NormalizedScheme> {
   return cached(NAV_KEY(code), NAV_TTL, async () => {
-    const data = await getJson<ApiNavResponse>(navHistoryUrl(code), "Failed to load scheme " + code);
+    const data = await getJson<ApiNavResponse>(
+      navHistoryUrl(code),
+      "Failed to load scheme " + code,
+    );
     return { meta: toMeta(data), rows: toNavRows(data.navHistory) };
   });
 }
