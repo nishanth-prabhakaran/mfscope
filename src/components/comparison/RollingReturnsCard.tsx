@@ -1,6 +1,14 @@
 import { useMemo, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { calculateRollingReturns, rollingStats } from "@/lib/calculators";
@@ -22,15 +30,23 @@ function median(arr: number[]) {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
   benchmarkRows?: NavRow[];
   benchmarkLabel?: string;
+  /** Controlled rolling window. Shared with Risk Analytics so both stay in sync. */
+  period: RollingYears;
+  onPeriodChange: (p: RollingYears) => void;
 }
 
-export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: Props) {
-  const [period, setPeriod] = useState<RollingYears>(3);
+export function RollingReturnsCard({
+  schemes,
+  benchmarkRows,
+  benchmarkLabel,
+  period,
+  onPeriodChange,
+}: Props) {
+  const setPeriod = onPeriodChange;
   const [hidden, setHidden] = useState<Set<number>>(new Set());
   const [showPeer, setShowPeer] = useState(true);
   const chartRef = useMemo(() => ({ current: null as HTMLDivElement | null }), []);
@@ -47,7 +63,8 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
   }, [rolling, period]);
 
   const benchSeries = useMemo(
-    () => (benchmarkRows && benchmarkRows.length ? calculateRollingReturns(benchmarkRows, period) : []),
+    () =>
+      benchmarkRows && benchmarkRows.length ? calculateRollingReturns(benchmarkRows, period) : [],
     [benchmarkRows, period],
   );
 
@@ -90,7 +107,6 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
     });
   }, [rolling, hidden, benchSeries]);
 
-
   // Peer aggregate summary stats
   const peerStats = useMemo(() => {
     const avgs = chartData.map((r) => r.peerAvg).filter((v): v is number => typeof v === "number");
@@ -100,16 +116,23 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
       const sorted = [...arr].sort((a, b) => a - b);
       const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
       const med = sorted[Math.floor(sorted.length / 2)];
-      return { count: arr.length, min: sorted[0], max: sorted[sorted.length - 1], mean, median: med, current: arr[arr.length - 1] };
+      return {
+        count: arr.length,
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        mean,
+        median: med,
+        current: arr[arr.length - 1],
+      };
     };
     return { avg: s(avgs), med: s(meds) };
   }, [chartData]);
 
-
   const toggle = (code: number) => {
     setHidden((h) => {
       const n = new Set(h);
-      if (n.has(code)) n.delete(code); else n.add(code);
+      if (n.has(code)) n.delete(code);
+      else n.add(code);
       return n;
     });
   };
@@ -130,7 +153,9 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
     if (!chartRef.current) return;
     const dataUrl = await toPng(chartRef.current, { backgroundColor: "#0f1420", pixelRatio: 2 });
     const a = document.createElement("a");
-    a.href = dataUrl; a.download = `rolling-${period}y-returns.png`; a.click();
+    a.href = dataUrl;
+    a.download = `rolling-${period}y-returns.png`;
+    a.click();
   };
 
   return (
@@ -149,7 +174,9 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={`shrink-0 px-2.5 py-1 text-xs rounded-md transition-colors ${
-                  period === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  period === p
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {p}Y
@@ -159,19 +186,29 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
           <button
             onClick={() => setShowPeer((v) => !v)}
             className={`whitespace-nowrap px-2.5 py-1 text-xs rounded-md border transition-colors ${
-              showPeer ? "border-border/60 bg-accent/40 text-foreground" : "border-border/40 text-muted-foreground hover:text-foreground"
+              showPeer
+                ? "border-border/60 bg-accent/40 text-foreground"
+                : "border-border/40 text-muted-foreground hover:text-foreground"
             }`}
             title="Overlay peer average & median across your selected funds"
           >
             {showPeer ? "Peer lines: On" : "Peer lines: Off"}
           </button>
-          <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-3.5 w-3.5" /> CSV</Button>
-          <Button variant="outline" size="sm" onClick={exportPng}><FileImage className="h-3.5 w-3.5" /> PNG</Button>
+          <Button variant="outline" size="sm" onClick={exportCsv}>
+            <Download className="h-3.5 w-3.5" /> CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPng}>
+            <FileImage className="h-3.5 w-3.5" /> PNG
+          </Button>
         </div>
       </div>
 
-
-      <div ref={(el) => { chartRef.current = el; }} className="mt-4 h-[280px] sm:h-[380px] w-full">
+      <div
+        ref={(el) => {
+          chartRef.current = el;
+        }}
+        className="mt-4 h-[280px] sm:h-[380px] w-full"
+      >
         {chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Not enough history for a {period}-year rolling window.
@@ -180,7 +217,11 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.35} />
-              <XAxis dataKey="date" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} minTickGap={40} />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                minTickGap={40}
+              />
               <YAxis
                 tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                 tickFormatter={(v) => `${v}%`}
@@ -194,7 +235,16 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
                   const endT = (payload[0]?.payload?.t as number) ?? 0;
                   const startT = endT - period * 365.25 * 86_400_000;
                   return (
-                    <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12, padding: "8px 10px", minWidth: 220 }}>
+                    <div
+                      style={{
+                        background: "var(--popover)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        fontSize: 12,
+                        padding: "8px 10px",
+                        minWidth: 220,
+                      }}
+                    >
                       <div className="text-[11px] text-muted-foreground">
                         {period}Y window measured
                       </div>
@@ -203,12 +253,23 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
                       </div>
                       <div className="mt-1.5 space-y-0.5">
                         {payload.map((p) => (
-                          <div key={String(p.dataKey)} className="flex items-center justify-between gap-4">
-                            <span className="flex items-center gap-1.5 truncate max-w-[200px]" style={{ color: p.color as string }}>
-                              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color as string }} />
+                          <div
+                            key={String(p.dataKey)}
+                            className="flex items-center justify-between gap-4"
+                          >
+                            <span
+                              className="flex items-center gap-1.5 truncate max-w-[200px]"
+                              style={{ color: p.color as string }}
+                            >
+                              <span
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: p.color as string }}
+                              />
                               <span className="text-foreground/90 truncate">{p.name}</span>
                             </span>
-                            <span className="num font-medium">{(p.value as number).toFixed(2)}%</span>
+                            <span className="num font-medium">
+                              {(p.value as number).toFixed(2)}%
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -221,21 +282,22 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
                 wrapperStyle={{ fontSize: 11 }}
                 formatter={(value) => <span className="text-muted-foreground">{value}</span>}
               />
-              {schemes.map((s, i) => (
-                !hidden.has(s.code) && (
-                  <Line
-                    key={s.code}
-                    type="monotone"
-                    dataKey={`s${s.code}`}
-                    name={s.name}
-                    stroke={colorFor(i)}
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                    connectNulls
-                  />
-                )
-              ))}
+              {schemes.map(
+                (s, i) =>
+                  !hidden.has(s.code) && (
+                    <Line
+                      key={s.code}
+                      type="monotone"
+                      dataKey={`s${s.code}`}
+                      name={s.name}
+                      stroke={colorFor(i)}
+                      strokeWidth={2}
+                      dot={false}
+                      isAnimationActive={false}
+                      connectNulls
+                    />
+                  ),
+              )}
               {showPeer && schemes.length >= 2 && (
                 <Line
                   type="monotone"
@@ -325,7 +387,10 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
               <tr key={s.code} className="border-b border-border/30 last:border-0">
                 <td className="py-2 pr-3">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(i) }} />
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: colorFor(i) }}
+                    />
                     <span className="truncate max-w-[220px]">{s.name}</span>
                   </div>
                 </td>
@@ -340,7 +405,9 @@ export function RollingReturnsCard({ schemes, benchmarkRows, benchmarkLabel }: P
                 <td className="text-right">{fmtNum(s.p75)}%</td>
                 <td className="text-right">{fmtNum(s.p95)}%</td>
                 <td className="text-right">{fmtNum(s.positivePct, 1)}%</td>
-                <td className="text-right font-medium">{s.current == null ? "—" : `${fmtNum(s.current)}%`}</td>
+                <td className="text-right font-medium">
+                  {s.current == null ? "—" : `${fmtNum(s.current)}%`}
+                </td>
               </tr>
             ))}
             {showPeer && schemes.length >= 2 && peerStats.avg && (

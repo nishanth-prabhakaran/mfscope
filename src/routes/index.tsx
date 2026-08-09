@@ -36,7 +36,7 @@ import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useBenchmark } from "@/hooks/useBenchmark";
-import type { BenchmarkKey, NavRow } from "@/types/mf";
+import type { BenchmarkKey, NavRow, RollingYears } from "@/types/mf";
 
 
 export const Route = createFileRoute("/")({
@@ -66,6 +66,8 @@ function Home() {
   const { funds, add, remove, clear, has } = useSelection();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [benchmarkKey, setBenchmarkKey] = useState<BenchmarkKey | undefined>(undefined);
+  // Shared by the Rolling Returns chart and Risk Analytics so both use the same window.
+  const [rollingPeriod, setRollingPeriod] = useState<RollingYears>(3);
   const queries = useSchemes(funds.map((f) => f.schemeCode));
   const benchmarkQuery = useBenchmark(benchmarkKey);
 
@@ -321,7 +323,13 @@ function Home() {
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
           <div className="space-y-6">
-            <RollingReturnsCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} />
+            <RollingReturnsCard
+              schemes={schemes}
+              benchmarkRows={benchmarkRows}
+              benchmarkLabel={benchmarkQuery.data?.label}
+              period={rollingPeriod}
+              onPeriodChange={setRollingPeriod}
+            />
 
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -339,7 +347,9 @@ function Home() {
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
               <TabsContent value="deepdive" className="mt-4"><FundDeepDiveCard schemes={schemes.map((s) => ({ code: s.code, name: s.name }))} onAdd={(code, name) => add({ schemeCode: code, schemeName: name })} isSelected={has} canAdd={funds.length < 10} /></TabsContent>
-              <TabsContent value="risk" className="mt-4"><RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
+              <TabsContent value="risk" className="mt-4">
+                <RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} windowYears={rollingPeriod} />
+              </TabsContent>
 
               <TabsContent value="benchmark" className="mt-4"><BenchmarkComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
               <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>

@@ -1,19 +1,59 @@
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { calculateRisk } from "@/lib/calculators";
-import type { NormalizedScheme } from "@/types/mf";
+import type { NormalizedScheme, NavRow, RollingYears } from "@/types/mf";
 import { colorFor, fmtNum, fmtPct } from "@/lib/format";
 import { MetricGlossaryButton, MetricInfo, RankLegend } from "./MetricInfo";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
   benchmarkRows?: import("@/types/mf").NavRow[];
+  /** Trailing window (years) selected on the Rolling Returns chart. */
+  windowYears: RollingYears;
 }
 
-export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
-  const rows = useMemo(() => schemes.map((s, i) => ({ ...s, i, risk: calculateRisk(s.data.rows, 0.065, benchmarkRows) })), [schemes, benchmarkRows]);
+/** Minimum NAV points calculateRisk needs before it returns meaningful numbers. */
+const MIN_RISK_ROWS = 30;
 
-  const metrics: Array<{ key: keyof ReturnType<typeof calculateRisk>; label: string; fmt: (v: number) => string; higherBetter?: boolean }> = [
+/** Slice to the trailing `years` window, measured back from the series' last NAV date. */
+function trailingWindow(rows: NavRow[], years: RollingYears): NavRow[] {
+  if (!rows.length) return rows;
+  const endT = rows[rows.length - 1].t;
+  const startT = endT - years * 365.25 * 86_400_000;
+  const sliced = rows.filter((r) => r.t >= startT);
+  return sliced.length >= MIN_RISK_ROWS ? sliced : rows;
+}
+
+export function RiskMetricsCard({ schemes, benchmarkRows, windowYears }: Props) {
+  const windowedBenchmark = useMemo(
+    () => (benchmarkRows?.length ? trailingWindow(benchmarkRows, windowYears) : benchmarkRows),
+    [benchmarkRows, windowYears],
+  );
+
+  const rows = useMemo(
+    () =>
+      schemes.map((s, i) => {
+        const windowed = trailingWindow(s.data.rows, windowYears);
+        // A fund younger than the selected window falls back to its full history.
+        const truncated = windowed.length < s.data.rows.length;
+        return {
+          ...s,
+          i,
+          truncated,
+          risk: calculateRisk(windowed, 0.065, windowedBenchmark),
+        };
+      }),
+    [schemes, windowedBenchmark, windowYears],
+  );
+
+  const partialCoverage = rows.some((r) => !r.truncated);
+
+  const metrics: Array<{
+    key: keyof ReturnType<typeof calculateRisk>;
+    label: string;
+    fmt: (v: number) => string;
+    higherBetter?: boolean;
+  }> = [
     { key: "cagr", label: "CAGR", fmt: (v) => fmtPct(v), higherBetter: true },
     { key: "annualReturn", label: "Annualized Return", fmt: (v) => fmtPct(v), higherBetter: true },
     { key: "volatility", label: "Volatility", fmt: (v) => fmtPct(v), higherBetter: false },
@@ -31,7 +71,10 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
   ];
 
   /** Returns fund codes ranked best → second best for a metric. */
-  const rankOf = (key: keyof ReturnType<typeof calculateRisk>, higherBetter?: boolean): { best: number; second: number } => {
+  const rankOf = (
+    key: keyof ReturnType<typeof calculateRisk>,
+    higherBetter?: boolean,
+  ): { best: number; second: number } => {
     if (higherBetter == null) return { best: -1, second: -1 };
     const sorted = rows
       .map((r) => ({ code: r.code, v: r.risk[key] as number }))
@@ -46,8 +89,15 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
         <div>
           <h3 className="font-display text-base sm:text-lg font-semibold">Risk Analytics</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Full-history risk-adjusted metrics on daily NAV (risk-free = 6.5%).
+            Trailing {windowYears}-year risk-adjusted metrics on daily NAV (risk-free = 6.5%).
+            Follows the rolling window selected on the Rolling Returns chart.
           </p>
+          {partialCoverage && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Funds with less than {windowYears} years of history fall back to their full available
+              history.
+            </p>
+          )}
           <RankLegend className="mt-2" />
         </div>
         <MetricGlossaryButton />
@@ -60,7 +110,10 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
               {rows.map((r) => (
                 <th key={r.code} className="text-right font-medium py-2 pl-3">
                   <div className="flex items-center justify-end gap-2">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(r.i) }} />
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: colorFor(r.i) }}
+                    />
                     <span className="truncate max-w-[200px]">{r.name}</span>
                   </div>
                 </th>
@@ -100,4 +153,3 @@ export function RiskMetricsCard({ schemes, benchmarkRows }: Props) {
     </Card>
   );
 }
-
