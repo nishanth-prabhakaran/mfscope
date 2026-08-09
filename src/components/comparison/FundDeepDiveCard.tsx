@@ -24,6 +24,7 @@ import {
   Tooltip,
   Cell,
   Legend,
+  LabelList,
 } from "recharts";
 import { useSchemeDetail } from "@/hooks/useSchemeDetail";
 import {
@@ -82,6 +83,42 @@ function AllocBar({ data }: { data: { label: string; value: number }[] }) {
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Custom legend for the Performance & Rank bar chart. Shows explicit,
+ *  unambiguous coloured markers that match the on-chart bar styling. */
+function PerfLegend() {
+  const items = [
+    {
+      label: "Fund — outperforming",
+      color: "var(--success)",
+      desc: "Annualised return at or above category average",
+    },
+    {
+      label: "Fund — below category",
+      color: "var(--primary)",
+      desc: "Annualised return below category average",
+    },
+    {
+      label: "Category average",
+      color: "color-mix(in oklab, var(--foreground) 30%, transparent)",
+      desc: "Peer-group average for the same category & period",
+    },
+  ];
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+      {items.map((it) => (
+        <span key={it.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+            style={{ background: it.color }}
+            title={it.desc}
+          />
+          {it.label}
+        </span>
+      ))}
     </div>
   );
 }
@@ -407,14 +444,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                             ]}
                           />
                           <Legend
-                            wrapperStyle={{ fontSize: 11 }}
-                            formatter={(v) => (
-                              <span className="text-muted-foreground">
-                                {v === "fund" ? "Fund" : "Category avg"}
-                              </span>
-                            )}
+                            content={<PerfLegend />}
                           />
-                          <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]}>
+                          <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]} fill="var(--success)">
                             {rankData.map((d, i) => (
                               <Cell
                                 key={i}
@@ -425,6 +457,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                                 }
                               />
                             ))}
+                            <LabelList
+                              dataKey="fund"
+                              position="top"
+                              formatter={(v: number | null) =>
+                                v != null && Number.isFinite(v) ? `${fmtNum(v)}%` : ""
+                              }
+                              style={{ fill: "var(--foreground)", fontSize: 10, fontWeight: 600 }}
+                            />
                           </Bar>
                           <Bar
                             dataKey="category"
@@ -432,7 +472,16 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                             fill="var(--foreground)"
                             opacity={0.3}
                             radius={[3, 3, 0, 0]}
-                          />
+                          >
+                            <LabelList
+                              dataKey="category"
+                              position="top"
+                              formatter={(v: number | null) =>
+                                v != null && Number.isFinite(v) ? `${fmtNum(v)}%` : ""
+                              }
+                              style={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                            />
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
