@@ -499,6 +499,8 @@ describe("suitabilityScore", () => {
     maxDD: -0.35,
     recoveryDays: 400,
     expenseRatio: 1.0,
+    sharpe: 0.7,
+    sortino: 1.0,
   };
 
   it("prefers the cheaper of two otherwise identical funds", () => {
@@ -544,6 +546,8 @@ describe("suitabilityScore", () => {
       maxDD: -0.9,
       recoveryDays: 5000,
       expenseRatio: 5,
+      sharpe: -1.5,
+      sortino: -2,
     });
     const ideal = suitabilityScore({
       rollingMean: 40,
@@ -553,6 +557,8 @@ describe("suitabilityScore", () => {
       maxDD: -0.01,
       recoveryDays: 0,
       expenseRatio: 0,
+      sharpe: 4,
+      sortino: 5,
     });
     expect(awful).toBeGreaterThanOrEqual(0);
     expect(ideal).toBeLessThanOrEqual(100);
@@ -624,6 +630,8 @@ describe("weightsFor (profile-adaptive ranking)", () => {
       maxDD: -0.3,
       recoveryDays: 400,
       expenseRatio: 0.3,
+      sharpe: 0.8,
+      sortino: 1.2,
     };
     const punchyDear = {
       rollingMean: 17,
@@ -633,6 +641,8 @@ describe("weightsFor (profile-adaptive ranking)", () => {
       maxDD: -0.58,
       recoveryDays: 950,
       expenseRatio: 1.9,
+      sharpe: 0.6,
+      sortino: 0.8,
     };
     const nervous = weightsAt({ horizon: 4, drawdown: 0 });
     expect(suitabilityScore(steadyCheap, nervous)).toBeGreaterThan(
@@ -645,5 +655,59 @@ describe("weightsFor (profile-adaptive ranking)", () => {
     const text = weightsExplanation(scoreProfile(a), a);
     expect(text).toMatch(/cost \d+%/);
     expect(text).toMatch(/sell during a deep fall/i);
+  });
+});
+
+describe("risk-adjusted return in the ranking", () => {
+  const base = {
+    rollingMean: 13,
+    worstRolling: 4,
+    positivePct: 95,
+    volatility: 0.17,
+    maxDD: -0.35,
+    recoveryDays: 400,
+    expenseRatio: 1.0,
+    sharpe: 0.7,
+    sortino: 1.0,
+  };
+
+  it("prefers better risk-adjusted returns when everything else matches", () => {
+    expect(suitabilityScore({ ...base, sharpe: 1.4, sortino: 2.0 })).toBeGreaterThan(
+      suitabilityScore({ ...base, sharpe: 0.2, sortino: 0.3 }),
+    );
+  });
+
+  it("prefers the same return earned with less risk", () => {
+    // Identical mean return; one fund took far more risk to get there.
+    const efficient = { ...base, volatility: 0.14, sharpe: 1.2, sortino: 1.7, maxDD: -0.28 };
+    const wasteful = { ...base, volatility: 0.29, sharpe: 0.3, sortino: 0.4, maxDD: -0.55 };
+    expect(suitabilityScore(efficient)).toBeGreaterThan(suitabilityScore(wasteful));
+  });
+
+  it("weights Sortino above Sharpe, since upside volatility isn't a risk", () => {
+    // Same Sharpe, better Sortino (losses were shallower) must score higher.
+    const betterDownside = suitabilityScore({ ...base, sharpe: 0.7, sortino: 1.8 });
+    const worseDownside = suitabilityScore({ ...base, sharpe: 0.7, sortino: 0.4 });
+    expect(betterDownside).toBeGreaterThan(worseDownside);
+  });
+
+  it("keeps risk-adjusted weight non-trivial for every profile", () => {
+    const answers = (h: number, d: number): Answers => ({
+      debt: 2,
+      insurance: 2,
+      horizon: h,
+      emergency: 3,
+      income: 3,
+      share: 3,
+      drawdown: d,
+      experience: 2,
+      badyear: 2.7,
+    });
+    for (const h of [0, 2, 4]) {
+      for (const d of [0, 2, 4]) {
+        const a = answers(h, d);
+        expect(weightsFor(scoreProfile(a), a).riskAdj).toBeGreaterThan(0.05);
+      }
+    }
   });
 });

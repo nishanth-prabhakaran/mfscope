@@ -145,6 +145,8 @@ export function ProfileSuggestionsCard({
               maxDD: c.fund.maxDrawdown,
               recoveryDays: c.risk.recoveryDays,
               expenseRatio: c.expenseRatio,
+              sharpe: c.risk.sharpe,
+              sortino: c.risk.sortino,
             },
             weights,
           ),

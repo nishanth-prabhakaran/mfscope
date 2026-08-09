@@ -360,6 +360,9 @@ export interface SuitabilityInput {
   recoveryDays: number | null;
   /** Annual expense ratio (%), null when the provider doesn't publish it. */
   expenseRatio: number | null;
+  sharpe: number;
+  /** Sortino penalises only downside deviation, which is the risk that matters here. */
+  sortino: number;
 }
 
 const clamp = (v: number) => Math.max(0, Math.min(100, v));
@@ -396,17 +399,20 @@ export interface SuitabilityWeights {
   recovery: number;
   vol: number;
   ret: number;
+  /** Sharpe/Sortino — return earned per unit of risk taken. */
+  riskAdj: number;
 }
 
 /** Baseline weights, used when no profile is supplied. */
 export const BASE_WEIGHTS: SuitabilityWeights = {
-  cost: 0.25,
-  worst: 0.16,
-  positive: 0.1,
-  dd: 0.1,
+  cost: 0.22,
+  ret: 0.18,
+  riskAdj: 0.14,
+  worst: 0.14,
+  vol: 0.1,
+  dd: 0.09,
+  positive: 0.08,
   recovery: 0.05,
-  vol: 0.14,
-  ret: 0.2,
 };
 
 /**
@@ -448,7 +454,10 @@ export function weightsFor(profile: ProfileResult, answers: Answers): Suitabilit
     w.dd *= fear;
     w.recovery *= fear;
     w.vol *= fear;
-    // Return matters correspondingly less to someone who would not hold on.
+    // Sortino is downside-aware, so it matters more to a nervous investor too,
+    // but less sharply than the raw worst-case terms.
+    w.riskAdj *= 1 + (fear - 1) * 0.4;
+    // Raw return matters correspondingly less to someone who would not hold on.
     w.ret *= 2 - fear;
   }
 
@@ -474,16 +483,24 @@ export function suitabilityScore(
   const recovery = clamp(i.recoveryDays == null ? 70 : 100 - i.recoveryDays / 12);
   const vol = clamp(100 - i.volatility * 350);
 
+  // Risk-adjusted return: what the fund earned per unit of risk taken. Counted
+  // once here — calculateOverallScore counts it twice, directly and again
+  // inside calculateConsistencyScore. Sortino is weighted above Sharpe because
+  // it penalises only downside deviation; upside volatility is not a problem
+  // an investor needs protecting from.
+  const riskAdj = clamp(50 + i.sharpe * 25) * 0.45 + clamp(50 + i.sortino * 22) * 0.55;
+
   const ret = clamp((i.rollingMean / 18) * 100);
 
   return Math.round(
     cost * weights.cost +
+      ret * weights.ret +
+      riskAdj * weights.riskAdj +
       worst * weights.worst +
-      positive * weights.positive +
-      dd * weights.dd +
-      recovery * weights.recovery +
       vol * weights.vol +
-      ret * weights.ret,
+      dd * weights.dd +
+      positive * weights.positive +
+      recovery * weights.recovery,
   );
 }
 
@@ -507,7 +524,7 @@ export function weightsExplanation(profile: ProfileResult, answers: Answers): st
   }
   return `${parts.join("; ")} (cost ${Math.round(w.cost * 100)}%, downside ${Math.round(
     (w.worst + w.dd + w.recovery + w.vol) * 100,
-  )}%, return ${Math.round(w.ret * 100)}%).`;
+  )}%, return ${Math.round(w.ret * 100)}%, risk-adjusted ${Math.round(w.riskAdj * 100)}%).`;
 }
 
 // ---------------------------------------------------------------- gates
