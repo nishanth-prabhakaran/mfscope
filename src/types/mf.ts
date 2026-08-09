@@ -78,12 +78,23 @@ export interface DrawdownPoint {
 
 // ---------- Benchmarks ----------
 
-export type BenchmarkKey = "nifty50" | "nifty100" | "nifty150midcap" | "nifty250smallcap" | "sensex" | "nifty500" | "niftynext50" | "niftylargemid250";
+export type BenchmarkKey =
+  | "nifty50"
+  | "nifty100"
+  | "nifty150midcap"
+  | "nifty250smallcap"
+  | "sensex"
+  | "nifty500"
+  | "niftynext50"
+  | "niftylargemid250";
 
 export interface Benchmark {
   key: BenchmarkKey;
   label: string;
   yahooSymbol: string;
+  /** NSE index name as finapi expects it (e.g. "NIFTY 50"). Preferred source: it
+   *  serves true TRI values, which Yahoo does not. */
+  finapiIndexName?: string;
   /** When Yahoo has no history for the index, use this index-fund scheme as a proxy. */
   proxySchemeCode?: number;
   categoryHint: string[];

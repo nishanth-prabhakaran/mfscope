@@ -24,6 +24,57 @@ interface FinApiNavResponse {
   message?: string;
 }
 
+interface FinApiIndexResponse {
+  status?: string;
+  data?: {
+    indexName: string;
+    priceDate: string;
+    closePrice: number | string;
+    triValue: number | string | null;
+  }[];
+}
+
+/**
+ * finapi's NSE index endpoint. Preferred over Yahoo because it serves triValue
+ * (Total Return Index), which is the like-for-like comparison against a fund
+ * NAV — a NAV reinvests dividends, a price-return index does not, so comparing
+ * against price return flatters every fund.
+ */
+async function fetchFromFinapiIndex(indexName: string): Promise<NavRow[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const url =
+    `https://finapi.upvaly.com/api/nifty-indices` +
+    `?indexName=${encodeURIComponent(indexName)}&startDate=1990-01-01&endDate=${today}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`Index fetch failed: ${res.status}`);
+  const json = (await res.json()) as FinApiIndexResponse;
+
+  // Guard against the endpoint echoing back a different index than requested.
+  const entries = (json.data ?? []).filter(
+    (r) => !r.indexName || r.indexName.toUpperCase() === indexName.toUpperCase(),
+  );
+
+  // Pick ONE scale for the whole series. TRI (~35,000 for Nifty 50) and price
+  // (~23,000) are different scales, so substituting price on days where TRI is
+  // missing would splice in a phantom ~30% crash. Use TRI only if it covers
+  // effectively the whole series; otherwise fall back to price throughout.
+  const triCount = entries.filter((r) => {
+    const v = r.triValue == null ? NaN : Number(r.triValue);
+    return Number.isFinite(v) && v > 0;
+  }).length;
+  const useTri = entries.length > 0 && triCount >= entries.length * 0.98;
+
+  const rows: NavRow[] = [];
+  for (const r of entries) {
+    const raw = useTri ? r.triValue : r.closePrice;
+    const value = raw == null ? NaN : Number(raw);
+    const [y, m, d] = r.priceDate.split("-").map(Number);
+    if (value > 0 && Number.isFinite(y)) rows.push({ t: Date.UTC(y, m - 1, d), nav: value });
+  }
+  rows.sort((a, b) => a.t - b.t);
+  return rows;
+}
+
 /** Some NSE indices have no Yahoo history; fall back to a tracking index fund's NAV. */
 async function fetchFromProxyFund(code: number): Promise<NavRow[]> {
   const today = new Date().toISOString().slice(0, 10);
@@ -43,10 +94,21 @@ async function fetchFromProxyFund(code: number): Promise<NavRow[]> {
   return rows;
 }
 
-export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<BenchmarkData> {
+export async function fetchBenchmarkSeries(key: BenchmarkKey): Promise<BenchmarkData> {
   const bench = benchmarkByKey(key);
   if (!bench) throw new Error("Unknown benchmark " + key);
 
+  // 1. finapi TRI — the accurate source.
+  if (bench.finapiIndexName) {
+    try {
+      const rows = await fetchFromFinapiIndex(bench.finapiIndexName);
+      if (rows.length > 30) return { key, label: bench.label, rows };
+    } catch {
+      // fall through to the proxy/Yahoo paths below
+    }
+  }
+
+  // 2. Tracking index-fund NAV.
   if (bench.proxySchemeCode) {
     const rows = await fetchFromProxyFund(bench.proxySchemeCode);
     if (rows.length > 30) return { key, label: bench.label, rows };
@@ -54,7 +116,8 @@ export async function fetchBenchmarkFromYahoo(key: BenchmarkKey): Promise<Benchm
 
   const res = await fetch(yahooUrl(bench.yahooSymbol), {
     headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       Accept: "application/json",
     },
   });
