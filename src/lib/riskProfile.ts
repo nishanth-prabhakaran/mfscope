@@ -75,7 +75,13 @@ export const BANDS: Record<RiskBand, BandMeta> = {
 
 // ---------------------------------------------------------------- questions
 
-export type Dimension = "capacity" | "tolerance";
+/**
+ * "gate" questions are deliberately NOT scored. They decide whether the person
+ * should be buying an equity fund at all — a question most beginners skip
+ * straight past. Folding them into the risk score would let a high score
+ * paper over "you have credit-card debt and no emergency fund".
+ */
+export type Dimension = "capacity" | "tolerance" | "gate";
 
 export interface QuestionOption {
   label: string;
@@ -94,6 +100,28 @@ export interface Question {
 }
 
 export const QUESTIONS: Question[] = [
+  {
+    id: "debt",
+    dimension: "gate",
+    text: "Do you have any high-interest debt right now?",
+    help: "Credit cards and personal loans charge far more than any fund reliably earns.",
+    options: [
+      { label: "Yes — credit card or personal loan", value: 0 },
+      { label: "Only a home or education loan", value: 1 },
+      { label: "No high-interest debt", value: 2 },
+    ],
+  },
+  {
+    id: "insurance",
+    dimension: "gate",
+    text: "Do you have health insurance?",
+    help: "A hospital bill without cover forces you to sell investments at the worst possible time.",
+    options: [
+      { label: "No cover", value: 0 },
+      { label: "Employer cover only", value: 1 },
+      { label: "Yes, my own policy", value: 2 },
+    ],
+  },
   {
     id: "horizon",
     dimension: "capacity",
@@ -316,6 +344,115 @@ export function analyseFundRisk(
     category,
     historyYears,
   };
+}
+
+// ---------------------------------------------------------------- gates
+
+/**
+ * Checks that run BEFORE any fund is suggested.
+ *
+ * The honest answer to "which fund should I buy" is sometimes "none yet".
+ * A shortlist shown to someone with no emergency fund, credit-card debt, or a
+ * two-year horizon isn't helpful — it's harmful, because acting on it is worse
+ * than doing nothing. These gates surface that instead of quietly ranking funds.
+ */
+export type GateSeverity = "block" | "warn";
+
+export interface Gate {
+  id: string;
+  severity: GateSeverity;
+  title: string;
+  detail: string;
+  /** What to do instead, concretely. */
+  action: string;
+}
+
+export function evaluateGates(answers: Answers): Gate[] {
+  const gates: Gate[] = [];
+  const horizonIdx = answers.horizon;
+  const horizonYears = horizonIdx != null ? (HORIZON_YEARS[horizonIdx] ?? 6) : 6;
+
+  if (answers.debt === 0) {
+    gates.push({
+      id: "debt",
+      severity: "block",
+      title: "Clear the high-interest debt first",
+      detail:
+        "Credit cards in India typically charge 36–48% a year and personal loans 12–20%. Equity has returned roughly 12% a year over long periods, and not reliably in any single year. Paying that debt down is a guaranteed return no fund can match.",
+      action:
+        "Clear the balance, then come back — this is the single highest-return move available to you.",
+    });
+  }
+
+  if (answers.emergency === 0) {
+    gates.push({
+      id: "emergency",
+      severity: "block",
+      title: "Build an emergency fund first",
+      detail:
+        "Without 6 months of expenses set aside, a job loss or medical bill forces you to sell — and those events cluster with market falls, so you would be selling at the bottom. That single forced exit can undo years of returns.",
+      action:
+        "Park 6 months of expenses in a savings account or liquid fund before investing in equity.",
+    });
+  }
+
+  if (horizonYears < 3) {
+    gates.push({
+      id: "horizon",
+      severity: "block",
+      title: "Equity is the wrong tool for this horizon",
+      detail:
+        "Indian equity funds have fallen 40–60% and taken two to four years to recover. With under three years, you may be forced to sell mid-fall with no time to recover. This is about arithmetic, not nerve — no risk appetite fixes a short horizon.",
+      action:
+        "For money needed within three years, use a fixed deposit, liquid fund or short-duration debt fund. Equity is not a substitute.",
+    });
+  } else if (horizonYears < 5) {
+    gates.push({
+      id: "horizon-short",
+      severity: "warn",
+      title: "A three-to-four year horizon is tight for equity",
+      detail:
+        "Historically, most rolling windows shorter than five years have included at least one significant drawdown. It can work, but the odds of a poor outcome are materially higher than at seven years or more.",
+      action: "Consider a hybrid or balanced-advantage fund, or extend the horizon if you can.",
+    });
+  }
+
+  if (answers.insurance === 0) {
+    gates.push({
+      id: "insurance",
+      severity: "warn",
+      title: "Get health cover before investing",
+      detail:
+        "One uninsured hospitalisation can wipe out an emergency fund and force redemption at a loss. Cover is cheap relative to what it protects.",
+      action: "A basic family floater policy costs a fraction of what a single hospital stay does.",
+    });
+  } else if (answers.insurance === 1) {
+    gates.push({
+      id: "insurance-employer",
+      severity: "warn",
+      title: "Employer health cover disappears with the job",
+      detail:
+        "Job loss and market falls tend to coincide, which is exactly when you would lose the cover and need the money.",
+      action: "Consider a personal policy alongside the employer one.",
+    });
+  }
+
+  if (answers.share === 0) {
+    gates.push({
+      id: "concentration",
+      severity: "warn",
+      title: "Putting nearly all your savings into this",
+      detail:
+        "Committing everything to one asset class leaves no buffer. If markets fall just as you need cash, you have no alternative source.",
+      action: "Keep some of it liquid and invest the rest gradually.",
+    });
+  }
+
+  return gates;
+}
+
+export function hasBlockingGate(gates: Gate[]): boolean {
+  return gates.some((g) => g.severity === "block");
 }
 
 // ---------------------------------------------------------------- suggestions

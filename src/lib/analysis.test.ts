@@ -17,6 +17,8 @@ import {
   isSuggestable,
   SUITABLE_CATEGORIES,
   QUESTIONS,
+  evaluateGates,
+  hasBlockingGate,
   type Answers,
   type RiskBand,
 } from "./riskProfile";
@@ -415,5 +417,70 @@ describe("activeShare", () => {
     expect(activeShareVerdict(10).label).toMatch(/index/i);
     expect(activeShareVerdict(40).label).toMatch(/closet/i);
     expect(activeShareVerdict(70).label).toMatch(/active/i);
+  });
+});
+
+// ---------------------------------------------------------------- gates
+
+describe("evaluateGates", () => {
+  const clean: Answers = {
+    debt: 2,
+    insurance: 2,
+    horizon: 4,
+    emergency: 3,
+    income: 3,
+    share: 3,
+    drawdown: 2,
+    experience: 2,
+    badyear: 2.7,
+  };
+
+  it("raises nothing for a well-prepared investor", () => {
+    expect(evaluateGates(clean)).toHaveLength(0);
+    expect(hasBlockingGate(evaluateGates(clean))).toBe(false);
+  });
+
+  it("blocks on high-interest debt", () => {
+    const g = evaluateGates({ ...clean, debt: 0 });
+    expect(g.some((x) => x.id === "debt" && x.severity === "block")).toBe(true);
+    expect(hasBlockingGate(g)).toBe(true);
+  });
+
+  it("blocks when there is no emergency fund", () => {
+    const g = evaluateGates({ ...clean, emergency: 0 });
+    expect(g.some((x) => x.id === "emergency" && x.severity === "block")).toBe(true);
+  });
+
+  it("blocks a sub-3-year horizon regardless of risk appetite", () => {
+    // Maximum risk tolerance must NOT unlock equity on a 2-year horizon.
+    const bold = { ...clean, horizon: 0, drawdown: 4, experience: 4, badyear: 4 };
+    expect(hasBlockingGate(evaluateGates(bold))).toBe(true);
+    expect(evaluateGates(bold).some((x) => x.id === "horizon")).toBe(true);
+  });
+
+  it("warns but does not block a 3-4 year horizon", () => {
+    const g = evaluateGates({ ...clean, horizon: 1 });
+    expect(g.some((x) => x.id === "horizon-short" && x.severity === "warn")).toBe(true);
+    expect(hasBlockingGate(g)).toBe(false);
+  });
+
+  it("warns on missing or employer-only health cover", () => {
+    expect(evaluateGates({ ...clean, insurance: 0 }).some((x) => x.id === "insurance")).toBe(true);
+    expect(
+      evaluateGates({ ...clean, insurance: 1 }).some((x) => x.id === "insurance-employer"),
+    ).toBe(true);
+  });
+
+  it("stacks multiple gates", () => {
+    const g = evaluateGates({ ...clean, debt: 0, emergency: 0, horizon: 0, insurance: 0 });
+    expect(g.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("does not let gate answers alter the risk score", () => {
+    // Gate questions are excluded from scoring; band must be identical.
+    const withDebt = scoreProfile({ ...clean, debt: 0, insurance: 0 });
+    const withoutDebt = scoreProfile(clean);
+    expect(withDebt.band).toBe(withoutDebt.band);
+    expect(withDebt.capacityScore).toBeCloseTo(withoutDebt.capacityScore, 6);
   });
 });

@@ -18,11 +18,14 @@ import {
   scoreProfile,
   analyseFundRisk,
   matchFund,
+  evaluateGates,
+  hasBlockingGate,
   VERDICT_TONE,
   type Answers,
 } from "@/lib/riskProfile";
 import { useRiskProfile } from "@/hooks/useRiskProfile";
 import { ProfileSuggestionsCard } from "./ProfileSuggestionsCard";
+import { GatePanel } from "./GatePanel";
 import { fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +44,9 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
   const [showDetail, setShowDetail] = useState(false);
 
   const profile = useMemo(() => (completed ? scoreProfile(answers) : null), [answers, completed]);
+  const gates = useMemo(() => (completed ? evaluateGates(answers) : []), [answers, completed]);
+  const blocked = hasBlockingGate(gates);
+  const [gateOverridden, setGateOverridden] = useState(false);
 
   const matches = useMemo(() => {
     if (!profile) return [];
@@ -234,6 +240,12 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
       )}
 
       {/* Fund matches */}
+      <GatePanel
+        gates={gates}
+        overridden={gateOverridden}
+        onOverride={() => setGateOverridden(true)}
+      />
+
       {matches.length === 0 ? (
         <p className="mt-4 rounded-lg border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
           Add funds below and each one will be checked against this profile.
@@ -312,12 +324,14 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
         </div>
       )}
 
-      <ProfileSuggestionsCard
-        profile={profile!}
-        onAdd={onAdd}
-        isSelected={isSelected}
-        canAdd={canAdd}
-      />
+      {(!blocked || gateOverridden) && (
+        <ProfileSuggestionsCard
+          profile={profile!}
+          onAdd={onAdd}
+          isSelected={isSelected}
+          canAdd={canAdd}
+        />
+      )}
 
       <p className="mt-4 flex gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
         <Info className="mt-0.5 h-3 w-3 shrink-0" />
