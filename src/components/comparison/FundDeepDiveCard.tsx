@@ -429,8 +429,8 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                           <Bar
                             dataKey="category"
                             name="category"
-                            fill="var(--muted-foreground)"
-                            opacity={0.6}
+                            fill="var(--foreground)"
+                            opacity={0.3}
                             radius={[3, 3, 0, 0]}
                           />
                         </BarChart>
