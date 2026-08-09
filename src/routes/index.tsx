@@ -1,6 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Sparkles, TrendingUp, Loader2, AlertTriangle, BarChart3, CalendarIcon, X } from "lucide-react";
+import { Suspense, lazy, useMemo, useState } from "react";
+import {
+  Sparkles,
+  TrendingUp,
+  Loader2,
+  AlertTriangle,
+  BarChart3,
+  CalendarIcon,
+  X,
+} from "lucide-react";
 import fundscopeLogo from "@/assets/fundscope-logo.png.asset.json";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,31 +20,11 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
-import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
 import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
-import { PortfolioOverlapCard } from "@/components/comparison/PortfolioOverlapCard";
-import { CostComparisonCard } from "@/components/comparison/CostComparisonCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { RollingSipCard } from "@/components/comparison/RollingSipCard";
-import { CategoryPercentileCard } from "@/components/comparison/CategoryPercentileCard";
-import { DrawdownCard } from "@/components/comparison/DrawdownCard";
-import { RiskMetricsCard } from "@/components/comparison/RiskMetricsCard";
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
-import { NavGrowthCard } from "@/components/comparison/NavGrowthCard";
-import { ScoreAndRankCard } from "@/components/comparison/ScoreAndRankCard";
-import { TopFundsCard } from "@/components/comparison/TopFundsCard";
-import { FundDeepDiveCard } from "@/components/comparison/FundDeepDiveCard";
 
-import { CalculatorsCard } from "@/components/comparison/CalculatorsCard";
-import { RetirementCalculatorCard } from "@/components/comparison/RetirementCalculatorCard";
-import { ProjectionCalculatorCard } from "@/components/comparison/ProjectionCalculatorCard";
-import { GoalPlannerCard } from "@/components/comparison/GoalPlannerCard";
-import { SwpCalculatorCard } from "@/components/comparison/SwpCalculatorCard";
-import { PortfolioModeCard } from "@/components/comparison/PortfolioModeCard";
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
-import { CorrelationMatrixCard } from "@/components/comparison/CorrelationMatrixCard";
-import { BenchmarkComparisonCard } from "@/components/comparison/BenchmarkComparisonCard";
-import { AnnualReturnsCard } from "@/components/comparison/AnnualReturnsCard";
 import { InstallButton } from "@/components/pwa/InstallPrompt";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
@@ -44,6 +32,93 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useBenchmark } from "@/hooks/useBenchmark";
 import type { BenchmarkKey, NavRow, RollingYears } from "@/types/mf";
 
+/* Tab contents are code-split: the initial bundle carried every chart, calculator
+   and the 900-line deep-dive card even for someone who never opens those tabs. */
+const RollingReturnsCard = lazy(() =>
+  import("@/components/comparison/RollingReturnsCard").then((m) => ({
+    default: m.RollingReturnsCard,
+  })),
+);
+const NavGrowthCard = lazy(() =>
+  import("@/components/comparison/NavGrowthCard").then((m) => ({ default: m.NavGrowthCard })),
+);
+const RiskMetricsCard = lazy(() =>
+  import("@/components/comparison/RiskMetricsCard").then((m) => ({ default: m.RiskMetricsCard })),
+);
+const DrawdownCard = lazy(() =>
+  import("@/components/comparison/DrawdownCard").then((m) => ({ default: m.DrawdownCard })),
+);
+const CorrelationMatrixCard = lazy(() =>
+  import("@/components/comparison/CorrelationMatrixCard").then((m) => ({
+    default: m.CorrelationMatrixCard,
+  })),
+);
+const ActiveShareCard = lazy(() =>
+  import("@/components/comparison/ActiveShareCard").then((m) => ({ default: m.ActiveShareCard })),
+);
+const PortfolioOverlapCard = lazy(() =>
+  import("@/components/comparison/PortfolioOverlapCard").then((m) => ({
+    default: m.PortfolioOverlapCard,
+  })),
+);
+const CostComparisonCard = lazy(() =>
+  import("@/components/comparison/CostComparisonCard").then((m) => ({
+    default: m.CostComparisonCard,
+  })),
+);
+const AnnualReturnsCard = lazy(() =>
+  import("@/components/comparison/AnnualReturnsCard").then((m) => ({
+    default: m.AnnualReturnsCard,
+  })),
+);
+const BenchmarkComparisonCard = lazy(() =>
+  import("@/components/comparison/BenchmarkComparisonCard").then((m) => ({
+    default: m.BenchmarkComparisonCard,
+  })),
+);
+const ScoreAndRankCard = lazy(() =>
+  import("@/components/comparison/ScoreAndRankCard").then((m) => ({ default: m.ScoreAndRankCard })),
+);
+const CategoryPercentileCard = lazy(() =>
+  import("@/components/comparison/CategoryPercentileCard").then((m) => ({
+    default: m.CategoryPercentileCard,
+  })),
+);
+const PortfolioModeCard = lazy(() =>
+  import("@/components/comparison/PortfolioModeCard").then((m) => ({
+    default: m.PortfolioModeCard,
+  })),
+);
+const CalculatorsCard = lazy(() =>
+  import("@/components/comparison/CalculatorsCard").then((m) => ({ default: m.CalculatorsCard })),
+);
+const GoalPlannerCard = lazy(() =>
+  import("@/components/comparison/GoalPlannerCard").then((m) => ({ default: m.GoalPlannerCard })),
+);
+const ProjectionCalculatorCard = lazy(() =>
+  import("@/components/comparison/ProjectionCalculatorCard").then((m) => ({
+    default: m.ProjectionCalculatorCard,
+  })),
+);
+const SwpCalculatorCard = lazy(() =>
+  import("@/components/comparison/SwpCalculatorCard").then((m) => ({
+    default: m.SwpCalculatorCard,
+  })),
+);
+const RetirementCalculatorCard = lazy(() =>
+  import("@/components/comparison/RetirementCalculatorCard").then((m) => ({
+    default: m.RetirementCalculatorCard,
+  })),
+);
+const RollingSipCard = lazy(() =>
+  import("@/components/comparison/RollingSipCard").then((m) => ({ default: m.RollingSipCard })),
+);
+const FundDeepDiveCard = lazy(() =>
+  import("@/components/comparison/FundDeepDiveCard").then((m) => ({ default: m.FundDeepDiveCard })),
+);
+const TopFundsCard = lazy(() =>
+  import("@/components/comparison/TopFundsCard").then((m) => ({ default: m.TopFundsCard })),
+);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -67,6 +142,13 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+/** Keeps tab height stable while a split chunk loads, so content doesn't jump. */
+function CardSkeleton() {
+  return (
+    <div className="min-h-[220px] animate-pulse rounded-xl border border-border/50 bg-card/40" />
+  );
+}
+
 function Home() {
   const hydrated = useHydrated();
   const { funds, add, remove, clear, has } = useSelection();
@@ -84,8 +166,17 @@ function Home() {
   const MIN_ROWS = 30;
 
   const { schemes, excluded, earliestCommon } = useMemo(() => {
-    const kept: Array<{ code: number; name: string; data: NonNullable<(typeof queries)[number]["data"]> }> = [];
-    const skipped: Array<{ code: number; name: string; inception: number | null; reason: "no-data" | "too-few" }> = [];
+    const kept: Array<{
+      code: number;
+      name: string;
+      data: NonNullable<(typeof queries)[number]["data"]>;
+    }> = [];
+    const skipped: Array<{
+      code: number;
+      name: string;
+      inception: number | null;
+      reason: "no-data" | "too-few";
+    }> = [];
     let maxFirst = 0;
     let anyLoaded = false;
 
@@ -117,10 +208,10 @@ function Home() {
 
   const benchmarkRows: NavRow[] | undefined = useMemo(() => {
     if (!benchmarkQuery.data) return undefined;
-    return startT ? benchmarkQuery.data.rows.filter((r) => r.t >= startT) : benchmarkQuery.data.rows;
+    return startT
+      ? benchmarkQuery.data.rows.filter((r) => r.t >= startT)
+      : benchmarkQuery.data.rows;
   }, [benchmarkQuery.data, startT]);
-
-
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -152,11 +243,12 @@ function Home() {
               <div className="truncate text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-muted-foreground -mt-0.5">
                 Indian Mutual Fund Research Terminal
               </div>
-
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground sm:gap-4">
-            <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" /> FinAPI · IndexedDB cached</span>
+            <span className="hidden lg:flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> FinAPI · IndexedDB cached
+            </span>
             <span className="rounded-full border border-border/60 px-2 py-1 num text-[11px] sm:px-2.5 sm:text-xs">
               {hydrated ? `${funds.length}/10` : "0/10"}
               <span className="hidden sm:inline"> selected</span>
@@ -181,7 +273,8 @@ function Home() {
             </h1>
             <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl">
               Compare up to 10 funds side-by-side. Rolling returns, consistency scoring, drawdowns,
-              Sharpe & Sortino, SIP and lumpsum backtests — all computed live from FinAPI historical NAVs.
+              Sharpe & Sortino, SIP and lumpsum backtests — all computed live from FinAPI historical
+              NAVs.
             </p>
           </div>
         </section>
@@ -189,7 +282,12 @@ function Home() {
         {/* Risk profiler — first decision aid for new investors */}
         {hydrated && (
           <div className="mb-4">
-            <RiskProfilerCard schemes={schemes} onAdd={add} isSelected={has} canAdd={funds.length < 10} />
+            <RiskProfilerCard
+              schemes={schemes}
+              onAdd={add}
+              isSelected={has}
+              canAdd={funds.length < 10}
+            />
           </div>
         )}
 
@@ -255,7 +353,6 @@ function Home() {
           )}
         </Card>
 
-
         {/* Empty state */}
         {hydrated && funds.length === 0 && <EmptyState />}
 
@@ -297,8 +394,13 @@ function Home() {
                 </div>
                 <ul className="mt-2 space-y-1 text-xs">
                   {excluded.map((e) => (
-                    <li key={e.code} className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
-                      <span className="text-foreground/90 truncate max-w-[220px] sm:max-w-[420px]">{e.name}</span>
+                    <li
+                      key={e.code}
+                      className="flex flex-wrap items-center gap-x-2 text-muted-foreground"
+                    >
+                      <span className="text-foreground/90 truncate max-w-[220px] sm:max-w-[420px]">
+                        {e.name}
+                      </span>
                       {e.inception && (
                         <span className="num">
                           · inception {format(new Date(e.inception), "dd MMM yyyy")}
@@ -332,18 +434,18 @@ function Home() {
           </Card>
         )}
 
-
-
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
           <div className="space-y-6">
-            <RollingReturnsCard
-              schemes={schemes}
-              benchmarkRows={benchmarkRows}
-              benchmarkLabel={benchmarkQuery.data?.label}
-              period={rollingPeriod}
-              onPeriodChange={setRollingPeriod}
-            />
+            <Suspense fallback={<CardSkeleton />}>
+              <RollingReturnsCard
+                schemes={schemes}
+                benchmarkRows={benchmarkRows}
+                benchmarkLabel={benchmarkQuery.data?.label}
+                period={rollingPeriod}
+                onPeriodChange={setRollingPeriod}
+              />
+            </Suspense>
 
             <Tabs defaultValue="risk" className="w-full">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -361,54 +463,134 @@ function Home() {
                 <TabsTrigger value="costs">Costs</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
-              <TabsContent value="deepdive" className="mt-4"><FundDeepDiveCard schemes={schemes.map((s) => ({ code: s.code, name: s.name }))} onAdd={(code, name) => add({ schemeCode: code, schemeName: name })} isSelected={has} canAdd={funds.length < 10} /></TabsContent>
+              <TabsContent value="deepdive" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <FundDeepDiveCard
+                    schemes={schemes.map((s) => ({ code: s.code, name: s.name }))}
+                    onAdd={(code, name) => add({ schemeCode: code, schemeName: name })}
+                    isSelected={has}
+                    canAdd={funds.length < 10}
+                  />
+                </Suspense>
+              </TabsContent>
               <TabsContent value="risk" className="mt-4">
-                <RiskMetricsCard schemes={schemes} benchmarkRows={benchmarkRows} windowYears={rollingPeriod} />
+                <Suspense fallback={<CardSkeleton />}>
+                  <RiskMetricsCard
+                    schemes={schemes}
+                    benchmarkRows={benchmarkRows}
+                    windowYears={rollingPeriod}
+                  />
+                </Suspense>
               </TabsContent>
 
-              <TabsContent value="benchmark" className="mt-4"><BenchmarkComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
-              <TabsContent value="returns" className="mt-4"><ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} /></TabsContent>
-              <TabsContent value="drawdown" className="mt-4"><DrawdownCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
-              <TabsContent value="growth" className="mt-4"><NavGrowthCard schemes={schemes} benchmarkRows={benchmarkRows} benchmarkLabel={benchmarkQuery.data?.label} /></TabsContent>
-              <TabsContent value="scores" className="mt-4">
-                <div className="space-y-6">
-                  <ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} />
-                  <CategoryPercentileCard schemes={schemes} />
-                  <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
-                </div>
+              <TabsContent value="benchmark" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <BenchmarkComparisonCard
+                    schemes={schemes}
+                    benchmarkRows={benchmarkRows}
+                    benchmarkLabel={benchmarkQuery.data?.label}
+                  />
+                </Suspense>
               </TabsContent>
-              <TabsContent value="portfolio" className="mt-4"><PortfolioModeCard schemes={schemes} /></TabsContent>
+              <TabsContent value="returns" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="drawdown" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <DrawdownCard
+                    schemes={schemes}
+                    benchmarkRows={benchmarkRows}
+                    benchmarkLabel={benchmarkQuery.data?.label}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="growth" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <NavGrowthCard
+                    schemes={schemes}
+                    benchmarkRows={benchmarkRows}
+                    benchmarkLabel={benchmarkQuery.data?.label}
+                  />
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="scores" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <div className="space-y-6">
+                    <ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} />
+                    <CategoryPercentileCard schemes={schemes} />
+                    <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
+                  </div>
+                </Suspense>
+              </TabsContent>
+              <TabsContent value="portfolio" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <PortfolioModeCard schemes={schemes} />
+                </Suspense>
+              </TabsContent>
               <TabsContent value="calc" className="mt-4">
-                <Tabs defaultValue="backtest" className="w-full">
-                  <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
-                    <TabsTrigger value="goal">Goal Planner</TabsTrigger>
-                    <TabsTrigger value="projection">Investment Projection</TabsTrigger>
-                    <TabsTrigger value="swp">SWP</TabsTrigger>
-                    <TabsTrigger value="retirement">Retirement</TabsTrigger>
-                    <TabsTrigger value="rollingsip">Rolling SIP</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="backtest" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
-                  <TabsContent value="goal" className="mt-4"><GoalPlannerCard schemes={schemes} /></TabsContent>
-                  <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
-                  <TabsContent value="swp" className="mt-4"><SwpCalculatorCard schemes={schemes} /></TabsContent>
-                  <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
-                  <TabsContent value="rollingsip" className="mt-4">
-                    <RollingSipCard schemes={schemes} />
-                  </TabsContent>
-                </Tabs>
+                <Suspense fallback={<CardSkeleton />}>
+                  <Tabs defaultValue="backtest" className="w-full">
+                    <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
+                      <TabsTrigger value="goal">Goal Planner</TabsTrigger>
+                      <TabsTrigger value="projection">Investment Projection</TabsTrigger>
+                      <TabsTrigger value="swp">SWP</TabsTrigger>
+                      <TabsTrigger value="retirement">Retirement</TabsTrigger>
+                      <TabsTrigger value="rollingsip">Rolling SIP</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="backtest" className="mt-4">
+                      <CalculatorsCard schemes={schemes} />
+                    </TabsContent>
+                    <TabsContent value="goal" className="mt-4">
+                      <Suspense fallback={<CardSkeleton />}>
+                        <GoalPlannerCard schemes={schemes} />
+                      </Suspense>
+                    </TabsContent>
+                    <TabsContent value="projection" className="mt-4">
+                      <Suspense fallback={<CardSkeleton />}>
+                        <ProjectionCalculatorCard schemes={schemes} />
+                      </Suspense>
+                    </TabsContent>
+                    <TabsContent value="swp" className="mt-4">
+                      <Suspense fallback={<CardSkeleton />}>
+                        <SwpCalculatorCard schemes={schemes} />
+                      </Suspense>
+                    </TabsContent>
+                    <TabsContent value="retirement" className="mt-4">
+                      <Suspense fallback={<CardSkeleton />}>
+                        <RetirementCalculatorCard />
+                      </Suspense>
+                    </TabsContent>
+                    <TabsContent value="rollingsip" className="mt-4">
+                      <Suspense fallback={<CardSkeleton />}>
+                        <RollingSipCard schemes={schemes} />
+                      </Suspense>
+                    </TabsContent>
+                  </Tabs>
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="diversify" className="mt-4">
-                <div className="grid gap-5">
-                  <PortfolioOverlapCard schemes={schemes} />
-                  <CorrelationMatrixCard schemes={schemes} />
-                </div>
+                <Suspense fallback={<CardSkeleton />}>
+                  <div className="grid gap-5">
+                    <PortfolioOverlapCard schemes={schemes} />
+                    <ActiveShareCard schemes={schemes} />
+                    <CorrelationMatrixCard schemes={schemes} />
+                  </div>
+                </Suspense>
               </TabsContent>
               <TabsContent value="costs" className="mt-4">
-                <CostComparisonCard schemes={schemes} />
+                <Suspense fallback={<CardSkeleton />}>
+                  <CostComparisonCard schemes={schemes} />
+                </Suspense>
               </TabsContent>
-              <TabsContent value="annual" className="mt-4"><AnnualReturnsCard schemes={schemes} /></TabsContent>
+              <TabsContent value="annual" className="mt-4">
+                <Suspense fallback={<CardSkeleton />}>
+                  <AnnualReturnsCard schemes={schemes} />
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
         )}
@@ -416,42 +598,44 @@ function Home() {
         {/* Standalone planners when nothing is selected */}
         {hydrated && !loading && schemes.length === 0 && (
           <div className="space-y-6">
-            <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
-            <GoalPlannerCard schemes={[]} />
-            <ProjectionCalculatorCard schemes={[]} />
-            <SwpCalculatorCard schemes={[]} />
-            <RetirementCalculatorCard />
-
+            <Suspense fallback={<CardSkeleton />}>
+              <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
+              <GoalPlannerCard schemes={[]} />
+              <ProjectionCalculatorCard schemes={[]} />
+              <SwpCalculatorCard schemes={[]} />
+              <RetirementCalculatorCard />
+            </Suspense>
           </div>
         )}
-
 
         <footer className="mt-16 border-t border-border/40 pt-8 text-xs text-muted-foreground">
           <div className="rounded-lg border border-border/50 bg-muted/20 p-4">
             <h4 className="text-sm font-semibold text-foreground">Important disclaimer</h4>
             <div className="mt-2 space-y-2 leading-relaxed">
               <p>
-                Everything on FundScope — scores, rankings, percentiles, risk bands, suitability verdicts and
-                the suggested shortlist — is computed from <strong>historical NAV and index data</strong>. Past
-                performance does not indicate future results, and no figure here is a forecast.
+                Everything on FundScope — scores, rankings, percentiles, risk bands, suitability
+                verdicts and the suggested shortlist — is computed from{" "}
+                <strong>historical NAV and index data</strong>. Past performance does not indicate
+                future results, and no figure here is a forecast.
               </p>
               <p>
-                This is a research and education tool, <strong>not investment advice</strong> and not a
-                recommendation to buy, sell or hold any scheme. It is not personalised financial advice. FundScope
-                is not a SEBI-registered investment adviser or research analyst, and no output should be treated
-                as a substitute for advice from one.
+                This is a research and education tool, <strong>not investment advice</strong> and
+                not a recommendation to buy, sell or hold any scheme. It is not personalised
+                financial advice. FundScope is not a SEBI-registered investment adviser or research
+                analyst, and no output should be treated as a substitute for advice from one.
               </p>
               <p>
-                The risk profiler reflects only what you self-report in a short questionnaire; it cannot account
-                for your full financial position, liabilities, taxes or goals. Screens cover funds currently open
-                for investment, so schemes that closed or merged after poor performance are absent and historical
-                averages read better than reality. Expense ratios, exit loads, taxation and tracking error are not
-                fully modelled. Data is sourced from third parties and may contain errors or lag.
+                The risk profiler reflects only what you self-report in a short questionnaire; it
+                cannot account for your full financial position, liabilities, taxes or goals.
+                Screens cover funds currently open for investment, so schemes that closed or merged
+                after poor performance are absent and historical averages read better than reality.
+                Expense ratios, exit loads, taxation and tracking error are not fully modelled. Data
+                is sourced from third parties and may contain errors or lag.
               </p>
               <p>
-                Mutual fund investments are subject to market risks. Read all scheme-related documents carefully.
-                Verify any figure against the official Scheme Information Document and consult a
-                SEBI-registered adviser before investing.
+                Mutual fund investments are subject to market risks. Read all scheme-related
+                documents carefully. Verify any figure against the official Scheme Information
+                Document and consult a SEBI-registered adviser before investing.
               </p>
             </div>
           </div>

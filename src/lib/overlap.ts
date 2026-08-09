@@ -178,3 +178,100 @@ export function projectCost(
     grossValue,
   };
 }
+
+// ---------------------------------------------------------------- active share
+
+/**
+ * Active Share: the share of a portfolio that differs from its benchmark.
+ *   ActiveShare = 1/2 * Σ |w_fund - w_index|
+ *
+ * Cremers & Petajisto's measure. Roughly:
+ *   < 20%  pure index fund
+ *   20-60% "closet indexer" — paying active fees for near-index exposure
+ *   > 60%  genuinely active
+ *
+ * The halving matters: without it, a fund that simply reweights the same
+ * stocks would score double what it should, since every overweight is
+ * necessarily matched by an underweight elsewhere.
+ */
+export interface ActiveShareResult {
+  activeShare: number; // percent
+  /** Weight held in names absent from the index entirely. */
+  offBenchmarkPct: number;
+  /** Index weight the fund doesn't hold at all. */
+  missingPct: number;
+  /** Biggest deviations, largest absolute difference first. */
+  topDeviations: { name: string; fund: number; index: number; diff: number }[];
+  fundHoldings: number;
+  indexHoldings: number;
+}
+
+export function activeShare(
+  fund: WeightedHolding[],
+  index: WeightedHolding[],
+): ActiveShareResult | null {
+  if (!fund.length || !index.length) return null;
+
+  // Renormalise both to 100% so a fund holding 5% cash isn't scored as 5% active.
+  const fundTotal = fund.reduce((a, h) => a + h.weight, 0);
+  const indexTotal = index.reduce((a, h) => a + h.weight, 0);
+  if (fundTotal <= 0 || indexTotal <= 0) return null;
+
+  const fMap = new Map(fund.map((h) => [h.key, (h.weight / fundTotal) * 100]));
+  const iMap = new Map(index.map((h) => [h.key, (h.weight / indexTotal) * 100]));
+  const names = new Map<string, string>();
+  for (const h of fund) names.set(h.key, h.name);
+  for (const h of index) if (!names.has(h.key)) names.set(h.key, h.name);
+
+  let sumAbs = 0;
+  let offBenchmark = 0;
+  let missing = 0;
+  const deviations: ActiveShareResult["topDeviations"] = [];
+
+  for (const key of new Set([...fMap.keys(), ...iMap.keys()])) {
+    const f = fMap.get(key) ?? 0;
+    const i = iMap.get(key) ?? 0;
+    const diff = f - i;
+    sumAbs += Math.abs(diff);
+    if (i === 0) offBenchmark += f;
+    if (f === 0) missing += i;
+    deviations.push({ name: names.get(key) ?? key, fund: f, index: i, diff });
+  }
+
+  deviations.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+
+  return {
+    activeShare: sumAbs / 2,
+    offBenchmarkPct: offBenchmark,
+    missingPct: missing,
+    topDeviations: deviations.slice(0, 10),
+    fundHoldings: fund.length,
+    indexHoldings: index.length,
+  };
+}
+
+export function activeShareVerdict(pct: number): { label: string; tone: string; note: string } {
+  if (pct < 20)
+    return {
+      label: "Index-like",
+      tone: "text-info",
+      note: "Effectively tracks the index. Fine if that's what you want — but only worth an index fund's fee.",
+    };
+  if (pct < 60)
+    return {
+      label: "Closet indexer",
+      tone: "text-warning",
+      note: "Most of this portfolio mirrors the index, yet it charges active fees. The active portion has to work much harder to justify the cost.",
+    };
+  if (pct < 80)
+    return {
+      label: "Genuinely active",
+      tone: "text-success",
+      note: "Meaningfully different from the index — for better or worse, you are paying for real stock selection.",
+    };
+  return {
+    label: "Highly active",
+    tone: "text-success",
+    note: "Very different from the index. Expect returns to diverge sharply from it in both directions.",
+  };
+}
