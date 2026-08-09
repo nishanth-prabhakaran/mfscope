@@ -408,14 +408,9 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                             ]}
                           />
                           <Legend
-                            wrapperStyle={{ fontSize: 11 }}
-                            formatter={(v) => (
-                              <span className="text-muted-foreground">
-                                {v === "fund" ? "Fund" : "Category avg"}
-                              </span>
-                            )}
+                            content={<PerfLegend />}
                           />
-                          <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]}>
+                          <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]} fill="var(--success)">
                             {rankData.map((d, i) => (
                               <Cell
                                 key={i}
@@ -426,6 +421,14 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                                 }
                               />
                             ))}
+                            <LabelList
+                              dataKey="fund"
+                              position="top"
+                              formatter={(v: number | null) =>
+                                v != null && Number.isFinite(v) ? `${fmtNum(v)}%` : ""
+                              }
+                              style={{ fill: "var(--foreground)", fontSize: 10, fontWeight: 600 }}
+                            />
                           </Bar>
                           <Bar
                             dataKey="category"
@@ -433,7 +436,16 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                             fill="var(--foreground)"
                             opacity={0.3}
                             radius={[3, 3, 0, 0]}
-                          />
+                          >
+                            <LabelList
+                              dataKey="category"
+                              position="top"
+                              formatter={(v: number | null) =>
+                                v != null && Number.isFinite(v) ? `${fmtNum(v)}%` : ""
+                              }
+                              style={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                            />
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
