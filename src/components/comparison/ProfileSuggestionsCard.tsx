@@ -9,10 +9,13 @@ import {
   analyseFundRisk,
   isSuggestable,
   suitabilityScore,
+  weightsFor,
+  weightsExplanation,
   SUITABLE_CATEGORIES,
   BANDS,
   type ProfileResult,
   type FundRisk,
+  type Answers,
 } from "@/lib/riskProfile";
 import { calculateRollingReturns, rollingStats, calculateRisk } from "@/lib/calculators";
 import { fetchSchemeDetail, num } from "@/lib/finapiDetail";
@@ -26,6 +29,7 @@ const MAX_RESULTS = 8;
 
 interface Props {
   profile: ProfileResult;
+  answers: Answers;
   onAdd?: (f: { schemeCode: number; schemeName: string }) => void;
   isSelected?: (code: number) => boolean;
   canAdd?: boolean;
@@ -41,7 +45,14 @@ interface Suggestion {
   fund: FundRisk;
 }
 
-export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = true }: Props) {
+export function ProfileSuggestionsCard({
+  profile,
+  answers,
+  onAdd,
+  isSelected,
+  canAdd = true,
+}: Props) {
+  const weights = useMemo(() => weightsFor(profile, answers), [profile, answers]);
   const { data: list, isLoading: listLoading } = useSchemeList();
   const [run, setRun] = useState(false);
 
@@ -59,7 +70,13 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
   }, [list, categories]);
 
   const screen = useQuery({
-    queryKey: ["profile-suggestions", profile.band, profile.horizonWindow, universe.length],
+    queryKey: [
+      "profile-suggestions",
+      profile.band,
+      profile.horizonWindow,
+      universe.length,
+      JSON.stringify(weights),
+    ],
     enabled: run && universe.length > 0,
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
@@ -119,15 +136,18 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
           amc: c.amc,
           expenseRatio: c.expenseRatio,
           fund: c.fund,
-          score: suitabilityScore({
-            rollingMean: c.stats.mean,
-            worstRolling: c.stats.min,
-            positivePct: c.stats.positivePct,
-            volatility: c.risk.volatility,
-            maxDD: c.fund.maxDrawdown,
-            recoveryDays: c.risk.recoveryDays,
-            expenseRatio: c.expenseRatio,
-          }),
+          score: suitabilityScore(
+            {
+              rollingMean: c.stats.mean,
+              worstRolling: c.stats.min,
+              positivePct: c.stats.positivePct,
+              volatility: c.risk.volatility,
+              maxDD: c.fund.maxDrawdown,
+              recoveryDays: c.risk.recoveryDays,
+              expenseRatio: c.expenseRatio,
+            },
+            weights,
+          ),
         });
       }
 

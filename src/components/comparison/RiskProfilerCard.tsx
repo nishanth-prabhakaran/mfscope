@@ -327,6 +327,7 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
       {(!blocked || gateOverridden) && (
         <ProfileSuggestionsCard
           profile={profile!}
+          answers={answers}
           onAdd={onAdd}
           isSelected={isSelected}
           canAdd={canAdd}

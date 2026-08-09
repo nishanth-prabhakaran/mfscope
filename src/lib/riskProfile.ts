@@ -388,7 +388,81 @@ const clamp = (v: number) => Math.max(0, Math.min(100, v));
  * Sortino, volatility and drawdown both directly and again inside
  * calculateConsistencyScore, so its nominal weights understate risk.
  */
-export function suitabilityScore(i: SuitabilityInput): number {
+export interface SuitabilityWeights {
+  cost: number;
+  worst: number;
+  positive: number;
+  dd: number;
+  recovery: number;
+  vol: number;
+  ret: number;
+}
+
+/** Baseline weights, used when no profile is supplied. */
+export const BASE_WEIGHTS: SuitabilityWeights = {
+  cost: 0.25,
+  worst: 0.16,
+  positive: 0.1,
+  dd: 0.1,
+  recovery: 0.05,
+  vol: 0.14,
+  ret: 0.2,
+};
+
+/**
+ * Tilts the weights toward what this particular investor's answers imply,
+ * then renormalises so they still sum to 1.
+ *
+ * The eligibility filter is already questionnaire-driven — the band picks the
+ * categories, isSuggestable excludes funds riskier than the band, and the
+ * horizon sets the rolling window. This makes the *ordering* answer to the
+ * questionnaire too, rather than applying one fixed formula to a nervous
+ * five-year first-timer and a fifteen-year veteran alike.
+ *
+ * Two adjustments, both with a clear mechanism:
+ *
+ *  - Horizon scales cost. A 0.5% fee difference is a rounding error over three
+ *    years and roughly a fifth of the final corpus over twenty-five, because
+ *    fees compound against you exactly as returns compound for you. Longer
+ *    horizon, heavier cost weight.
+ *
+ *  - Stated drawdown reaction scales the downside terms. Someone who answered
+ *    that they would sell during a deep fall is not served by a fund with a
+ *    great average and a brutal worst case: they will not be holding it at the
+ *    bottom. Their real risk is abandoning the plan, so the worst window,
+ *    drawdown and recovery matter more, and past return less.
+ */
+export function weightsFor(profile: ProfileResult, answers: Answers): SuitabilityWeights {
+  const w = { ...BASE_WEIGHTS };
+
+  // Horizon: ~0.7x at 1.5y up to ~1.5x at 15y.
+  const horizonFactor = 0.6 + Math.min(profile.horizonYears, 20) / 22;
+  w.cost *= horizonFactor;
+
+  // Drawdown answer runs 0 (sell everything) to 4 (buy more).
+  const dd = answers.drawdown;
+  if (dd != null) {
+    // 1.6x downside weight for a panic-seller, 0.8x for someone who buys the dip.
+    const fear = 1.6 - (dd / 4) * 0.8;
+    w.worst *= fear;
+    w.dd *= fear;
+    w.recovery *= fear;
+    w.vol *= fear;
+    // Return matters correspondingly less to someone who would not hold on.
+    w.ret *= 2 - fear;
+  }
+
+  const total = Object.values(w).reduce((a, b) => a + b, 0);
+  (Object.keys(w) as (keyof SuitabilityWeights)[]).forEach((k) => {
+    w[k] = w[k] / total;
+  });
+  return w;
+}
+
+export function suitabilityScore(
+  i: SuitabilityInput,
+  weights: SuitabilityWeights = BASE_WEIGHTS,
+): number {
   // Cost: 0.2% ≈ 95, 1.0% ≈ 75, 2.0% ≈ 50. Missing data scores neutrally
   // rather than favourably, so an unknown fee can't win by default.
   const cost = i.expenseRatio == null ? 55 : clamp(100 - i.expenseRatio * 25);
@@ -400,18 +474,40 @@ export function suitabilityScore(i: SuitabilityInput): number {
   const recovery = clamp(i.recoveryDays == null ? 70 : 100 - i.recoveryDays / 12);
   const vol = clamp(100 - i.volatility * 350);
 
-  // Return, deliberately the smallest term.
   const ret = clamp((i.rollingMean / 18) * 100);
 
   return Math.round(
-    cost * 0.25 +
-      worst * 0.16 +
-      positive * 0.1 +
-      dd * 0.1 +
-      recovery * 0.05 +
-      vol * 0.14 +
-      ret * 0.2,
+    cost * weights.cost +
+      worst * weights.worst +
+      positive * weights.positive +
+      dd * weights.dd +
+      recovery * weights.recovery +
+      vol * weights.vol +
+      ret * weights.ret,
   );
+}
+
+/** Human-readable note explaining why this investor's ordering is what it is. */
+export function weightsExplanation(profile: ProfileResult, answers: Answers): string {
+  const w = weightsFor(profile, answers);
+  const parts: string[] = [];
+  parts.push(
+    profile.horizonYears >= 10
+      ? `over ${Math.round(profile.horizonYears)} years fees compound heavily, so cost is weighted most`
+      : profile.horizonYears <= 3
+        ? "your horizon is short, so cost matters less than downside protection"
+        : "cost and downside are balanced for your horizon",
+  );
+  if (answers.drawdown != null && answers.drawdown <= 1) {
+    parts.push(
+      "you said you would sell during a deep fall, so worst-case behaviour is weighted heavily",
+    );
+  } else if (answers.drawdown != null && answers.drawdown >= 3.2) {
+    parts.push("you said you would hold or buy through a fall, so returns count for more");
+  }
+  return `${parts.join("; ")} (cost ${Math.round(w.cost * 100)}%, downside ${Math.round(
+    (w.worst + w.dd + w.recovery + w.vol) * 100,
+  )}%, return ${Math.round(w.ret * 100)}%).`;
 }
 
 // ---------------------------------------------------------------- gates

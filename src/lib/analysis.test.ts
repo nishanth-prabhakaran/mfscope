@@ -20,6 +20,8 @@ import {
   evaluateGates,
   hasBlockingGate,
   suitabilityScore,
+  weightsFor,
+  weightsExplanation,
   type Answers,
   type RiskBand,
 } from "./riskProfile";
@@ -555,5 +557,93 @@ describe("suitabilityScore", () => {
     expect(awful).toBeGreaterThanOrEqual(0);
     expect(ideal).toBeLessThanOrEqual(100);
     expect(ideal).toBeGreaterThan(awful);
+  });
+});
+
+describe("weightsFor (profile-adaptive ranking)", () => {
+  const answersWith = (over: Partial<Answers>): Answers => ({
+    debt: 2,
+    insurance: 2,
+    horizon: 2,
+    emergency: 3,
+    income: 3,
+    share: 3,
+    drawdown: 2,
+    experience: 2,
+    badyear: 2.7,
+    ...over,
+  });
+
+  const weightsAt = (over: Partial<Answers>) => {
+    const a = answersWith(over);
+    return weightsFor(scoreProfile(a), a);
+  };
+
+  it("always renormalises to 1", () => {
+    for (const h of [0, 1, 2, 3, 4]) {
+      for (const d of [0, 1, 2, 3.2, 4]) {
+        const w = weightsAt({ horizon: h, drawdown: d });
+        const sum = Object.values(w).reduce((x, y) => x + y, 0);
+        expect(sum).toBeCloseTo(1, 6);
+      }
+    }
+  });
+
+  it("weights cost more heavily for a longer horizon", () => {
+    expect(weightsAt({ horizon: 4 }).cost).toBeGreaterThan(weightsAt({ horizon: 0 }).cost);
+  });
+
+  it("weights downside more heavily for someone who would panic-sell", () => {
+    const panicky = weightsAt({ drawdown: 0 });
+    const steady = weightsAt({ drawdown: 4 });
+    const downside = (w: typeof panicky) => w.worst + w.dd + w.recovery + w.vol;
+    expect(downside(panicky)).toBeGreaterThan(downside(steady));
+  });
+
+  it("weights past return more for someone who would hold through a fall", () => {
+    expect(weightsAt({ drawdown: 4 }).ret).toBeGreaterThan(weightsAt({ drawdown: 0 }).ret);
+  });
+
+  it("keeps every weight positive", () => {
+    for (const h of [0, 4]) {
+      for (const d of [0, 4]) {
+        for (const v of Object.values(weightsAt({ horizon: h, drawdown: d }))) {
+          expect(v).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it("changes which fund ranks first for different investors", () => {
+    // Cheap-and-steady vs pricey-but-higher-returning.
+    const steadyCheap = {
+      rollingMean: 12,
+      worstRolling: 4,
+      positivePct: 97,
+      volatility: 0.14,
+      maxDD: -0.3,
+      recoveryDays: 400,
+      expenseRatio: 0.3,
+    };
+    const punchyDear = {
+      rollingMean: 17,
+      worstRolling: -6,
+      positivePct: 80,
+      volatility: 0.26,
+      maxDD: -0.58,
+      recoveryDays: 950,
+      expenseRatio: 1.9,
+    };
+    const nervous = weightsAt({ horizon: 4, drawdown: 0 });
+    expect(suitabilityScore(steadyCheap, nervous)).toBeGreaterThan(
+      suitabilityScore(punchyDear, nervous),
+    );
+  });
+
+  it("produces an explanation mentioning the actual weights", () => {
+    const a = answersWith({ horizon: 4, drawdown: 0 });
+    const text = weightsExplanation(scoreProfile(a), a);
+    expect(text).toMatch(/cost \d+%/);
+    expect(text).toMatch(/sell during a deep fall/i);
   });
 });
