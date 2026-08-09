@@ -104,7 +104,7 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
         <h3 className="mt-4 font-display text-base font-semibold sm:text-lg">{q.text}</h3>
         {q.help && <p className="mt-1 text-xs text-muted-foreground">{q.help}</p>}
 
-        <div className="mt-4 grid gap-2">
+        <div className="mt-4 grid min-w-0 gap-2">
           {q.options.map((o) => {
             const active = answers[q.id] === o.value;
             return (
@@ -239,15 +239,18 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
           Add funds below and each one will be checked against this profile.
         </p>
       ) : (
-        <div className="mt-4 grid gap-2">
+        <div className="mt-4 grid min-w-0 gap-2">
           {matches.map((m, idx) => {
             const open = expanded === m.code;
             return (
-              <div key={m.code} className="rounded-lg border border-border/60">
+              <div
+                key={m.code}
+                className="min-w-0 overflow-hidden rounded-lg border border-border/60"
+              >
                 <button
                   type="button"
                   onClick={() => setExpanded(open ? null : m.code)}
-                  className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left"
+                  className="flex w-full min-w-0 items-start justify-between gap-3 px-3 py-2.5 text-left"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{m.name}</p>

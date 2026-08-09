@@ -123,8 +123,8 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
 
   if (!run) {
     return (
-      <div className="mt-4 rounded-lg border border-dashed border-border/60 p-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-4 min-w-0 overflow-hidden rounded-lg border border-dashed border-border/60 p-3">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium">Don't know where to start?</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -148,7 +148,7 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-border/60 p-3">
+    <div className="mt-4 min-w-0 overflow-hidden rounded-lg border border-border/60 p-3">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium">Shortlist to research</p>
         {screen.isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />}
@@ -173,20 +173,20 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
 
       {rows.length > 0 && (
         <>
-          <div className="mt-3 grid gap-2">
+          <div className="mt-3 grid min-w-0 gap-2">
             {rows.map((s) => {
               const selected = isSelected?.(s.code) ?? false;
               return (
                 <div
                   key={s.code}
-                  className="flex items-start justify-between gap-3 rounded-lg border border-border/50 px-3 py-2.5"
+                  className="flex min-w-0 items-start justify-between gap-3 overflow-hidden rounded-lg border border-border/50 px-3 py-2.5"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{s.name}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {s.fund.category ?? "Fund"} · {BANDS[s.fund.band].label}
                     </p>
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                    <div className="mt-1.5 flex min-w-0 flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                       <span className="num">Volatility {fmtPct(s.fund.volatility, 1)}</span>
                       <span className="num">Worst fall {fmtPct(s.fund.maxDrawdown, 1)}</span>
                       {s.fund.worstAtHorizon != null && (
