@@ -16,6 +16,8 @@ import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
 import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
 import { PortfolioOverlapCard } from "@/components/comparison/PortfolioOverlapCard";
 import { CostComparisonCard } from "@/components/comparison/CostComparisonCard";
+import { RollingSipCard } from "@/components/comparison/RollingSipCard";
+import { CategoryPercentileCard } from "@/components/comparison/CategoryPercentileCard";
 import { DrawdownCard } from "@/components/comparison/DrawdownCard";
 import { RiskMetricsCard } from "@/components/comparison/RiskMetricsCard";
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
@@ -369,6 +371,7 @@ function Home() {
               <TabsContent value="scores" className="mt-4">
                 <div className="space-y-6">
                   <ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} />
+                  <CategoryPercentileCard schemes={schemes} />
                   <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
                 </div>
               </TabsContent>
@@ -381,12 +384,16 @@ function Home() {
                     <TabsTrigger value="projection">Investment Projection</TabsTrigger>
                     <TabsTrigger value="swp">SWP</TabsTrigger>
                     <TabsTrigger value="retirement">Retirement</TabsTrigger>
+                    <TabsTrigger value="rollingsip">Rolling SIP</TabsTrigger>
                   </TabsList>
                   <TabsContent value="backtest" className="mt-4"><CalculatorsCard schemes={schemes} /></TabsContent>
                   <TabsContent value="goal" className="mt-4"><GoalPlannerCard schemes={schemes} /></TabsContent>
                   <TabsContent value="projection" className="mt-4"><ProjectionCalculatorCard schemes={schemes} /></TabsContent>
                   <TabsContent value="swp" className="mt-4"><SwpCalculatorCard schemes={schemes} /></TabsContent>
                   <TabsContent value="retirement" className="mt-4"><RetirementCalculatorCard /></TabsContent>
+                  <TabsContent value="rollingsip" className="mt-4">
+                    <RollingSipCard schemes={schemes} />
+                  </TabsContent>
                 </Tabs>
               </TabsContent>
 
@@ -417,10 +424,46 @@ function Home() {
         )}
 
 
-        <footer className="mt-16 pt-8 border-t border-border/40 text-xs text-muted-foreground">
-          <p>
-            Data source: <a className="underline hover:text-foreground" href="https://finapi.upvaly.com" target="_blank" rel="noreferrer">FinAPI</a>.
-            Calculations for research/education only — not investment advice.
+        <footer className="mt-16 border-t border-border/40 pt-8 text-xs text-muted-foreground">
+          <div className="rounded-lg border border-border/50 bg-muted/20 p-4">
+            <h4 className="text-sm font-semibold text-foreground">Important disclaimer</h4>
+            <div className="mt-2 space-y-2 leading-relaxed">
+              <p>
+                Everything on FundScope — scores, rankings, percentiles, risk bands, suitability verdicts and
+                the suggested shortlist — is computed from <strong>historical NAV and index data</strong>. Past
+                performance does not indicate future results, and no figure here is a forecast.
+              </p>
+              <p>
+                This is a research and education tool, <strong>not investment advice</strong> and not a
+                recommendation to buy, sell or hold any scheme. It is not personalised financial advice. FundScope
+                is not a SEBI-registered investment adviser or research analyst, and no output should be treated
+                as a substitute for advice from one.
+              </p>
+              <p>
+                The risk profiler reflects only what you self-report in a short questionnaire; it cannot account
+                for your full financial position, liabilities, taxes or goals. Screens cover funds currently open
+                for investment, so schemes that closed or merged after poor performance are absent and historical
+                averages read better than reality. Expense ratios, exit loads, taxation and tracking error are not
+                fully modelled. Data is sourced from third parties and may contain errors or lag.
+              </p>
+              <p>
+                Mutual fund investments are subject to market risks. Read all scheme-related documents carefully.
+                Verify any figure against the official Scheme Information Document and consult a
+                SEBI-registered adviser before investing.
+              </p>
+            </div>
+          </div>
+          <p className="mt-4">
+            Data source:{" "}
+            <a
+              className="underline hover:text-foreground"
+              href="https://finapi.upvaly.com"
+              target="_blank"
+              rel="noreferrer"
+            >
+              FinAPI
+            </a>
+            . Index values shown are Total Return (TRI) where available.
           </p>
         </footer>
       </main>
