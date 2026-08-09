@@ -260,7 +260,7 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {m.match.warnings.length > 0 && (
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                      <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                     )}
                     <span className={cn("text-xs font-semibold", VERDICT_TONE[m.match.verdict])}>
                       {m.match.label}
@@ -278,7 +278,7 @@ export function RiskProfilerCard({ schemes, onAdd, isSelected, canAdd = true }: 
                     <p className="leading-relaxed">{m.match.reason}</p>
 
                     {m.match.warnings.map((w) => (
-                      <p key={w} className="mt-2 flex gap-1.5 leading-relaxed text-amber-400">
+                      <p key={w} className="mt-2 flex gap-1.5 leading-relaxed text-warning">
                         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                         <span>{w}</span>
                       </p>

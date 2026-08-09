@@ -111,7 +111,7 @@ export function allOverlaps(funds: FundHoldings[]): OverlapPair[] {
 
 export function overlapTone(pct: number): { label: string; tone: string } {
   if (pct >= 70) return { label: "Very high", tone: "text-destructive" };
-  if (pct >= 50) return { label: "High", tone: "text-amber-400" };
+  if (pct >= 50) return { label: "High", tone: "text-warning" };
   if (pct >= 30) return { label: "Moderate", tone: "text-foreground" };
   return { label: "Low", tone: "text-success" };
 }

@@ -73,7 +73,7 @@ export function CalculatorsCard({ schemes }: Props) {
                     </td>
                     <td className="text-right">{fmtInr(row.r.totalInvested)}</td>
                     <td className="text-right">{fmtInr(row.r.currentValue)}</td>
-                    <td className={`text-right ${row.r.profit >= 0 ? "text-success" : "text-destructive-foreground"}`}>
+                    <td className={`text-right ${row.r.profit >= 0 ? "text-success" : "text-destructive"}`}>
                       {fmtInr(row.r.profit)}
                     </td>
                     <td className="text-right">{fmtPct(row.r.absoluteReturn)}</td>
@@ -112,7 +112,7 @@ export function CalculatorsCard({ schemes }: Props) {
                     </td>
                     <td className="text-right">{fmtInr(row.r.invested)}</td>
                     <td className="text-right">{fmtInr(row.r.currentValue)}</td>
-                    <td className={`text-right ${row.r.absoluteReturn >= 0 ? "text-success" : "text-destructive-foreground"}`}>
+                    <td className={`text-right ${row.r.absoluteReturn >= 0 ? "text-success" : "text-destructive"}`}>
                       {fmtPct(row.r.absoluteReturn)}
                     </td>
                     <td className="text-right font-medium">{fmtPct(row.r.cagr)}</td>

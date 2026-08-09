@@ -5,7 +5,7 @@ import type { NormalizedScheme, NavRow } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum } from "@/lib/format";
 import { findNavAt } from "@/lib/calculators";
 
-const BENCH_COLOR = "#a78bfa";
+const BENCH_COLOR = "var(--series-bench)";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];

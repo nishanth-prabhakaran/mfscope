@@ -19,9 +19,9 @@ import { Download, FileImage, Eye, EyeOff } from "lucide-react";
 import { toPng } from "html-to-image";
 
 const PERIODS: RollingYears[] = [1, 3, 5, 7, 10, 12, 15];
-const AVG_COLOR = "#f5b642";
-const MED_COLOR = "#22d3ee";
-const BENCH_COLOR = "#a78bfa";
+const AVG_COLOR = "var(--series-avg)";
+const MED_COLOR = "var(--series-med)";
+const BENCH_COLOR = "var(--series-bench)";
 
 function median(arr: number[]) {
   if (!arr.length) return NaN;
@@ -151,7 +151,10 @@ export function RollingReturnsCard({
 
   const exportPng = async () => {
     if (!chartRef.current) return;
-    const dataUrl = await toPng(chartRef.current, { backgroundColor: "#0f1420", pixelRatio: 2 });
+    // toPng needs a resolved colour — CSS vars aren't evaluated by html-to-image.
+    const exportBg =
+      getComputedStyle(document.documentElement).getPropertyValue("--export-bg").trim() || "#0f1420";
+    const dataUrl = await toPng(chartRef.current, { backgroundColor: exportBg, pixelRatio: 2 });
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = `rolling-${period}y-returns.png`;
@@ -395,7 +398,7 @@ export function RollingReturnsCard({
                   </div>
                 </td>
                 <td className="text-right">{s.count}</td>
-                <td className="text-right text-destructive-foreground/90">{fmtNum(s.min)}%</td>
+                <td className="text-right text-destructive/90">{fmtNum(s.min)}%</td>
                 <td className="text-right">{fmtNum(s.mean)}%</td>
                 <td className="text-right">{fmtNum(s.median)}%</td>
                 <td className="text-right text-success">{fmtNum(s.max)}%</td>

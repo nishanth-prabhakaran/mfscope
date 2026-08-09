@@ -210,7 +210,7 @@ export function PortfolioModeCard({ schemes }: Props) {
                     return (
                       <tr key={p.label} className="border-b border-border/30 last:border-0">
                         <td className="py-1.5 text-muted-foreground">{p.label}</td>
-                        <td className={`text-right font-medium ${v >= 0 ? "text-success" : "text-destructive-foreground"}`}>{fmtPct(v)}</td>
+                        <td className={`text-right font-medium ${v >= 0 ? "text-success" : "text-destructive"}`}>{fmtPct(v)}</td>
                       </tr>
                     );
                   })}
@@ -248,7 +248,7 @@ export function PortfolioModeCard({ schemes }: Props) {
 }
 
 function Stat({ label, value, accent, tone }: { label: string; value: string; accent?: boolean; tone?: "success" | "destructive" }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive-foreground" : accent ? "text-primary" : "";
+  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : accent ? "text-primary" : "";
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5">
       <div className="text-[11px] text-muted-foreground">{label}</div>

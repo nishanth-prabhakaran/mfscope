@@ -89,7 +89,7 @@ export function PortfolioOverlapCard({ schemes }: Props) {
 
       {worst && worst.overlapPct >= 50 && (
         <div className="mt-3 flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-relaxed">
             <span className="font-medium">{worst.overlapPct.toFixed(0)}% overlap</span> between two
             of your funds. Holding both gives you far less diversification than it appears — you are

@@ -63,7 +63,7 @@ export const BANDS: Record<RiskBand, BandMeta> = {
     band: 4,
     label: "Growth",
     blurb: "Long horizon and steady nerves through deep drawdowns.",
-    tone: "text-amber-400",
+    tone: "text-warning",
   },
   5: {
     band: 5,
@@ -438,7 +438,7 @@ export function matchFund(fund: FundRisk, profile: ProfileResult, answers: Answe
 
 export const VERDICT_TONE: Record<Verdict, string> = {
   fit: "text-success",
-  stretch: "text-amber-400",
+  stretch: "text-warning",
   mismatch: "text-destructive",
   below: "text-sky-400",
 };

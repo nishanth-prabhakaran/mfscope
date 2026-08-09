@@ -5,9 +5,9 @@ import { drawdownSeries, maxDrawdown, longestRecoveryDays, mean } from "@/lib/ca
 import type { NormalizedScheme, NavRow } from "@/types/mf";
 import { colorFor, fmtDateShort, fmtNum, fmtPct } from "@/lib/format";
 
-const AVG_COLOR = "#f5b642";
-const MED_COLOR = "#22d3ee";
-const BENCH_COLOR = "#a78bfa";
+const AVG_COLOR = "var(--series-avg)";
+const MED_COLOR = "var(--series-med)";
+const BENCH_COLOR = "var(--series-bench)";
 
 function medianOf(arr: number[]) {
   if (!arr.length) return NaN;
@@ -206,7 +206,7 @@ export function DrawdownCard({ schemes, benchmarkRows, benchmarkLabel }: Props) 
                     <span className="truncate max-w-[280px]">{s.name}</span>
                   </div>
                 </td>
-                <td className="text-right text-destructive-foreground">{fmtPct(s.max)}</td>
+                <td className="text-right text-destructive">{fmtPct(s.max)}</td>
                 <td className="text-right">{fmtPct(s.current)}</td>
                 <td className="text-right">{fmtPct(s.avg)}</td>
                 <td className="text-right">{s.recovery ? `${fmtNum(s.recovery / 30, 1)} months` : "—"}</td>

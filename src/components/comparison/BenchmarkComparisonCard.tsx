@@ -112,10 +112,10 @@ export function BenchmarkComparisonCard({ schemes, benchmarkRows, benchmarkLabel
                   <>
                     <td className={`text-right ${cls(rFund, row.code)}`}>{fmtPct(row.c.fundCagr)}</td>
                     <td className="text-right text-muted-foreground">{fmtPct(row.c.benchCagr)}</td>
-                    <td className={`text-right font-medium ${cls(rExcess, row.code) || (row.c.excessCagr >= 0 ? "text-success" : "text-destructive-foreground")}`}>
+                    <td className={`text-right font-medium ${cls(rExcess, row.code) || (row.c.excessCagr >= 0 ? "text-success" : "text-destructive")}`}>
                       {fmtPct(row.c.excessCagr)}
                     </td>
-                    <td className={`text-right ${cls(rAlpha, row.code) || (row.c.alpha >= 0 ? "text-success" : "text-destructive-foreground")}`}>{fmtPct(row.c.alpha)}</td>
+                    <td className={`text-right ${cls(rAlpha, row.code) || (row.c.alpha >= 0 ? "text-success" : "text-destructive")}`}>{fmtPct(row.c.alpha)}</td>
                     <td className="text-right">{fmtNum(row.c.beta)}</td>
                     <td className="text-right">{fmtNum(row.c.rSquared)}</td>
                     <td className="text-right">{fmtPct(row.c.trackingError)}</td>

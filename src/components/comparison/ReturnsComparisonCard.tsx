@@ -70,7 +70,7 @@ export function ReturnsComparisonCard({ schemes, benchmarkRows }: Props) {
                           ? "text-success font-semibold"
                           : isSecond
                             ? "text-info font-medium"
-                            : positive ? "" : "text-destructive-foreground"
+                            : positive ? "" : "text-destructive"
                       }`}
                     >
                       {fmtPct(v.v)}

@@ -127,11 +127,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+/**
+ * Runs before first paint so a light-theme user never sees a dark flash.
+ * Must stay inline and dependency-free — anything imported would load too late.
+ */
+const THEME_BOOT = `(function(){try{
+var c=localStorage.getItem('mf-theme-v1')||'dark';
+var r=c==='system'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):c;
+var e=document.documentElement;
+e.classList.toggle('light',r==='light');
+e.classList.toggle('dark',r==='dark');
+e.style.colorScheme=r;
+}catch(_){}})();`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body>
         {children}

@@ -118,7 +118,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
             <Area type="monotone" dataKey="value" name="Base case" stroke="var(--chart-2)" fill="url(#projGrad)" strokeWidth={2.5} />
             <Area type="monotone" dataKey="low" name="Conservative" stroke="var(--chart-5)" fill="none" strokeDasharray="4 4" strokeWidth={1.5} />
             <Area type="monotone" dataKey="invested" name="Invested" stroke="var(--muted-foreground)" fill="none" strokeWidth={1.5} />
-            <Area type="monotone" dataKey="real" name="Inflation-adjusted" stroke="#f59e0b" fill="none" strokeDasharray="2 3" strokeWidth={1.5} />
+            <Area type="monotone" dataKey="real" name="Inflation-adjusted" stroke="var(--series-alt)" fill="none" strokeDasharray="2 3" strokeWidth={1.5} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -158,7 +158,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
 }
 
 function Stat({ label, value, accent, tone }: { label: string; value: string; accent?: boolean; tone?: "success" | "destructive" }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive-foreground" : accent ? "text-primary" : "";
+  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : accent ? "text-primary" : "";
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5">
       <div className="text-[11px] text-muted-foreground">{label}</div>

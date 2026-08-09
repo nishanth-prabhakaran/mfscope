@@ -149,6 +149,6 @@ export function percentileLabel(pct: number): { label: string; tone: string } {
   if (pct >= 90) return { label: "Top 10%", tone: "text-success" };
   if (pct >= 75) return { label: "Top quartile", tone: "text-success" };
   if (pct >= 50) return { label: "Above median", tone: "text-foreground" };
-  if (pct >= 25) return { label: "Below median", tone: "text-amber-400" };
+  if (pct >= 25) return { label: "Below median", tone: "text-warning" };
   return { label: "Bottom quartile", tone: "text-destructive" };
 }

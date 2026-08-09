@@ -91,7 +91,7 @@ export function RetirementCalculatorCard() {
             />
             <Area type="monotone" dataKey="accumulation" name="Accumulation" stroke="var(--chart-1)" fill="url(#accGrad)" strokeWidth={2} connectNulls={false} />
             <Area type="monotone" dataKey="retirement" name="Retirement drawdown" stroke="var(--chart-3)" fill="url(#retGrad)" strokeWidth={2} connectNulls={false} />
-            <Line type="monotone" dataKey="required" name="On-track path" stroke="#f59e0b" strokeDasharray="5 4" strokeWidth={2} dot={false} connectNulls={false} />
+            <Line type="monotone" dataKey="required" name="On-track path" stroke="var(--series-alt)" strokeDasharray="5 4" strokeWidth={2} dot={false} connectNulls={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -105,7 +105,7 @@ export function RetirementCalculatorCard() {
 }
 
 function Stat({ label, value, accent, tone }: { label: string; value: string; accent?: boolean; tone?: "success" | "destructive" }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive-foreground" : accent ? "text-primary" : "";
+  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : accent ? "text-primary" : "";
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5">
       <div className="text-[11px] text-muted-foreground">{label}</div>

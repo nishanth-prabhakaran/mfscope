@@ -296,7 +296,7 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
                     <td className="py-2.5 px-2 text-right">{fmtNum(r.sharpe, 2)}</td>
                     <td className="py-2.5 px-2 text-right">{fmtNum(r.sortino, 2)}</td>
                     <td className="py-2.5 px-2 text-right">{fmtNum(r.volatility * 100, 2)}%</td>
-                    <td className="py-2.5 px-2 text-right text-destructive-foreground">
+                    <td className="py-2.5 px-2 text-right text-destructive">
                       {fmtNum(r.maxDD * 100, 2)}%
                     </td>
                     {onAdd && (

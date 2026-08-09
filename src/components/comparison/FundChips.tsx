@@ -24,7 +24,7 @@ export function FundChips({ funds, onRemove, onClear }: Props) {
           <span className="truncate max-w-[190px] sm:max-w-[240px] md:max-w-[320px]">{f.schemeName}</span>
           <button
             onClick={() => onRemove(f.schemeCode)}
-            className="ml-1 rounded-full p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive-foreground"
+            className="ml-1 rounded-full p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
             aria-label="Remove"
           >
             <X className="h-3 w-3" />
@@ -34,7 +34,7 @@ export function FundChips({ funds, onRemove, onClear }: Props) {
       {funds.length > 1 && (
         <button
           onClick={onClear}
-          className="text-xs text-muted-foreground hover:text-destructive-foreground ml-1"
+          className="text-xs text-muted-foreground hover:text-destructive ml-1"
         >
           Clear all
         </button>

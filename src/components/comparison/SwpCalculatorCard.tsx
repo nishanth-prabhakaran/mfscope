@@ -119,7 +119,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
                     <td className="py-1.5 pr-3">{r.year}</td>
                     <td className="text-right">{fmtInr(r.withdrawnThisYear)}</td>
                     <td className="text-right">{fmtInr(r.cumulativeWithdrawn)}</td>
-                    <td className={`text-right ${r.balance <= 0 ? "text-destructive-foreground" : ""}`}>{fmtInr(r.balance)}</td>
+                    <td className={`text-right ${r.balance <= 0 ? "text-destructive" : ""}`}>{fmtInr(r.balance)}</td>
                     <td className="text-right text-muted-foreground">{fmtInr(r.realBalance)}</td>
                   </tr>
                 ))}
@@ -157,7 +157,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
                     <td className={`text-right ${row.r.finalValue >= row.r.invested ? "text-success" : ""}`}>{fmtInr(row.r.finalValue)}</td>
                     <td className="text-right">{row.r.monthsSurvived}</td>
                     <td className="text-right">
-                      {row.r.depletedAt ? <span className="text-destructive-foreground">{fmtDate(row.r.depletedAt)}</span> : "—"}
+                      {row.r.depletedAt ? <span className="text-destructive">{fmtDate(row.r.depletedAt)}</span> : "—"}
                     </td>
                     <td className="text-right font-medium">{fmtPct(row.r.xirr)}</td>
                   </tr>
@@ -172,7 +172,7 @@ export function SwpCalculatorCard({ schemes }: Props) {
 }
 
 function Stat({ label, value, accent, tone }: { label: string; value: string; accent?: boolean; tone?: "success" | "destructive" }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive-foreground" : accent ? "text-primary" : "";
+  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : accent ? "text-primary" : "";
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5">
       <div className="text-[11px] text-muted-foreground">{label}</div>

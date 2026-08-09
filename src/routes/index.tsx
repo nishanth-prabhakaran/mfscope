@@ -16,6 +16,7 @@ import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
 import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
 import { PortfolioOverlapCard } from "@/components/comparison/PortfolioOverlapCard";
 import { CostComparisonCard } from "@/components/comparison/CostComparisonCard";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { RollingSipCard } from "@/components/comparison/RollingSipCard";
 import { CategoryPercentileCard } from "@/components/comparison/CategoryPercentileCard";
 import { DrawdownCard } from "@/components/comparison/DrawdownCard";
@@ -124,7 +125,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className="ambient pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 grid-bg opacity-30" />
         <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-brand/25 blur-[120px]" />
         <div className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full bg-brand-2/20 blur-[120px]" />
@@ -160,6 +161,7 @@ function Home() {
               {hydrated ? `${funds.length}/10` : "0/10"}
               <span className="hidden sm:inline"> selected</span>
             </span>
+            <ThemeToggle />
             <InstallButton className="h-8 gap-1.5 px-2.5 text-xs" />
           </div>
         </div>
@@ -275,7 +277,7 @@ function Home() {
 
         {errored > 0 && !loading && (
           <Card className="p-4 mb-4 border-destructive/40 bg-destructive/10 flex items-center gap-3">
-            <AlertTriangle className="h-4 w-4 text-destructive-foreground" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
             <span className="text-sm">{errored} fund(s) failed to load. Try again shortly.</span>
           </Card>
         )}
@@ -283,7 +285,7 @@ function Home() {
         {hydrated && !loading && excluded.length > 0 && (
           <Card className="p-4 mb-4 border-amber-500/40 bg-amber-500/10">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-400 shrink-0" />
+              <AlertTriangle className="h-4 w-4 mt-0.5 text-warning shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">
                   {excluded.length} fund{excluded.length > 1 ? "s" : ""} excluded from analysis

@@ -114,7 +114,7 @@ export function GoalPlannerCard({ schemes }: Props) {
       <div className="mt-4 rounded-lg border border-border/60 bg-card/50 p-3.5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">On track</span>
-          <span className={`num font-semibold ${onTrack ? "text-success" : "text-amber-400"}`}>
+          <span className={`num font-semibold ${onTrack ? "text-success" : "text-warning"}`}>
             {fmtNum(res.onTrackPct * 100, 0)}%
           </span>
         </div>
@@ -169,7 +169,7 @@ export function GoalPlannerCard({ schemes }: Props) {
 }
 
 function Stat({ label, value, accent, tone }: { label: string; value: string; accent?: boolean; tone?: "success" | "destructive" }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-amber-400" : accent ? "text-primary" : "";
+  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-warning" : accent ? "text-primary" : "";
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5">
       <div className="text-[11px] text-muted-foreground">{label}</div>
