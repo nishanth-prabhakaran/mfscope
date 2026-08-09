@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
 import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
+import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
 import { DrawdownCard } from "@/components/comparison/DrawdownCard";
 import { RiskMetricsCard } from "@/components/comparison/RiskMetricsCard";
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
@@ -178,6 +179,13 @@ function Home() {
             </p>
           </div>
         </section>
+
+        {/* Risk profiler — first decision aid for new investors */}
+        {hydrated && (
+          <div className="mb-4">
+            <RiskProfilerCard schemes={schemes} />
+          </div>
+        )}
 
         {/* Search + chips */}
         <Card className="p-3.5 sm:p-5 mb-5 sm:mb-6">
