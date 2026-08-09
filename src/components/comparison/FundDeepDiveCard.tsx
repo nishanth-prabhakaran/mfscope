@@ -24,6 +24,7 @@ import {
   Tooltip,
   Cell,
   Legend,
+  LabelList,
 } from "recharts";
 import { useSchemeDetail } from "@/hooks/useSchemeDetail";
 import {
