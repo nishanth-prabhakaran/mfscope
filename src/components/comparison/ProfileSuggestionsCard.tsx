@@ -229,8 +229,9 @@ export function ProfileSuggestionsCard({ profile, onAdd, isSelected, canAdd = tr
             <Info className="mt-0.5 h-3 w-3 shrink-0" />
             <span>
               A starting point for your own research, not a recommendation and not ranked by which
-              is "best". Expense ratio, fund manager tenure, portfolio holdings and AUM are not
-              considered here — check those before investing.
+              is "best". Screens only funds open today, so funds that closed or merged after poor
+              performance never appear. Check expense ratio, manager tenure and holdings before
+              investing — the Costs and Diversify tabs cover the first two.
             </span>
           </p>
         </>

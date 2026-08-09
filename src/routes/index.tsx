@@ -14,6 +14,8 @@ import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
 import { RollingReturnsCard } from "@/components/comparison/RollingReturnsCard";
 import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
+import { PortfolioOverlapCard } from "@/components/comparison/PortfolioOverlapCard";
+import { CostComparisonCard } from "@/components/comparison/CostComparisonCard";
 import { DrawdownCard } from "@/components/comparison/DrawdownCard";
 import { RiskMetricsCard } from "@/components/comparison/RiskMetricsCard";
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
@@ -352,6 +354,7 @@ function Home() {
                 <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
+                <TabsTrigger value="costs">Costs</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
               <TabsContent value="deepdive" className="mt-4"><FundDeepDiveCard schemes={schemes.map((s) => ({ code: s.code, name: s.name }))} onAdd={(code, name) => add({ schemeCode: code, schemeName: name })} isSelected={has} canAdd={funds.length < 10} /></TabsContent>
@@ -387,7 +390,15 @@ function Home() {
                 </Tabs>
               </TabsContent>
 
-              <TabsContent value="diversify" className="mt-4"><CorrelationMatrixCard schemes={schemes} /></TabsContent>
+              <TabsContent value="diversify" className="mt-4">
+                <div className="grid gap-5">
+                  <PortfolioOverlapCard schemes={schemes} />
+                  <CorrelationMatrixCard schemes={schemes} />
+                </div>
+              </TabsContent>
+              <TabsContent value="costs" className="mt-4">
+                <CostComparisonCard schemes={schemes} />
+              </TabsContent>
               <TabsContent value="annual" className="mt-4"><AnnualReturnsCard schemes={schemes} /></TabsContent>
             </Tabs>
           </div>

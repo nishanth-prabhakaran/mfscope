@@ -125,6 +125,8 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
           <p className="text-xs text-muted-foreground mt-0.5">
             Ranked on {period}-year rolling CAGR, consistency, Sharpe/Sortino, volatility and
             drawdown — computed live from NAV history of one scheme per AMC in the chosen category.
+            Ranks only funds open today, so funds that closed or merged after poor performance are
+            absent — real category averages were lower.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
