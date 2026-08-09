@@ -170,7 +170,8 @@ export function PortfolioModeCard({ schemes }: Props) {
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
             <div>
               <h4 className="text-sm font-medium mb-2">Allocation drift & fund CAGR</h4>
-              <table className="w-full text-xs num">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[320px] text-xs num">
                 <thead className="text-muted-foreground">
                   <tr className="border-b border-border/60">
                     <th className="text-left font-medium py-2 pr-3">Fund</th>
@@ -195,10 +196,12 @@ export function PortfolioModeCard({ schemes }: Props) {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div>
               <h4 className="text-sm font-medium mb-2">Portfolio returns</h4>
+              <div className="overflow-x-auto">
               <table className="w-full text-xs num">
                 <tbody>
                   {RETURN_PERIODS.map((p) => {
@@ -213,6 +216,7 @@ export function PortfolioModeCard({ schemes }: Props) {
                   })}
                 </tbody>
               </table>
+              </div>
 
               {sip && (
                 <div className="mt-4">

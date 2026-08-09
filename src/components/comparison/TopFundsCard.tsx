@@ -155,7 +155,7 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  "shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                  "shrink-0 rounded-full border px-3 py-2 text-xs transition-colors sm:py-1.5",
                   period === p
                     ? "bg-primary/15 border-primary/50 text-primary font-medium"
                     : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/30",

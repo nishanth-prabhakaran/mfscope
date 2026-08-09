@@ -173,7 +173,7 @@ export function RollingReturnsCard({
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`shrink-0 px-2.5 py-1 text-xs rounded-md transition-colors ${
+                className={`shrink-0 px-3 py-2 text-xs rounded-md transition-colors sm:px-2.5 sm:py-1 ${
                   period === p
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"

@@ -130,7 +130,7 @@ export function ScoreAndRankCard({ schemes, benchmarkRows }: Props) {
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-4 gap-2 text-[11px] num text-muted-foreground">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] num text-muted-foreground sm:grid-cols-4">
                   <Metric label="Rolling μ" value={`${fmtNum(s.rollingMean)}%`} />
                   <Metric label="Sharpe" value={fmtNum(s.risk.sharpe)} />
                   <Metric label="Sortino" value={fmtNum(s.risk.sortino)} />
