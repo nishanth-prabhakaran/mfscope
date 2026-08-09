@@ -87,6 +87,42 @@ function AllocBar({ data }: { data: { label: string; value: number }[] }) {
   );
 }
 
+/** Custom legend for the Performance & Rank bar chart. Shows explicit,
+ *  unambiguous coloured markers that match the on-chart bar styling. */
+function PerfLegend() {
+  const items = [
+    {
+      label: "Fund — outperforming",
+      color: "var(--success)",
+      desc: "Annualised return at or above category average",
+    },
+    {
+      label: "Fund — below category",
+      color: "var(--primary)",
+      desc: "Annualised return below category average",
+    },
+    {
+      label: "Category average",
+      color: "color-mix(in oklab, var(--foreground) 30%, transparent)",
+      desc: "Peer-group average for the same category & period",
+    },
+  ];
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+      {items.map((it) => (
+        <span key={it.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+            style={{ background: it.color }}
+            title={it.desc}
+          />
+          {it.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function RiskBlock({ name, block }: { name: string; block: RiskMetricBlock }) {
   const rows = block.timeframes ?? [];
   if (!rows.length) return null;
