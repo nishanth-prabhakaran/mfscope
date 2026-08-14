@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # `npm install` rather than `npm ci`: package-lock.json is gitignored (the
+      # repo uses bun), and bun.lock predates the vitest devDependency, so a
+      # frozen install would fail on a lockfile that does not match package.json.
+      # Regenerate bun.lock locally with `bun install` and this can become
+      # `bun install --frozen-lockfile`, which would also pin transitive versions.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Test
+        run: npm test
+
+      # Build last: it's the slowest step, so failing fast on types and tests
+      # gives quicker feedback.
+      - name: Build
+        run: npm run build
