@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import {
   Sparkles,
@@ -9,6 +9,8 @@ import {
   BarChart3,
   CalendarIcon,
   X,
+  Share2,
+  Check,
 } from "lucide-react";
 import fundscopeLogo from "@/assets/fundscope-logo.png.asset.json";
 import { Card } from "@/components/ui/card";
@@ -29,6 +31,7 @@ import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
 import { InstallButton } from "@/components/pwa/InstallPrompt";
 import { useSchemes } from "@/hooks/useSchemes";
 import { useSelection } from "@/hooks/useSelection";
+import { useSchemeList } from "@/hooks/useSchemes";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useBenchmark } from "@/hooks/useBenchmark";
 import type { BenchmarkKey, NavRow, RollingYears } from "@/types/mf";
@@ -52,6 +55,19 @@ const DrawdownCard = lazyWithRetry(() =>
 const CorrelationMatrixCard = lazyWithRetry(() =>
   import("@/components/comparison/CorrelationMatrixCard").then((m) => ({
     default: m.CorrelationMatrixCard,
+  })),
+);
+const CrisisStressCard = lazyWithRetry(() =>
+  import("@/components/comparison/CrisisStressCard").then((m) => ({ default: m.CrisisStressCard })),
+);
+const PostTaxReturnsCard = lazyWithRetry(() =>
+  import("@/components/comparison/PostTaxReturnsCard").then((m) => ({
+    default: m.PostTaxReturnsCard,
+  })),
+);
+const SectorExposureCard = lazyWithRetry(() =>
+  import("@/components/comparison/SectorExposureCard").then((m) => ({
+    default: m.SectorExposureCard,
   })),
 );
 const ActiveShareCard = lazyWithRetry(() =>
@@ -152,7 +168,17 @@ function CardSkeleton() {
 
 function Home() {
   const hydrated = useHydrated();
-  const { funds, add, remove, clear, has } = useSelection();
+  const { funds, add, remove, clear, has, shareUrl, hydrateNames } = useSelection();
+  // A shared link carries only scheme codes, so swap in real names once the
+  // scheme list arrives — otherwise the chips read "Scheme 120716".
+  const schemeListQuery = useSchemeList();
+  useEffect(() => {
+    const list = schemeListQuery.data;
+    if (!list?.length) return;
+    const byCode = new Map(list.map((x) => [x.schemeCode, x.schemeName]));
+    hydrateNames((code) => byCode.get(code));
+  }, [schemeListQuery.data, hydrateNames]);
+  const [copied, setCopied] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [benchmarkKey, setBenchmarkKey] = useState<BenchmarkKey | undefined>(undefined);
   // Shared by the Rolling Returns chart and Risk Analytics so both use the same window.
@@ -254,6 +280,28 @@ function Home() {
               {hydrated ? `${funds.length}/10` : "0/10"}
               <span className="hidden sm:inline"> selected</span>
             </span>
+            {hydrated && funds.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 px-2.5 text-xs"
+                onClick={async () => {
+                  const url = shareUrl();
+                  try {
+                    if (navigator.share)
+                      await navigator.share({ title: "FundScope comparison", url });
+                    else await navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch {
+                    /* user dismissed the share sheet */
+                  }
+                }}
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Share2 className="h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">{copied ? "Copied" : "Share"}</span>
+              </Button>
+            )}
             <ThemeToggle />
             <InstallButton className="h-8 gap-1.5 px-2.5 text-xs" />
           </div>
@@ -476,11 +524,14 @@ function Home() {
               </TabsContent>
               <TabsContent value="risk" className="mt-4">
                 <Suspense fallback={<CardSkeleton />}>
-                  <RiskMetricsCard
-                    schemes={schemes}
-                    benchmarkRows={benchmarkRows}
-                    windowYears={rollingPeriod}
-                  />
+                  <div className="grid gap-5">
+                    <RiskMetricsCard
+                      schemes={schemes}
+                      benchmarkRows={benchmarkRows}
+                      windowYears={rollingPeriod}
+                    />
+                    <CrisisStressCard schemes={schemes} benchmarkRows={benchmarkRows} />
+                  </div>
                 </Suspense>
               </TabsContent>
 
@@ -578,13 +629,17 @@ function Home() {
                   <div className="grid gap-5">
                     <PortfolioOverlapCard schemes={schemes} />
                     <ActiveShareCard schemes={schemes} />
+                    <SectorExposureCard schemes={schemes} />
                     <CorrelationMatrixCard schemes={schemes} />
                   </div>
                 </Suspense>
               </TabsContent>
               <TabsContent value="costs" className="mt-4">
                 <Suspense fallback={<CardSkeleton />}>
-                  <CostComparisonCard schemes={schemes} />
+                  <div className="grid gap-5">
+                    <CostComparisonCard schemes={schemes} />
+                    <PostTaxReturnsCard schemes={schemes} />
+                  </div>
                 </Suspense>
               </TabsContent>
               <TabsContent value="annual" className="mt-4">
