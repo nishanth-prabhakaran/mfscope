@@ -17,18 +17,67 @@ import { cn } from "@/lib/utils";
  * precision Active Share needs — the same proxy trick the benchmark loader
  * already uses for indices Yahoo doesn't carry.
  */
-const INDEX_PROXY: Record<string, { code: number; label: string }> = {
-  "Large Cap": { code: 120716, label: "Nifty 50 (via UTI Nifty 50 Index Fund)" },
-  Index: { code: 120716, label: "Nifty 50 (via UTI Nifty 50 Index Fund)" },
-  ELSS: { code: 120716, label: "Nifty 50 (via UTI Nifty 50 Index Fund)" },
-  "Flexi Cap": { code: 125354, label: "Nifty 500 (via index fund)" },
-  "Multi Cap": { code: 125354, label: "Nifty 500 (via index fund)" },
-  Value: { code: 125354, label: "Nifty 500 (via index fund)" },
-  Contra: { code: 125354, label: "Nifty 500 (via index fund)" },
-  Focused: { code: 125354, label: "Nifty 500 (via index fund)" },
-  "Large & Mid Cap": { code: 152156, label: "Nifty LargeMidcap 250 (via index fund)" },
-  "Mid Cap": { code: 152156, label: "Nifty LargeMidcap 250 (via index fund)" },
+interface IndexProxy {
+  code: number;
+  label: string;
+  /** Every token must appear in the fetched fund's name, case-insensitively.
+   *  Guards against a scheme code being wrong, reused, or retired — a silently
+   *  wrong index produces a confidently wrong Active Share, which is worse than
+   *  showing nothing. */
+  expect: string[];
+}
+
+const NIFTY50: IndexProxy = {
+  code: 120716,
+  label: "Nifty 50 (via an index fund)",
+  expect: ["nifty", "50"],
 };
+const NIFTY500: IndexProxy = {
+  code: 125354,
+  label: "Nifty 500 (via an index fund)",
+  expect: ["nifty", "500"],
+};
+const LARGEMID250: IndexProxy = {
+  code: 152156,
+  label: "Nifty LargeMidcap 250 (via an index fund)",
+  expect: ["nifty", "250"],
+};
+
+const INDEX_PROXY: Record<string, IndexProxy> = {
+  "Large Cap": NIFTY50,
+  Index: NIFTY50,
+  ELSS: NIFTY50,
+  "Flexi Cap": NIFTY500,
+  "Multi Cap": NIFTY500,
+  Value: NIFTY500,
+  Contra: NIFTY500,
+  Focused: NIFTY500,
+  "Large & Mid Cap": LARGEMID250,
+  // Mid Cap deliberately omitted: the nearest available proxy is LargeMidcap
+  // 250, whose large-cap half a mid-cap fund would never hold. Comparing against
+  // it would inflate Active Share for reasons that have nothing to do with
+  // active management. Better to skip than to mislead.
+};
+
+/** A plausible index portfolio: right name, and broad enough to be an index. */
+function validateProxy(
+  proxy: IndexProxy,
+  name: string | undefined,
+  holdingsCount: number,
+): string | null {
+  if (!name) return "Could not load the index portfolio.";
+  const lower = name.toLowerCase();
+  if (!lower.includes("index") && !lower.includes("nifty")) {
+    return "The reference fund for this category no longer looks like an index fund.";
+  }
+  if (!proxy.expect.every((t) => lower.includes(t))) {
+    return "The reference fund does not match the expected index.";
+  }
+  if (holdingsCount < 20) {
+    return "The index portfolio looks incomplete.";
+  }
+  return null;
+}
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
@@ -66,17 +115,31 @@ export function ActiveShareCard({ schemes }: Props) {
     enabled: run && proxyCodes.length > 0,
     staleTime: 12 * 60 * 60 * 1000,
     queryFn: async () => {
+      const byCode = new Map<number, IndexProxy>();
+      for (const t of targets) if (t.proxy) byCode.set(t.proxy.code, t.proxy);
+
       const entries = await Promise.all(
         proxyCodes.map(async (code) => {
+          const proxy = byCode.get(code)!;
           try {
             const d = await fetchSchemeDetail(code);
-            return [code, toWeighted(d.holdings)] as const;
+            const holdings = toWeighted(d.holdings);
+            const problem = validateProxy(proxy, d.schemeName, holdings.length);
+            // Reject rather than compare against something unverified.
+            if (problem) return [code, { holdings: [], problem }] as const;
+            return [code, { holdings, problem: null as string | null }] as const;
           } catch {
-            return [code, []] as const;
+            return [
+              code,
+              { holdings: [], problem: "Could not load the index portfolio." },
+            ] as const;
           }
         }),
       );
-      return Object.fromEntries(entries) as Record<number, ReturnType<typeof toWeighted>>;
+      return Object.fromEntries(entries) as Record<
+        number,
+        { holdings: ReturnType<typeof toWeighted>; problem: string | null }
+      >;
     },
   });
 
@@ -86,11 +149,12 @@ export function ActiveShareCard({ schemes }: Props) {
     if (!run || !proxyQuery.data) return [];
     return targets.map((t, i) => {
       const fundHoldings = toWeighted(fundDetails[i]?.data?.holdings);
-      const indexHoldings = t.proxy ? proxyQuery.data![t.proxy.code] : undefined;
+      const entry = t.proxy ? proxyQuery.data![t.proxy.code] : undefined;
       return {
         ...t,
         i,
-        result: indexHoldings ? activeShare(fundHoldings, indexHoldings) : null,
+        problem: entry?.problem ?? null,
+        result: entry?.holdings.length ? activeShare(fundHoldings, entry.holdings) : null,
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,9 +202,11 @@ export function ActiveShareCard({ schemes }: Props) {
                 >
                   <p className="truncate font-medium">{r.name}</p>
                   <p className="mt-1 text-muted-foreground">
-                    {r.proxy
-                      ? "Holdings unavailable for this fund or its index proxy."
-                      : `No comparable index for ${r.category ?? "this category"} — Active Share isn't meaningful here.`}
+                    {r.problem
+                      ? `${r.problem} Active Share is hidden rather than shown against the wrong index.`
+                      : r.proxy
+                        ? "Holdings unavailable for this fund."
+                        : `No comparable index for ${r.category ?? "this category"} — Active Share isn't meaningful here.`}
                   </p>
                 </div>
               );

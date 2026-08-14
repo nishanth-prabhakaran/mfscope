@@ -8,6 +8,8 @@ import {
   drawdownSeries,
   maxDrawdown,
   calculateRisk,
+  correlationMatrix,
+  stressCorrelationMatrix,
 } from "./calculators";
 import type { NavRow } from "@/types/mf";
 
@@ -137,5 +139,68 @@ describe("calculateRisk", () => {
     const risk = calculateRisk([{ t: 0, nav: 100 }]);
     expect(risk.volatility).toBe(0);
     expect(risk.maxDrawdown).toBe(0);
+  });
+});
+
+describe("stressCorrelationMatrix", () => {
+  const DAYMS = 86_400_000;
+
+  /** Builds two NAV series from explicit daily returns. */
+  function pair(retsA: number[], retsB: number[]) {
+    const mk = (rets: number[], code: number, name: string) => {
+      let nav = 100;
+      const rows: NavRow[] = [{ t: Date.UTC(2015, 0, 1), nav }];
+      rets.forEach((r, i) => {
+        nav *= 1 + r;
+        rows.push({ t: Date.UTC(2015, 0, 1) + (i + 1) * DAYMS, nav });
+      });
+      return { code, name, data: { meta: {}, rows } as never };
+    };
+    return [mk(retsA, 1, "A"), mk(retsB, 2, "B")];
+  }
+
+  it("returns nothing for fewer than two funds or too little history", () => {
+    expect(stressCorrelationMatrix([])).toHaveLength(0);
+    const short = pair([0.01, -0.01], [0.01, -0.01]);
+    expect(stressCorrelationMatrix(short)).toHaveLength(0);
+  });
+
+  it("detects funds that decouple in calm markets but fall together in a crash", () => {
+    // Calm days: uncorrelated (alternating opposite signs).
+    // Crash days: both fall hard together.
+    const n = 400;
+    const a: number[] = [];
+    const b: number[] = [];
+    for (let i = 0; i < n; i++) {
+      if (i % 40 === 0) {
+        a.push(-0.05 - (i % 7) * 0.002);
+        b.push(-0.048 - (i % 7) * 0.002);
+      } else {
+        a.push(i % 2 === 0 ? 0.004 : -0.004);
+        b.push(i % 2 === 0 ? -0.004 : 0.004);
+      }
+    }
+    const schemes = pair(a, b);
+    const full = correlationMatrix(schemes)[0];
+    const stressed = stressCorrelationMatrix(schemes)[0];
+    expect(stressed).toBeDefined();
+    // The crash-time figure must be materially higher than the full-period one.
+    expect(stressed.value).toBeGreaterThan(full.value);
+    expect(stressed.value).toBeGreaterThan(0.5);
+  });
+
+  it("produces one cell per pair", () => {
+    const n = 300;
+    const rets = Array.from({ length: n }, (_, i) => (i % 3 === 0 ? -0.02 : 0.01));
+    const schemes = pair(rets, rets);
+    expect(stressCorrelationMatrix(schemes)).toHaveLength(1);
+  });
+
+  it("reports near-perfect correlation for identical funds", () => {
+    const rets = Array.from({ length: 300 }, (_, i) => Math.sin(i) * 0.01);
+    const schemes = pair(rets, rets);
+    const cell = stressCorrelationMatrix(schemes)[0];
+    expect(cell.value).toBeGreaterThan(0.99);
+    expect(cell.overlap).toBe(true);
   });
 });
