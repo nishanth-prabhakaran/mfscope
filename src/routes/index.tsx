@@ -635,6 +635,11 @@ function Home() {
                         <RollingSipCard schemes={schemes} />
                       </Suspense>
                     </TabsContent>
+                    <TabsContent value="switch" className="mt-4">
+                      <Suspense fallback={<CardSkeleton />}>
+                        <SwitchCostCard />
+                      </Suspense>
+                    </TabsContent>
                   </Tabs>
                 </Suspense>
               </TabsContent>
