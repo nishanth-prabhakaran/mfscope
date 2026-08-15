@@ -57,6 +57,19 @@ const CorrelationMatrixCard = lazyWithRetry(() =>
     default: m.CorrelationMatrixCard,
   })),
 );
+const BreakEvenAlphaCard = lazyWithRetry(() =>
+  import("@/components/comparison/BreakEvenAlphaCard").then((m) => ({
+    default: m.BreakEvenAlphaCard,
+  })),
+);
+const HoldingPeriodCard = lazyWithRetry(() =>
+  import("@/components/comparison/HoldingPeriodCard").then((m) => ({
+    default: m.HoldingPeriodCard,
+  })),
+);
+const SwitchCostCard = lazyWithRetry(() =>
+  import("@/components/comparison/SwitchCostCard").then((m) => ({ default: m.SwitchCostCard })),
+);
 const CrisisStressCard = lazyWithRetry(() =>
   import("@/components/comparison/CrisisStressCard").then((m) => ({ default: m.CrisisStressCard })),
 );
@@ -531,6 +544,7 @@ function Home() {
                       windowYears={rollingPeriod}
                     />
                     <CrisisStressCard schemes={schemes} benchmarkRows={benchmarkRows} />
+                    <HoldingPeriodCard schemes={schemes} />
                   </div>
                 </Suspense>
               </TabsContent>
@@ -591,6 +605,7 @@ function Home() {
                       <TabsTrigger value="swp">SWP</TabsTrigger>
                       <TabsTrigger value="retirement">Retirement</TabsTrigger>
                       <TabsTrigger value="rollingsip">Rolling SIP</TabsTrigger>
+                      <TabsTrigger value="switch">Switch Cost</TabsTrigger>
                     </TabsList>
                     <TabsContent value="backtest" className="mt-4">
                       <CalculatorsCard schemes={schemes} />
@@ -639,6 +654,7 @@ function Home() {
                   <div className="grid gap-5">
                     <CostComparisonCard schemes={schemes} />
                     <PostTaxReturnsCard schemes={schemes} />
+                    <BreakEvenAlphaCard schemes={schemes} />
                   </div>
                 </Suspense>
               </TabsContent>
