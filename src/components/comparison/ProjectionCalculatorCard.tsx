@@ -3,13 +3,21 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { projectInvestment, scenarioReturns } from "@/lib/planning";
 import { calculateRisk } from "@/lib/calculators";
 import type { NormalizedScheme } from "@/types/mf";
 import { fmtInr, fmtNum, fmtPct } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Props {
   schemes: { code: number; name: string; data: NormalizedScheme }[];
@@ -22,6 +30,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
   const [years, setYears] = useState(15);
   const [expectedReturn, setExpectedReturn] = useState(12);
   const [inflation, setInflation] = useState(6);
+  const [showYearly, setShowYearly] = useState(false);
 
   const fundCagrs = useMemo(
     () => schemes.map((s) => ({ name: s.name, cagr: calculateRisk(s.data.rows).cagr })),
@@ -34,22 +43,31 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
   );
 
   const scenarios = useMemo(
-    () => scenarioReturns(expectedReturn).map((s) => ({
-      ...s,
-      r: projectInvestment({ lumpsum, monthly, stepUp, years, expectedReturn: s.rate, inflation }),
-    })),
+    () =>
+      scenarioReturns(expectedReturn).map((s) => ({
+        ...s,
+        r: projectInvestment({
+          lumpsum,
+          monthly,
+          stepUp,
+          years,
+          expectedReturn: s.rate,
+          inflation,
+        }),
+      })),
     [lumpsum, monthly, stepUp, years, expectedReturn, inflation],
   );
 
   const chartData = useMemo(
-    () => base.rows.map((row, i) => ({
-      year: row.year,
-      invested: row.invested,
-      value: row.value,
-      real: row.realValue,
-      low: scenarios[0].r.rows[i]?.value ?? null,
-      high: scenarios[2].r.rows[i]?.value ?? null,
-    })),
+    () =>
+      base.rows.map((row, i) => ({
+        year: row.year,
+        invested: row.invested,
+        value: row.value,
+        real: row.realValue,
+        low: scenarios[0].r.rows[i]?.value ?? null,
+        high: scenarios[2].r.rows[i]?.value ?? null,
+      })),
     [base, scenarios],
   );
 
@@ -59,7 +77,8 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
         <div>
           <h3 className="font-display text-base sm:text-lg font-semibold">Investment Projection</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Project a lumpsum + step-up SIP forward, with conservative / base / optimistic scenarios and inflation-adjusted value.
+            Project a lumpsum + step-up SIP forward, with conservative / base / optimistic scenarios
+            and inflation-adjusted value.
           </p>
         </div>
         {fundCagrs.length > 0 && (
@@ -84,8 +103,20 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
         <NumberField label="Lumpsum (₹)" value={lumpsum} onChange={setLumpsum} step={10000} />
         <NumberField label="Monthly SIP (₹)" value={monthly} onChange={setMonthly} step={1000} />
         <NumberField label="SIP step-up (%/yr)" value={stepUp} onChange={setStepUp} step={1} />
-        <NumberField label="Duration (years)" value={years} onChange={setYears} step={1} min={1} max={40} />
-        <NumberField label="Expected return (%)" value={expectedReturn} onChange={setExpectedReturn} step={0.5} />
+        <NumberField
+          label="Duration (years)"
+          value={years}
+          onChange={setYears}
+          step={1}
+          min={1}
+          max={40}
+        />
+        <NumberField
+          label="Expected return (%)"
+          value={expectedReturn}
+          onChange={setExpectedReturn}
+          step={0.5}
+        />
         <NumberField label="Inflation (%)" value={inflation} onChange={setInflation} step={0.5} />
       </div>
 
@@ -107,18 +138,71 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-            <XAxis dataKey="year" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" tickFormatter={(v: number) => `Y${v}`} />
-            <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" tickFormatter={(v: number) => fmtInr(v)} width={78} />
+            <XAxis
+              dataKey="year"
+              tick={{ fontSize: 11 }}
+              stroke="var(--muted-foreground)"
+              tickFormatter={(v: number) => `Y${v}`}
+            />
+            <YAxis
+              tick={{ fontSize: 11 }}
+              stroke="var(--muted-foreground)"
+              tickFormatter={(v: number) => fmtInr(v)}
+              width={78}
+            />
             <Tooltip
-              contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+              contentStyle={{
+                background: "var(--popover)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
               formatter={(v: number, n: string) => [fmtInr(v), n]}
               labelFormatter={(l) => `Year ${l}`}
             />
-            <Area type="monotone" dataKey="high" name="Optimistic" stroke="var(--chart-4)" fill="none" strokeDasharray="4 4" strokeWidth={1.5} />
-            <Area type="monotone" dataKey="value" name="Base case" stroke="var(--chart-2)" fill="url(#projGrad)" strokeWidth={2.5} />
-            <Area type="monotone" dataKey="low" name="Conservative" stroke="var(--chart-5)" fill="none" strokeDasharray="4 4" strokeWidth={1.5} />
-            <Area type="monotone" dataKey="invested" name="Invested" stroke="var(--muted-foreground)" fill="none" strokeWidth={1.5} />
-            <Area type="monotone" dataKey="real" name="Inflation-adjusted" stroke="var(--series-alt)" fill="none" strokeDasharray="2 3" strokeWidth={1.5} />
+            <Area
+              type="monotone"
+              dataKey="high"
+              name="Optimistic"
+              stroke="var(--chart-4)"
+              fill="none"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+            />
+            <Area
+              type="monotone"
+              dataKey="value"
+              name="Base case"
+              stroke="var(--chart-2)"
+              fill="url(#projGrad)"
+              strokeWidth={2.5}
+            />
+            <Area
+              type="monotone"
+              dataKey="low"
+              name="Conservative"
+              stroke="var(--chart-5)"
+              fill="none"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+            />
+            <Area
+              type="monotone"
+              dataKey="invested"
+              name="Invested"
+              stroke="var(--muted-foreground)"
+              fill="none"
+              strokeWidth={1.5}
+            />
+            <Area
+              type="monotone"
+              dataKey="real"
+              name="Inflation-adjusted"
+              stroke="var(--series-alt)"
+              fill="none"
+              strokeDasharray="2 3"
+              strokeWidth={1.5}
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -150,15 +234,111 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
         </table>
       </div>
 
+      {/* Year-by-year breakdown */}
+      <div className="mt-5">
+        <button
+          type="button"
+          onClick={() => setShowYearly((v) => !v)}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
+          {showYearly ? (
+            <ChevronUp className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5" />
+          )}
+          {showYearly ? "Hide" : "Show"} year-by-year breakdown
+        </button>
+
+        {showYearly && (
+          <div className="mt-2 overflow-x-auto">
+            <table className="num w-full min-w-[520px] text-xs">
+              <thead className="text-muted-foreground">
+                <tr className="border-b border-border/60">
+                  <th className="py-2 pr-3 text-left font-medium">Year</th>
+                  <th className="px-2 py-2 text-right font-medium">Invested</th>
+                  <th className="px-2 py-2 text-right font-medium">Value</th>
+                  <th className="px-2 py-2 text-right font-medium">Gains</th>
+                  <th className="px-2 py-2 text-right font-medium">Growth</th>
+                  <th className="px-2 py-2 text-right font-medium">In today's ₹</th>
+                  <th className="py-2 pl-2 text-right font-medium">Range (low–high)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {base.rows.map((row, i) => {
+                  const gains = row.value - row.invested;
+                  const prev = i > 0 ? base.rows[i - 1] : null;
+                  // Growth this year net of what was paid in, so a SIP's
+                  // contributions are not mistaken for investment returns.
+                  const growth = prev
+                    ? row.value - prev.value - (row.invested - prev.invested)
+                    : row.value - row.invested;
+                  return (
+                    <tr key={row.year} className="border-b border-border/30 last:border-0">
+                      <td className="py-1.5 pr-3">{row.year}</td>
+                      <td className="px-2 py-1.5 text-right text-muted-foreground">
+                        {fmtInr(row.invested)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-medium">{fmtInr(row.value)}</td>
+                      <td
+                        className={cn(
+                          "px-2 py-1.5 text-right",
+                          gains >= 0 ? "text-success" : "text-destructive",
+                        )}
+                      >
+                        {fmtInr(gains)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right text-muted-foreground">
+                        {fmtInr(growth)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right text-muted-foreground">
+                        {fmtInr(row.realValue)}
+                      </td>
+                      <td className="py-1.5 pl-2 text-right text-muted-foreground">
+                        {scenarios[0].r.rows[i] && scenarios[2].r.rows[i]
+                          ? `${fmtInr(scenarios[0].r.rows[i].value)} – ${fmtInr(scenarios[2].r.rows[i].value)}`
+                          : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              "Growth" is the value added in that year after subtracting what you paid in, so SIP
+              contributions are not counted as returns. "Range" spans the conservative and
+              optimistic scenarios for the same year.
+            </p>
+          </div>
+        )}
+      </div>
+
       <p className="text-[11px] text-muted-foreground mt-3">
-        Illustrative projections based on assumed constant returns; actual mutual fund returns vary and are not guaranteed.
+        Illustrative projections based on assumed constant returns; actual mutual fund returns vary
+        and are not guaranteed.
       </p>
     </Card>
   );
 }
 
-function Stat({ label, value, accent, tone }: { label: string; value: string; accent?: boolean; tone?: "success" | "destructive" }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : accent ? "text-primary" : "";
+function Stat({
+  label,
+  value,
+  accent,
+  tone,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  tone?: "success" | "destructive";
+}) {
+  const color =
+    tone === "success"
+      ? "text-success"
+      : tone === "destructive"
+        ? "text-destructive"
+        : accent
+          ? "text-primary"
+          : "";
   return (
     <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5">
       <div className="text-[11px] text-muted-foreground">{label}</div>
@@ -168,8 +348,20 @@ function Stat({ label, value, accent, tone }: { label: string; value: string; ac
 }
 
 function NumberField({
-  label, value, onChange, step = 1, min, max,
-}: { label: string; value: number; onChange: (v: number) => void; step?: number; min?: number; max?: number }) {
+  label,
+  value,
+  onChange,
+  step = 1,
+  min,
+  max,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+}) {
   return (
     <div>
       <Label className="text-[11px] text-muted-foreground">{label}</Label>
