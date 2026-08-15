@@ -12,6 +12,8 @@ import type { NavRow } from "@/types/mf";
 export interface CrisisPeriod {
   id: string;
   label: string;
+  /** Abbreviated label for narrow screens, where full names blow up the table. */
+  short: string;
   /** Inclusive ISO dates bounding the decline. */
   start: string;
   end: string;
@@ -27,6 +29,7 @@ export const CRISES: CrisisPeriod[] = [
   {
     id: "gfc-2008",
     label: "Global Financial Crisis",
+    short: "2008 GFC",
     start: "2008-01-08",
     end: "2009-03-09",
     blurb: "The Nifty lost roughly 60% peak to trough over fourteen months.",
@@ -34,6 +37,7 @@ export const CRISES: CrisisPeriod[] = [
   {
     id: "taper-2013",
     label: "Taper Tantrum",
+    short: "2013 Taper",
     start: "2013-05-20",
     end: "2013-08-28",
     blurb: "The rupee slid and foreign money left; mid-caps fell hardest.",
@@ -41,6 +45,7 @@ export const CRISES: CrisisPeriod[] = [
   {
     id: "midcap-2018",
     label: "Mid-cap unwind & IL&FS",
+    short: "2018 Mid-cap",
     start: "2018-01-15",
     end: "2019-02-19",
     blurb: "A credit shock after IL&FS defaulted. Small and mid-caps fell far more than the index.",
@@ -48,6 +53,7 @@ export const CRISES: CrisisPeriod[] = [
   {
     id: "covid-2020",
     label: "COVID crash",
+    short: "2020 COVID",
     start: "2020-01-14",
     end: "2020-03-23",
     blurb: "The fastest fall on record — roughly 38% in ten weeks.",
@@ -55,6 +61,7 @@ export const CRISES: CrisisPeriod[] = [
   {
     id: "rates-2022",
     label: "2022 rate shock",
+    short: "2022 Rates",
     start: "2021-10-18",
     end: "2022-06-17",
     blurb: "Global tightening and an inflation scare; growth stocks derated.",

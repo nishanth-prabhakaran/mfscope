@@ -57,10 +57,12 @@ export function CorrelationMatrixCard({ schemes }: Props) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[460px] text-sm">
               <thead>
                 <tr className="border-b border-border/50">
-                  <th className="py-2 pr-4 text-left font-medium text-muted-foreground">Pair</th>
+                  <th className="sticky left-0 z-10 bg-card py-2 pr-4 text-left font-medium text-muted-foreground">
+                    Pair
+                  </th>
                   <th className="py-2 pr-4 text-right font-medium text-muted-foreground">
                     Overall
                   </th>
@@ -84,10 +86,12 @@ export function CorrelationMatrixCard({ schemes }: Props) {
                       key={`${m.codeA}-${m.codeB}`}
                       className="border-b border-border/30 last:border-0"
                     >
-                      <td className="py-2.5 pr-4">
+                      <td className="sticky left-0 z-10 bg-card py-2.5 pr-4">
                         <div className="flex flex-col gap-0.5">
-                          <span className="truncate max-w-[220px] font-medium">{m.nameA}</span>
-                          <span className="truncate max-w-[220px] text-xs text-muted-foreground">
+                          <span className="max-w-[130px] truncate font-medium sm:max-w-[220px]">
+                            {m.nameA}
+                          </span>
+                          <span className="max-w-[130px] truncate text-xs text-muted-foreground sm:max-w-[220px]">
                             {m.nameB}
                           </span>
                         </div>

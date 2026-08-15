@@ -132,7 +132,7 @@ export function PostTaxReturnsCard({ schemes, defaultYears = 10 }: Props) {
         <table className="w-full min-w-[460px] text-xs">
           <thead className="text-muted-foreground">
             <tr className="border-b border-border/50">
-              <th className="py-2 pr-3 text-left font-medium">Fund</th>
+              <th className="sticky left-0 z-10 bg-card py-2 pr-3 text-left font-medium">Fund</th>
               <th className="px-2 py-2 text-left font-medium">Taxed as</th>
               <th className="px-2 py-2 text-right font-medium">Pre-tax</th>
               <th className="px-2 py-2 text-right font-medium">Post-tax</th>
@@ -142,13 +142,13 @@ export function PostTaxReturnsCard({ schemes, defaultYears = 10 }: Props) {
           <tbody>
             {rows.map((r) => (
               <tr key={r.code} className="border-b border-border/30 last:border-0">
-                <td className="py-2 pr-3">
+                <td className="sticky left-0 z-10 bg-card py-2 pr-3">
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ backgroundColor: colorFor(r.i) }}
                     />
-                    <span className="max-w-[160px] truncate">{r.name}</span>
+                    <span className="max-w-[110px] truncate sm:max-w-[160px]">{r.name}</span>
                   </span>
                 </td>
                 <td className="px-2 py-2 text-muted-foreground">{CLASS_LABEL[r.assetClass]}</td>

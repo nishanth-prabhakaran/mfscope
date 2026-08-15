@@ -55,13 +55,14 @@ export function CrisisStressCard({ schemes, benchmarkRows }: Props) {
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[560px] text-xs">
+        <table className="w-full min-w-[440px] text-xs">
           <thead className="text-muted-foreground">
             <tr className="border-b border-border/50">
-              <th className="py-2 pr-3 text-left font-medium">Fund</th>
+              <th className="sticky left-0 z-10 bg-card py-2 pr-3 text-left font-medium">Fund</th>
               {CRISES.map((c) => (
                 <th key={c.id} className="px-2 py-2 text-right font-medium" title={c.blurb}>
-                  {c.label}
+                  <span className="sm:hidden">{c.short}</span>
+                  <span className="hidden sm:inline">{c.label}</span>
                 </th>
               ))}
             </tr>
@@ -69,13 +70,13 @@ export function CrisisStressCard({ schemes, benchmarkRows }: Props) {
           <tbody>
             {rows.map((r) => (
               <tr key={r.code} className="border-b border-border/30 last:border-0">
-                <td className="py-2 pr-3">
+                <td className="sticky left-0 z-10 bg-card py-2 pr-3">
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ backgroundColor: colorFor(r.i) }}
                     />
-                    <span className="max-w-[150px] truncate">{r.name}</span>
+                    <span className="max-w-[110px] truncate sm:max-w-[150px]">{r.name}</span>
                   </span>
                 </td>
                 {r.results.map((res) => (

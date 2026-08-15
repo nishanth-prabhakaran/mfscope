@@ -72,7 +72,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
   );
 
   return (
-    <Card className="p-4 sm:p-5">
+    <Card className="min-w-0 p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div>
           <h3 className="font-display text-base sm:text-lg font-semibold">Investment Projection</h3>
@@ -208,7 +208,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
       </div>
 
       <div className="mt-5 overflow-x-auto">
-        <table className="w-full text-xs num">
+        <table className="num w-full min-w-[440px] text-xs">
           <thead className="text-muted-foreground">
             <tr className="border-b border-border/60">
               <th className="text-left font-medium py-2 pr-3">Scenario</th>
@@ -254,7 +254,9 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
             <table className="num w-full min-w-[520px] text-xs">
               <thead className="text-muted-foreground">
                 <tr className="border-b border-border/60">
-                  <th className="py-2 pr-3 text-left font-medium">Year</th>
+                  <th className="sticky left-0 z-10 bg-card py-2 pr-3 text-left font-medium">
+                    Year
+                  </th>
                   <th className="px-2 py-2 text-right font-medium">Invested</th>
                   <th className="px-2 py-2 text-right font-medium">Value</th>
                   <th className="px-2 py-2 text-right font-medium">Gains</th>
@@ -274,7 +276,7 @@ export function ProjectionCalculatorCard({ schemes }: Props) {
                     : row.value - row.invested;
                   return (
                     <tr key={row.year} className="border-b border-border/30 last:border-0">
-                      <td className="py-1.5 pr-3">{row.year}</td>
+                      <td className="sticky left-0 z-10 bg-card py-1.5 pr-3">{row.year}</td>
                       <td className="px-2 py-1.5 text-right text-muted-foreground">
                         {fmtInr(row.invested)}
                       </td>
