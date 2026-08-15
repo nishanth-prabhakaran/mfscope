@@ -681,6 +681,8 @@ function Home() {
               <ProjectionCalculatorCard schemes={[]} />
               <SwpCalculatorCard schemes={[]} />
               <RetirementCalculatorCard />
+              {/* Takes manual inputs only, so it works with nothing selected. */}
+              <SwitchCostCard />
             </Suspense>
           </div>
         )}
@@ -750,6 +752,11 @@ function EmptyState() {
       <h3 className="mt-4 font-display text-xl font-semibold">Start by adding 2 or more funds</h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Search above by scheme name or AMC. Try a few popular funds to get started:
+      </p>
+      <p className="mx-auto mt-3 max-w-prose text-xs leading-relaxed text-muted-foreground">
+        Adding funds unlocks the full dashboard — rolling returns, risk analytics, crisis stress
+        tests, portfolio overlap, sector exposure, costs and taxes, and fund-specific calculators.
+        The planners below work without selecting anything.
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         {suggestions.map((s) => (
