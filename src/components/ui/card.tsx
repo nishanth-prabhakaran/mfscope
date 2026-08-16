@@ -6,7 +6,11 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      // min-w-0 is essential: a Card is almost always a grid or flex item, and
+      // those default to min-width:auto (i.e. min-content). Without this, a wide
+      // table inside a Card stretches the Card past the viewport instead of
+      // letting its own overflow-x-auto wrapper scroll.
+      className={cn("min-w-0 rounded-xl border bg-card text-card-foreground shadow", className)}
       {...props}
     />
   ),

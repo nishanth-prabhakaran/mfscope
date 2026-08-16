@@ -321,7 +321,7 @@ function Home() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] overflow-x-clip px-3 py-5 pb-32 sm:px-4 sm:py-8 sm:pb-12 md:px-6">
+      <main className="mx-auto max-w-[1400px] px-3 py-5 pb-32 sm:px-4 sm:py-8 sm:pb-12 md:px-6">
         {/* Hero */}
         <section className="mb-5 sm:mb-8">
           <div className="max-w-3xl">
