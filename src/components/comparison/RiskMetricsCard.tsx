@@ -85,8 +85,8 @@ export function RiskMetricsCard({ schemes, benchmarkRows, windowYears }: Props) 
 
   return (
     <Card className="p-4 sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-        <div>
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3 className="font-display text-base sm:text-lg font-semibold">Risk Analytics</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Trailing {windowYears}-year risk-adjusted metrics on daily NAV (risk-free = 6.5%).
@@ -103,10 +103,10 @@ export function RiskMetricsCard({ schemes, benchmarkRows, windowYears }: Props) 
         <MetricGlossaryButton />
       </div>
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full text-xs num">
+        <table className="num w-full min-w-[380px] text-xs">
           <thead className="text-muted-foreground sticky top-0 bg-card/95">
             <tr className="border-b border-border/60">
-              <th className="text-left font-medium py-2 pr-3">Metric</th>
+              <th className="sticky left-0 z-20 bg-card py-2 pr-3 text-left font-medium">Metric</th>
               {rows.map((r) => (
                 <th key={r.code} className="text-right font-medium py-2 pl-3">
                   <div className="flex items-center justify-end gap-2">
@@ -114,7 +114,7 @@ export function RiskMetricsCard({ schemes, benchmarkRows, windowYears }: Props) 
                       className="h-2 w-2 rounded-full"
                       style={{ backgroundColor: colorFor(r.i) }}
                     />
-                    <span className="truncate max-w-[200px]">{r.name}</span>
+                    <span className="max-w-[110px] truncate sm:max-w-[200px]">{r.name}</span>
                   </div>
                 </th>
               ))}
@@ -125,7 +125,7 @@ export function RiskMetricsCard({ schemes, benchmarkRows, windowYears }: Props) 
               const rank = rankOf(m.key, m.higherBetter);
               return (
                 <tr key={m.key} className="border-b border-border/30 last:border-0">
-                  <td className="py-2 pr-3 text-muted-foreground">
+                  <td className="sticky left-0 z-10 bg-card py-2 pr-3 text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       {m.label}
                       <MetricInfo id={m.key as string} />

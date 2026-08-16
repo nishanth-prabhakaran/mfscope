@@ -129,7 +129,7 @@ export function CategoryPercentileCard({ schemes }: Props) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-1">
           {PERIODS.map((p) => (
             <button
