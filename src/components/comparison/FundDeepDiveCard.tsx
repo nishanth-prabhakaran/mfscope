@@ -27,7 +27,6 @@ import {
   LabelList,
 } from "recharts";
 import { useSchemeDetail } from "@/hooks/useSchemeDetail";
-import { InvestmentCaseSection } from "./InvestmentCaseSection";
 import {
   num,
   sortTimeframes,
@@ -111,10 +110,7 @@ function PerfLegend() {
   return (
     <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5">
       {items.map((it) => (
-        <span
-          key={it.label}
-          className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
-        >
+        <span key={it.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span
             className="h-2.5 w-2.5 shrink-0 rounded-sm"
             style={{ background: it.color }}
@@ -395,7 +391,6 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
 
             <Tabs defaultValue="perf" className="w-full">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <TabsTrigger value="case">The Case</TabsTrigger>
                 <TabsTrigger value="perf">Performance & Rank</TabsTrigger>
                 <TabsTrigger value="risk">Risk vs Category</TabsTrigger>
                 <TabsTrigger value="port">Portfolio</TabsTrigger>
@@ -405,19 +400,6 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
               </TabsList>
 
               {/* Performance */}
-              <TabsContent value="case" className="mt-4">
-                <InvestmentCaseSection
-                  name={data.schemeName}
-                  rows={navScheme?.rows ?? []}
-                  category={data.schemeCategoryLabel ?? data.schemeCategory}
-                  expenseRatio={num(data.expenseRatio)}
-                  aumCrore={num(data.aum)}
-                  portfolioTurnover={num(data.portfolioTurnover)}
-                  inceptionDate={data.inceptionDate}
-                  holdings={data.holdings}
-                  peers={data.peers}
-                />
-              </TabsContent>
               <TabsContent value="perf" className="mt-4 space-y-4">
                 {rankData.length > 0 ? (
                   <>
@@ -461,13 +443,10 @@ export function FundDeepDiveCard({ schemes, onAdd, isSelected, canAdd }: Props) 
                               n === "fund" ? "Fund" : "Category avg",
                             ]}
                           />
-                          <Legend content={<PerfLegend />} />
-                          <Bar
-                            dataKey="fund"
-                            name="fund"
-                            radius={[3, 3, 0, 0]}
-                            fill="var(--success)"
-                          >
+                          <Legend
+                            content={<PerfLegend />}
+                          />
+                          <Bar dataKey="fund" name="fund" radius={[3, 3, 0, 0]} fill="var(--success)">
                             {rankData.map((d, i) => (
                               <Cell
                                 key={i}
