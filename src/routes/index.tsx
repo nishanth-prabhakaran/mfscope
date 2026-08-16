@@ -321,7 +321,7 @@ function Home() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-3 py-5 pb-32 sm:px-4 sm:py-8 sm:pb-12 md:px-6">
+      <main className="mx-auto max-w-[1400px] overflow-x-clip px-3 py-5 pb-32 sm:px-4 sm:py-8 sm:pb-12 md:px-6">
         {/* Hero */}
         <section className="mb-5 sm:mb-8">
           <div className="max-w-3xl">
@@ -420,7 +420,7 @@ function Home() {
 
         {/* Loading */}
         {hydrated && funds.length > 0 && loading && (
-          <div className="grid gap-5">
+          <div className="grid min-w-0 gap-5">
             <Card className="p-6">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -498,7 +498,7 @@ function Home() {
 
         {/* Dashboard */}
         {hydrated && !loading && schemes.length > 0 && (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <Suspense fallback={<CardSkeleton />}>
               <RollingReturnsCard
                 schemes={schemes}
@@ -509,7 +509,7 @@ function Home() {
               />
             </Suspense>
 
-            <Tabs defaultValue="risk" className="w-full">
+            <Tabs defaultValue="risk" className="w-full min-w-0">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <TabsTrigger value="deepdive">Fund Deep Dive</TabsTrigger>
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
@@ -525,7 +525,7 @@ function Home() {
                 <TabsTrigger value="costs">Costs</TabsTrigger>
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
-              <TabsContent value="deepdive" className="mt-4">
+              <TabsContent value="deepdive" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <FundDeepDiveCard
                     schemes={schemes.map((s) => ({ code: s.code, name: s.name }))}
@@ -535,9 +535,9 @@ function Home() {
                   />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="risk" className="mt-4">
+              <TabsContent value="risk" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
-                  <div className="grid gap-5">
+                  <div className="grid min-w-0 gap-5">
                     <RiskMetricsCard
                       schemes={schemes}
                       benchmarkRows={benchmarkRows}
@@ -549,7 +549,7 @@ function Home() {
                 </Suspense>
               </TabsContent>
 
-              <TabsContent value="benchmark" className="mt-4">
+              <TabsContent value="benchmark" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <BenchmarkComparisonCard
                     schemes={schemes}
@@ -558,12 +558,12 @@ function Home() {
                   />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="returns" className="mt-4">
+              <TabsContent value="returns" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <ReturnsComparisonCard schemes={schemes} benchmarkRows={benchmarkRows} />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="drawdown" className="mt-4">
+              <TabsContent value="drawdown" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <DrawdownCard
                     schemes={schemes}
@@ -572,7 +572,7 @@ function Home() {
                   />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="growth" className="mt-4">
+              <TabsContent value="growth" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <NavGrowthCard
                     schemes={schemes}
@@ -581,23 +581,23 @@ function Home() {
                   />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="scores" className="mt-4">
+              <TabsContent value="scores" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
-                  <div className="space-y-6">
+                  <div className="min-w-0 space-y-6">
                     <ScoreAndRankCard schemes={schemes} benchmarkRows={benchmarkRows} />
                     <CategoryPercentileCard schemes={schemes} />
                     <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
                   </div>
                 </Suspense>
               </TabsContent>
-              <TabsContent value="portfolio" className="mt-4">
+              <TabsContent value="portfolio" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <PortfolioModeCard schemes={schemes} />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="calc" className="mt-4">
+              <TabsContent value="calc" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
-                  <Tabs defaultValue="backtest" className="w-full">
+                  <Tabs defaultValue="backtest" className="w-full min-w-0">
                     <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
                       <TabsTrigger value="goal">Goal Planner</TabsTrigger>
@@ -607,35 +607,35 @@ function Home() {
                       <TabsTrigger value="rollingsip">Rolling SIP</TabsTrigger>
                       <TabsTrigger value="switch">Switch Cost</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="backtest" className="mt-4">
+                    <TabsContent value="backtest" className="mt-4 min-w-0">
                       <CalculatorsCard schemes={schemes} />
                     </TabsContent>
-                    <TabsContent value="goal" className="mt-4">
+                    <TabsContent value="goal" className="mt-4 min-w-0">
                       <Suspense fallback={<CardSkeleton />}>
                         <GoalPlannerCard schemes={schemes} />
                       </Suspense>
                     </TabsContent>
-                    <TabsContent value="projection" className="mt-4">
+                    <TabsContent value="projection" className="mt-4 min-w-0">
                       <Suspense fallback={<CardSkeleton />}>
                         <ProjectionCalculatorCard schemes={schemes} />
                       </Suspense>
                     </TabsContent>
-                    <TabsContent value="swp" className="mt-4">
+                    <TabsContent value="swp" className="mt-4 min-w-0">
                       <Suspense fallback={<CardSkeleton />}>
                         <SwpCalculatorCard schemes={schemes} />
                       </Suspense>
                     </TabsContent>
-                    <TabsContent value="retirement" className="mt-4">
+                    <TabsContent value="retirement" className="mt-4 min-w-0">
                       <Suspense fallback={<CardSkeleton />}>
                         <RetirementCalculatorCard />
                       </Suspense>
                     </TabsContent>
-                    <TabsContent value="rollingsip" className="mt-4">
+                    <TabsContent value="rollingsip" className="mt-4 min-w-0">
                       <Suspense fallback={<CardSkeleton />}>
                         <RollingSipCard schemes={schemes} />
                       </Suspense>
                     </TabsContent>
-                    <TabsContent value="switch" className="mt-4">
+                    <TabsContent value="switch" className="mt-4 min-w-0">
                       <Suspense fallback={<CardSkeleton />}>
                         <SwitchCostCard />
                       </Suspense>
@@ -644,9 +644,9 @@ function Home() {
                 </Suspense>
               </TabsContent>
 
-              <TabsContent value="diversify" className="mt-4">
+              <TabsContent value="diversify" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
-                  <div className="grid gap-5">
+                  <div className="grid min-w-0 gap-5">
                     <PortfolioOverlapCard schemes={schemes} />
                     <ActiveShareCard schemes={schemes} />
                     <SectorExposureCard schemes={schemes} />
@@ -654,16 +654,16 @@ function Home() {
                   </div>
                 </Suspense>
               </TabsContent>
-              <TabsContent value="costs" className="mt-4">
+              <TabsContent value="costs" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
-                  <div className="grid gap-5">
+                  <div className="grid min-w-0 gap-5">
                     <CostComparisonCard schemes={schemes} />
                     <PostTaxReturnsCard schemes={schemes} />
                     <BreakEvenAlphaCard schemes={schemes} />
                   </div>
                 </Suspense>
               </TabsContent>
-              <TabsContent value="annual" className="mt-4">
+              <TabsContent value="annual" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <AnnualReturnsCard schemes={schemes} />
                 </Suspense>
@@ -674,7 +674,7 @@ function Home() {
 
         {/* Standalone planners when nothing is selected */}
         {hydrated && !loading && schemes.length === 0 && (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <Suspense fallback={<CardSkeleton />}>
               <TopFundsCard onAdd={add} isSelected={has} canAdd={funds.length < 10} />
               <GoalPlannerCard schemes={[]} />
