@@ -24,6 +24,8 @@ interface ApiEnvelope<T> {
 interface ApiListItem {
   schemeCode: string | number;
   schemeName: string;
+  planName?: string | null;
+  optionName?: string | null;
   isinDivPayoutOrGrowth?: string | null;
   isinDivReinvestment?: string | null;
   fundHouse?: string | null;
