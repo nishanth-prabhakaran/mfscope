@@ -2,6 +2,14 @@ import type { BenchmarkData, BenchmarkKey, NavRow } from "@/types/mf";
 import { benchmarkByKey } from "./benchmarks";
 import { fetchWithTimeout } from "./http";
 
+const FINAPI_BASE = "https://api.finapi.upvaly.com/api";
+
+/** finapi requires an API key header; read it at call time, never at module scope. */
+function finapiHeaders(): Record<string, string> {
+  const key = process.env["FINAPI_API_KEY"];
+  return { Accept: "application/json", ...(key ? { "X-API-Key": key } : {}) };
+}
+
 interface YahooChartResult {
   chart?: {
     result?: Array<{
@@ -44,9 +52,9 @@ interface FinApiIndexResponse {
 async function fetchFromFinapiIndex(indexName: string): Promise<NavRow[]> {
   const today = new Date().toISOString().slice(0, 10);
   const url =
-    `https://finapi.upvaly.com/api/nifty-indices` +
+    `${FINAPI_BASE}/nifty-indices` +
     `?indexName=${encodeURIComponent(indexName)}&startDate=1990-01-01&endDate=${today}`;
-  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
+  const res = await fetchWithTimeout(url, { headers: finapiHeaders() });
   if (!res.ok) throw new Error(`Index fetch failed: ${res.status}`);
   const json = (await res.json()) as FinApiIndexResponse;
 
@@ -80,8 +88,8 @@ async function fetchFromFinapiIndex(indexName: string): Promise<NavRow[]> {
 async function fetchFromProxyFund(code: number): Promise<NavRow[]> {
   const today = new Date().toISOString().slice(0, 10);
   const res = await fetchWithTimeout(
-    `https://finapi.upvaly.com/api/mf/scheme-code/${code}/nav?startDate=1990-01-01&endDate=${today}`,
-    { headers: { Accept: "application/json" } },
+    `${FINAPI_BASE}/mf/scheme-code/${code}/nav?startDate=1990-01-01&endDate=${today}`,
+    { headers: finapiHeaders() },
   );
   if (!res.ok) throw new Error(`Benchmark proxy fetch failed: ${res.status}`);
   const json = (await res.json()) as FinApiNavResponse;

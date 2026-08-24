@@ -2,7 +2,7 @@ import { get, set } from "idb-keyval";
 import { fetchWithTimeout } from "./http";
 import type { NormalizedScheme, SchemeListItem, NavRow, SchemeMeta } from "@/types/mf";
 
-const API_BASE = "https://finapi.upvaly.com/api";
+const API_BASE = "/api/public/finapi";
 
 const LIST_KEY = "finapi:list:v1";
 const LIST_TTL = 24 * 60 * 60 * 1000;
