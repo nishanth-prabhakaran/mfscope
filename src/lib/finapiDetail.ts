@@ -1,7 +1,7 @@
 import { get, set } from "idb-keyval";
 import { fetchWithTimeout } from "./http";
 
-const API_BASE = "https://finapi.upvaly.com/api";
+const API_BASE = "/api/public/finapi";
 const KEY = (code: number) => `finapi:detail:${code}:v1`;
 const TTL = 12 * 60 * 60 * 1000;
 
