@@ -91,9 +91,18 @@ export async function fetchSchemeList(): Promise<SchemeListItem[]> {
     for (const s of data) {
       const code = Number(s.schemeCode);
       if (!Number.isFinite(code) || !s.schemeName) continue;
+      // The API now returns plan/option separately; the app's filters and
+      // labels expect them inside the display name (e.g. "… - Direct Plan - Growth").
+      const parts = [s.schemeName, s.planName, s.optionName]
+        .map((p) => (p ?? "").replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      const base = parts[0].toLowerCase();
+      const name = parts
+        .filter((p, i) => i === 0 || !base.includes(p.toLowerCase()))
+        .join(" - ");
       out.push({
         schemeCode: code,
-        schemeName: s.schemeName.replace(/\s+/g, " ").trim(),
+        schemeName: name,
         isinGrowth: s.isinDivPayoutOrGrowth ?? null,
         isinDivReinvestment: s.isinDivReinvestment ?? null,
       });
