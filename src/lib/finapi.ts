@@ -4,7 +4,7 @@ import type { NormalizedScheme, SchemeListItem, NavRow, SchemeMeta } from "@/typ
 
 const API_BASE = "/api/public/finapi";
 
-const LIST_KEY = "finapi:list:v1";
+const LIST_KEY = "finapi:list:v2";
 const LIST_TTL = 24 * 60 * 60 * 1000;
 const NAV_KEY = (code: number) => `finapi:nav:${code}:v1`;
 const NAV_TTL = 12 * 60 * 60 * 1000;
