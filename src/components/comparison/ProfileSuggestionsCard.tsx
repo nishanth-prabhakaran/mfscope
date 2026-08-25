@@ -119,6 +119,7 @@ export function ProfileSuggestionsCard({
       // single largest weight in the ranking, so it is worth the extra calls —
       // but only for funds that actually made the cut.
       const withCost = await mapPool(candidates, CONCURRENCY, async (c) => {
+        if (!FACTSHEET_AVAILABLE) return { ...c, expenseRatio: null };
         try {
           const detail = await fetchSchemeDetail(c.code);
           return { ...c, expenseRatio: num(detail.expenseRatio) };
