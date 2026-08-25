@@ -18,6 +18,7 @@ import {
   type Answers,
 } from "@/lib/riskProfile";
 import { calculateRollingReturns, rollingStats, calculateRisk } from "@/lib/calculators";
+import { FACTSHEET_AVAILABLE } from "@/lib/features";
 import { fetchSchemeDetail, num } from "@/lib/finapiDetail";
 import { fmtPct } from "@/lib/format";
 
