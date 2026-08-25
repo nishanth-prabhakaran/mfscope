@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import { FACTSHEET_AVAILABLE } from "@/lib/features";
 import {
   Sparkles,
   TrendingUp,
@@ -157,7 +158,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by FinAPI.",
+          "Compare up to 10 Indian mutual funds side-by-side. Rolling CAGR, drawdown, Sharpe, Sortino, SIP & lumpsum backtests — powered by MFAPI.",
       },
       { property: "og:title", content: "FundScope · Mutual Fund Research Terminal" },
       {
@@ -287,7 +288,7 @@ function Home() {
           </div>
           <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground sm:gap-4">
             <span className="hidden lg:flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> FinAPI · IndexedDB cached
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> MFAPI · IndexedDB cached
             </span>
             <span className="rounded-full border border-border/60 px-2 py-1 num text-[11px] sm:px-2.5 sm:text-xs">
               {hydrated ? `${funds.length}/10` : "0/10"}
@@ -335,7 +336,7 @@ function Home() {
             </h1>
             <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl">
               Compare up to 10 funds side-by-side. Rolling returns, consistency scoring, drawdowns,
-              Sharpe & Sortino, SIP and lumpsum backtests — all computed live from FinAPI historical
+              Sharpe & Sortino, SIP and lumpsum backtests — all computed live from MFAPI historical
               NAVs.
             </p>
           </div>
@@ -511,7 +512,7 @@ function Home() {
 
             <Tabs defaultValue="risk" className="w-full min-w-0">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <TabsTrigger value="deepdive">Fund Deep Dive</TabsTrigger>
+                {FACTSHEET_AVAILABLE && <TabsTrigger value="deepdive">Fund Deep Dive</TabsTrigger>}
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
 
                 <TabsTrigger value="benchmark">vs Benchmark</TabsTrigger>
@@ -522,9 +523,10 @@ function Home() {
                 <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
                 <TabsTrigger value="calc">Calculators</TabsTrigger>
                 <TabsTrigger value="diversify">Diversify</TabsTrigger>
-                <TabsTrigger value="costs">Costs</TabsTrigger>
+                {FACTSHEET_AVAILABLE && <TabsTrigger value="costs">Costs</TabsTrigger>}
                 <TabsTrigger value="annual">Annual</TabsTrigger>
               </TabsList>
+              {FACTSHEET_AVAILABLE && (
               <TabsContent value="deepdive" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <FundDeepDiveCard
@@ -535,6 +537,7 @@ function Home() {
                   />
                 </Suspense>
               </TabsContent>
+              )}
               <TabsContent value="risk" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <div className="grid min-w-0 gap-5">
@@ -647,13 +650,18 @@ function Home() {
               <TabsContent value="diversify" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <div className="grid min-w-0 gap-5">
-                    <PortfolioOverlapCard schemes={schemes} />
-                    <ActiveShareCard schemes={schemes} />
-                    <SectorExposureCard schemes={schemes} />
+                    {FACTSHEET_AVAILABLE && (
+                      <>
+                        <PortfolioOverlapCard schemes={schemes} />
+                        <ActiveShareCard schemes={schemes} />
+                        <SectorExposureCard schemes={schemes} />
+                      </>
+                    )}
                     <CorrelationMatrixCard schemes={schemes} />
                   </div>
                 </Suspense>
               </TabsContent>
+              {FACTSHEET_AVAILABLE && (
               <TabsContent value="costs" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <div className="grid min-w-0 gap-5">
@@ -663,6 +671,7 @@ function Home() {
                   </div>
                 </Suspense>
               </TabsContent>
+              )}
               <TabsContent value="annual" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
                   <AnnualReturnsCard schemes={schemes} />
@@ -722,11 +731,11 @@ function Home() {
             Data source:{" "}
             <a
               className="underline hover:text-foreground"
-              href="https://finapi.upvaly.com"
+              href="https://www.mfapi.in"
               target="_blank"
               rel="noreferrer"
             >
-              FinAPI
+              MFAPI
             </a>
             . Index values shown are Total Return (TRI) where available.
           </p>
