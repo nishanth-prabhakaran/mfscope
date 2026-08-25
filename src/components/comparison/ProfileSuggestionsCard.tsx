@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Check, Search, Info } from "lucide-react";
 import { useSchemeList } from "@/hooks/useSchemes";
-import { fetchScheme } from "@/lib/finapi";
+import { fetchScheme } from "@/lib/mfapi";
 import { buildUniverse, mapPool, CONCURRENCY } from "@/lib/universe";
 import {
   analyseFundRisk,
@@ -18,6 +18,7 @@ import {
   type Answers,
 } from "@/lib/riskProfile";
 import { calculateRollingReturns, rollingStats, calculateRisk } from "@/lib/calculators";
+import { FACTSHEET_AVAILABLE } from "@/lib/features";
 import { fetchSchemeDetail, num } from "@/lib/finapiDetail";
 import { fmtPct } from "@/lib/format";
 
@@ -119,6 +120,7 @@ export function ProfileSuggestionsCard({
       // single largest weight in the ranking, so it is worth the extra calls —
       // but only for funds that actually made the cut.
       const withCost = await mapPool(candidates, CONCURRENCY, async (c) => {
+        if (!FACTSHEET_AVAILABLE) return { ...c, expenseRatio: null };
         try {
           const detail = await fetchSchemeDetail(c.code);
           return { ...c, expenseRatio: num(detail.expenseRatio) };

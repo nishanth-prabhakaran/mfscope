@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Percent, Info, Search } from "lucide-react";
 import { useSchemeList } from "@/hooks/useSchemes";
-import { fetchScheme } from "@/lib/finapi";
+import { fetchScheme } from "@/lib/mfapi";
 import { buildUniverse, mapPool, CONCURRENCY } from "@/lib/universe";
 import { guessCategory } from "@/lib/categories";
 import {
