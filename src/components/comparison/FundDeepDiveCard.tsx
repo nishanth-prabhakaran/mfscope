@@ -37,7 +37,7 @@ import {
 } from "@/lib/finapiDetail";
 import { fmtNum, fmtPctRaw, colorFor } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { fetchScheme } from "@/lib/finapi";
+import { fetchScheme } from "@/lib/mfapi";
 import { calculateRollingReturns, rollingStats } from "@/lib/calculators";
 import type { RollingYears } from "@/types/mf";
 
