@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Check, Search, Info } from "lucide-react";
 import { useSchemeList } from "@/hooks/useSchemes";
-import { fetchScheme } from "@/lib/finapi";
+import { fetchScheme } from "@/lib/mfapi";
 import { buildUniverse, mapPool, CONCURRENCY } from "@/lib/universe";
 import {
   analyseFundRisk,
