@@ -65,8 +65,11 @@ async function cached<T>(key: string, ttl: number, loader: () => Promise<T>): Pr
   }
 }
 
-async function getJson<T>(url: string, errorMessage: string): Promise<T> {
-  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
+async function getJson<T>(url: string, errorMessage: string, timeoutMs?: number): Promise<T> {
+  const res = await fetchWithTimeout(url, {
+    headers: { Accept: "application/json" },
+    ...(timeoutMs ? { timeoutMs } : {}),
+  });
   if (!res.ok) throw new Error(errorMessage);
   return (await res.json()) as T;
 }
