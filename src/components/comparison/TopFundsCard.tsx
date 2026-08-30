@@ -63,10 +63,16 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
     queryFn: async (): Promise<Ranked[]> => {
-      const loaded = await mapPool(universe, CONCURRENCY, async (u) => {
-        const data = await fetchScheme(u.code);
-        return { ...u, rows: data.rows };
-      });
+      setProgress(0);
+      const loaded = await mapPool(
+        universe,
+        CONCURRENCY,
+        async (u) => {
+          const data = await fetchScheme(u.code);
+          return { ...u, rows: data.rows };
+        },
+        (done) => setProgress(done),
+      );
 
       const ranked: Ranked[] = [];
       for (const item of loaded) {
