@@ -63,6 +63,7 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
     enabled: run && universe.length > 0,
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
+    meta: { errorContext: "Ranking funds" },
     queryFn: async (): Promise<Ranked[]> => {
       setProgress(0);
       const loaded = await mapPool(
