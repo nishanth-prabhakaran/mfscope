@@ -1,9 +1,35 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { toastApiError } from "./lib/apiErrors";
+
+/** Opt a query into a friendlier label via `meta: { errorContext: "…" }`. */
+function contextOf(meta: unknown): string | undefined {
+  const c = (meta as { errorContext?: unknown } | undefined)?.errorContext;
+  return typeof c === "string" ? c : undefined;
+}
 
 export const getRouter = () => {
+  // One place where every failed data call surfaces to the user. Individual
+  // cards no longer need their own error plumbing to stay honest about failures.
+  const notify = (error: unknown, meta: unknown, key: string) => {
+    if (typeof window === "undefined") return; // no toasts during SSR
+    toastApiError(error, contextOf(meta), key);
+  };
+
   const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        // Stale cached data is already on screen; a toast would be noise.
+        if (query.state.data !== undefined) return;
+        notify(error, query.meta, `query:${String(query.queryKey[0])}`);
+      },
+    }),
+    mutationCache: new MutationCache({
+      onError: (error, _vars, _ctx, mutation) => {
+        notify(error, mutation.meta, "mutation");
+      },
+    }),
     defaultOptions: {
       queries: {
         // A screen can fan out to 60 fund fetches; refetching all of them every
