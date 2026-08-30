@@ -12,5 +12,6 @@ export function useBenchmark(key: BenchmarkKey | undefined) {
     enabled: !!key,
     staleTime: 12 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    meta: { errorContext: "Loading benchmark index" },
   });
 }

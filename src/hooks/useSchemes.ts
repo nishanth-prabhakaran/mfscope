@@ -7,6 +7,7 @@ export function useSchemeList() {
     queryFn: fetchSchemeList,
     staleTime: 24 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    meta: { errorContext: "Loading the fund list" },
   });
 }
 
@@ -17,6 +18,7 @@ export function useSchemes(codes: number[]) {
       queryFn: () => fetchScheme(code),
       staleTime: 6 * 60 * 60 * 1000,
       gcTime: 12 * 60 * 60 * 1000,
+      meta: { errorContext: "Loading NAV history" },
     })),
   });
 }

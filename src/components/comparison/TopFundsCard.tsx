@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +63,7 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
     enabled: run && universe.length > 0,
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
+    meta: { errorContext: "Ranking funds" },
     queryFn: async (): Promise<Ranked[]> => {
       setProgress(0);
       const loaded = await mapPool(
@@ -73,6 +75,17 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
         },
         (done) => setProgress(done),
       );
+
+      // mapPool swallows per-fund failures so one bad scheme can't kill the
+      // screen — but silently ranking 40 of 60 funds would be misleading.
+      const failed = loaded.filter((x) => x === null).length;
+      if (failed > 0) {
+        toast.warning(`${failed} of ${universe.length} funds couldn't be loaded`, {
+          id: "top-funds-partial",
+          description: "They're excluded from this ranking. Refresh to retry them.",
+          duration: 6000,
+        });
+      }
 
       const ranked: Ranked[] = [];
       for (const item of loaded) {
