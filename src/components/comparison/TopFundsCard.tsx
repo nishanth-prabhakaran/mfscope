@@ -53,6 +53,7 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
   const [category, setCategory] = useState<string>("Flexi Cap");
   const [period, setPeriod] = useState<RollingYears>(3);
   const [run, setRun] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const universe = useMemo(() => buildUniverse(list, category), [list, category]);
 
