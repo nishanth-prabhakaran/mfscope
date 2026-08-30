@@ -219,9 +219,26 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
       )}
 
       {run && screen.isFetching && (
-        <div className="mt-5 flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 p-4 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          Screening {universe.length} {category} funds on {period}Y rolling returns…
+        <div className="mt-5 rounded-xl border border-border/60 bg-card/40 p-4">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+            <span>
+              Downloading NAV history — {progress} of {universe.length} {category} funds
+              {progress >= universe.length ? " · scoring…" : ""}
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-300"
+              style={{
+                width: `${universe.length ? Math.round((progress / universe.length) * 100) : 0}%`,
+              }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            First run only — each fund's full NAV history is cached on this device, so re-runs are
+            near instant.
+          </p>
         </div>
       )}
 
