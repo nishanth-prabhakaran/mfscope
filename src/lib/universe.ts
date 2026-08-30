@@ -9,7 +9,10 @@ import { guessAmc, guessCategory } from "./categories";
 import type { SchemeListItem } from "@/types/mf";
 
 export const UNIVERSE_CAP = 60;
-export const CONCURRENCY = 8;
+// MFAPI serves one full NAV history per request, so the screen is latency-bound,
+// not CPU-bound: more sockets in flight is the single biggest win. Browsers cap
+// at ~6 connections per host anyway, so this mostly removes our own throttle.
+export const CONCURRENCY = 16;
 
 export interface UniverseFund {
   code: number;
