@@ -79,6 +79,7 @@ export function ProfileSuggestionsCard({
       JSON.stringify(weights),
     ],
     enabled: run && universe.length > 0,
+    meta: { errorContext: "Matching funds to your profile" },
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
     queryFn: async (): Promise<Suggestion[]> => {
