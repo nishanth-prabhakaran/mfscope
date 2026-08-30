@@ -64,10 +64,21 @@ export function buildUniverse(
     .slice(0, cap);
 }
 
-/** Run `fn` over `items` with bounded concurrency; failures resolve to null. */
-export async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>) {
+/**
+ * Run `fn` over `items` with bounded concurrency; failures resolve to null.
+ *
+ * `onProgress` fires after every settled item so long screens can show movement
+ * instead of an opaque spinner.
+ */
+export async function mapPool<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+  onProgress?: (done: number, total: number) => void,
+) {
   const out: (R | null)[] = new Array(items.length).fill(null);
   let cursor = 0;
+  let done = 0;
   await Promise.all(
     Array.from({ length: Math.min(limit, items.length) }, async () => {
       while (cursor < items.length) {
@@ -77,6 +88,8 @@ export async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => 
         } catch {
           out[i] = null;
         }
+        done++;
+        onProgress?.(done, items.length);
       }
     }),
   );
