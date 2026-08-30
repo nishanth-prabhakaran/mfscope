@@ -74,6 +74,17 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
         (done) => setProgress(done),
       );
 
+      // mapPool swallows per-fund failures so one bad scheme can't kill the
+      // screen — but silently ranking 40 of 60 funds would be misleading.
+      const failed = loaded.filter((x) => x === null).length;
+      if (failed > 0) {
+        toast.warning(`${failed} of ${universe.length} funds couldn't be loaded`, {
+          id: "top-funds-partial",
+          description: "They're excluded from this ranking. Refresh to retry them.",
+          duration: 6000,
+        });
+      }
+
       const ranked: Ranked[] = [];
       for (const item of loaded) {
         if (!item || item.rows.length < 250) continue;
