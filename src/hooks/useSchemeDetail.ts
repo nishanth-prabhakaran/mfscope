@@ -8,5 +8,6 @@ export function useSchemeDetail(code: number | null) {
     enabled: code != null,
     staleTime: 6 * 60 * 60 * 1000,
     retry: 1,
+    meta: { errorContext: "Loading fund factsheet" },
   });
 }
