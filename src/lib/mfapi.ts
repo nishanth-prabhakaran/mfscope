@@ -117,14 +117,30 @@ function toMeta(code: number, m: ApiSchemeResponse["meta"]): SchemeMeta {
   };
 }
 
+/**
+ * In-flight dedupe: a screen and an open comparison card can ask for the same
+ * scheme at the same moment. Without this, both pay the full download and both
+ * write the same blob to IndexedDB.
+ */
+const inflight = new Map<number, Promise<NormalizedScheme>>();
+
 export async function fetchScheme(code: number): Promise<NormalizedScheme> {
-  return cached(NAV_KEY(code), NAV_TTL, async () => {
+  const running = inflight.get(code);
+  if (running) return running;
+
+  const p = cached(NAV_KEY(code), NAV_TTL, async () => {
     const data = await getJson<ApiSchemeResponse>(
       `${MFAPI_BASE}/mf/${code}`,
       "Failed to load scheme " + code,
+      // Full NAV history is a large payload; the 15s default aborts healthy but
+      // slow downloads, which then get retried from scratch — making it slower.
+      30_000,
     );
     const rows = toNavRows(data.data);
     if (!rows.length) throw new Error("No NAV history for scheme " + code);
     return { meta: toMeta(code, data.meta), rows };
-  });
+  }).finally(() => inflight.delete(code));
+
+  inflight.set(code, p);
+  return p;
 }
