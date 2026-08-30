@@ -53,6 +53,7 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
   const [category, setCategory] = useState<string>("Flexi Cap");
   const [period, setPeriod] = useState<RollingYears>(3);
   const [run, setRun] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const universe = useMemo(() => buildUniverse(list, category), [list, category]);
 
@@ -62,10 +63,16 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
     queryFn: async (): Promise<Ranked[]> => {
-      const loaded = await mapPool(universe, CONCURRENCY, async (u) => {
-        const data = await fetchScheme(u.code);
-        return { ...u, rows: data.rows };
-      });
+      setProgress(0);
+      const loaded = await mapPool(
+        universe,
+        CONCURRENCY,
+        async (u) => {
+          const data = await fetchScheme(u.code);
+          return { ...u, rows: data.rows };
+        },
+        (done) => setProgress(done),
+      );
 
       const ranked: Ranked[] = [];
       for (const item of loaded) {
@@ -212,9 +219,26 @@ export function TopFundsCard({ onAdd, isSelected, canAdd = true }: Props) {
       )}
 
       {run && screen.isFetching && (
-        <div className="mt-5 flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 p-4 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          Screening {universe.length} {category} funds on {period}Y rolling returns…
+        <div className="mt-5 rounded-xl border border-border/60 bg-card/40 p-4">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+            <span>
+              Downloading NAV history — {progress} of {universe.length} {category} funds
+              {progress >= universe.length ? " · scoring…" : ""}
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-300"
+              style={{
+                width: `${universe.length ? Math.round((progress / universe.length) * 100) : 0}%`,
+              }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            First run only — each fund's full NAV history is cached on this device, so re-runs are
+            near instant.
+          </p>
         </div>
       )}
 
