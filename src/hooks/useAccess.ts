@@ -22,8 +22,14 @@ export function useAccess(): AccessState {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
+      if (event === "SIGNED_IN" && next?.user) {
+        // Owner dashboard sign-in history.
+        void supabase
+          .from("sign_in_events")
+          .insert({ user_id: next.user.id, email: next.user.email ?? null });
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);

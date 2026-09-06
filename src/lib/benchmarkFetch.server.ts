@@ -1,6 +1,7 @@
 import type { BenchmarkData, BenchmarkKey, NavRow } from "@/types/mf";
 import { benchmarkByKey } from "./benchmarks";
 import { fetchWithTimeout } from "./http";
+import { logApiCall } from "./apiUsage.server";
 
 interface YahooChartResult {
   chart?: {
@@ -48,10 +49,17 @@ async function fetchFromBharat(indexName: string): Promise<NavRow[]> {
 
   while (page <= totalPages && page <= 20) {
     const url = `${BHARAT_BASE}/indices/${encodeURIComponent(indexName)}/prices?from=1990-01-01&page_size=1000&page=${page}`;
-    const res = await fetchWithTimeout(url, {
-      headers: { Accept: "application/json", "X-API-Key": key },
-      timeoutMs: 20_000,
-    });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(url, {
+        headers: { Accept: "application/json", "X-API-Key": key },
+        timeoutMs: 20_000,
+      });
+    } catch (err) {
+      await logApiCall("bharatstock", indexName, false);
+      throw err;
+    }
+    await logApiCall("bharatstock", indexName, res.ok, res.status);
     if (!res.ok) throw new Error(`Index fetch failed: ${res.status}`);
     const json = (await res.json()) as BharatPricesResponse;
     for (const p of json.data ?? []) {

@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogOut, UserCog, Users } from "lucide-react";
+import { Gauge, LogOut, UserCog, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccessContext } from "@/hooks/accessContext";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AccessManager } from "@/components/auth/AccessManager";
+import { OwnerDashboard } from "@/components/auth/OwnerDashboard";
 
 export function AccountMenu() {
   const access = useAccessContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   if (!access?.session) return null;
   const email = access.session.user.email ?? "Signed in";
@@ -58,6 +60,12 @@ export function AccountMenu() {
               Manage access
             </DropdownMenuItem>
           )}
+          {access.isOwner && (
+            <DropdownMenuItem onSelect={() => setStatsOpen(true)}>
+              <Gauge className="mr-2 h-4 w-4" />
+              Usage dashboard
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => void signOut()}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
@@ -75,6 +83,18 @@ export function AccountMenu() {
             </DialogDescription>
           </DialogHeader>
           <AccessManager />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={statsOpen} onOpenChange={setStatsOpen}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Usage dashboard</DialogTitle>
+            <DialogDescription>
+              Today's market-index data usage against the daily limit, plus who has signed in.
+            </DialogDescription>
+          </DialogHeader>
+          <OwnerDashboard />
         </DialogContent>
       </Dialog>
     </>
