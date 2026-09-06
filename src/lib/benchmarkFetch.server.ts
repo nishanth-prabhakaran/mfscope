@@ -1,6 +1,7 @@
 import type { BenchmarkData, BenchmarkKey, NavRow } from "@/types/mf";
 import { benchmarkByKey } from "./benchmarks";
 import { fetchWithTimeout } from "./http";
+import { logApiCall } from "./apiUsage.server";
 
 interface YahooChartResult {
   chart?: {
