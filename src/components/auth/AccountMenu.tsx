@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AccessManager } from "@/components/auth/AccessManager";
+import { OwnerDashboard } from "@/components/auth/OwnerDashboard";
 
 export function AccountMenu() {
   const access = useAccessContext();
