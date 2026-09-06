@@ -26,6 +26,9 @@ import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
 import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AccessGate } from "@/components/auth/AccessGate";
+import { AccountMenu } from "@/components/auth/AccountMenu";
+
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
 
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
