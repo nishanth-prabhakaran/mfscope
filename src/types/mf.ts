@@ -92,9 +92,11 @@ export interface Benchmark {
   key: BenchmarkKey;
   label: string;
   yahooSymbol: string;
-  /** NSE index name as finapi expects it (e.g. "NIFTY 50"). Preferred source: it
-   *  serves true TRI values, which Yahoo does not. */
+  /** NSE index name as finapi expects it (e.g. "NIFTY 50"). */
   finapiIndexName?: string;
+  /** NSE index name as BharatStock API lists it (e.g. "NIFTY SMLCAP 250"). Primary
+   *  source for index levels — exchange EOD data, refreshed daily. */
+  bharatIndexName?: string;
   /** When Yahoo has no history for the index, use this index-fund scheme as a proxy. */
   proxySchemeCode?: number;
   categoryHint: string[];
