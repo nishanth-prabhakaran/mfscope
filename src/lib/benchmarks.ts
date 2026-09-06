@@ -34,6 +34,7 @@ export const BENCHMARKS: Benchmark[] = [
     yahooSymbol: "^CNXMID",
     finapiIndexName: "NIFTY MIDCAP 150",
     bharatIndexName: "NIFTY MIDCAP 150",
+    proxySchemeCode: 147622,
     categoryHint: ["mid cap"],
   },
   {
@@ -51,6 +52,7 @@ export const BENCHMARKS: Benchmark[] = [
     yahooSymbol: "^CNXSMALL",
     finapiIndexName: "NIFTY SMALLCAP 250",
     bharatIndexName: "NIFTY SMLCAP 250",
+    proxySchemeCode: 147623,
     categoryHint: ["small cap"],
   },
   {
@@ -67,6 +69,7 @@ export const BENCHMARKS: Benchmark[] = [
     yahooSymbol: "^NX50",
     finapiIndexName: "NIFTY NEXT 50",
     bharatIndexName: "NIFTY NEXT 50",
+    proxySchemeCode: 112957,
     categoryHint: ["large cap"],
   },
   // Sensex is a BSE index, so the NSE-oriented finapi endpoint has no entry
