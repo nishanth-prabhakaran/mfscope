@@ -330,6 +330,8 @@ function Home() {
               </Button>
             )}
             <ThemeToggle />
+            <AccountMenu />
+
             <InstallButton className="h-8 gap-1.5 px-2.5 text-xs" />
           </div>
         </div>
