@@ -85,6 +85,18 @@ export function AccountMenu() {
           <AccessManager />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={statsOpen} onOpenChange={setStatsOpen}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Usage dashboard</DialogTitle>
+            <DialogDescription>
+              Today's market-index data usage against the daily limit, plus who has signed in.
+            </DialogDescription>
+          </DialogHeader>
+          <OwnerDashboard />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
