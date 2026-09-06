@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogOut, UserCog, Users } from "lucide-react";
+import { Gauge, LogOut, UserCog, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccessContext } from "@/hooks/accessContext";
 import { Button } from "@/components/ui/button";
