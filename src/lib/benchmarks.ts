@@ -2,9 +2,10 @@ import type { Benchmark, BenchmarkKey } from "@/types/mf";
 
 /**
  * Benchmarks resolve in this order (see benchmarkFetch.server.ts):
- *   1. finapi /api/nifty-indices  — true TRI, matches how funds are measured
- *   2. proxy index-fund NAV       — for indices finapi/Yahoo don't carry
- *   3. Yahoo Finance              — price-return only, last resort
+ *   1. BharatStock API /v1/indices/{name}/prices — official NSE EOD levels
+ *   2. proxy index-fund NAV       — for indices BharatStock doesn't carry, and
+ *                                   to extend history before BharatStock's start
+ *   3. Yahoo Finance              — last resort
  *
  * Labels say "TRI" only where a total-return series is actually available,
  * since comparing a fund's NAV (which includes dividends) against a
@@ -16,6 +17,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty 50 TRI",
     yahooSymbol: "^NSEI",
     finapiIndexName: "NIFTY 50",
+    bharatIndexName: "NIFTY 50",
     categoryHint: ["large cap", "bluechip", "index"],
   },
   {
@@ -23,6 +25,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty 100 TRI",
     yahooSymbol: "^CNX100",
     finapiIndexName: "NIFTY 100",
+    bharatIndexName: "NIFTY 100",
     categoryHint: ["large cap", "mid cap", "large & mid"],
   },
   {
@@ -30,6 +33,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty Midcap 150 TRI",
     yahooSymbol: "^CNXMID",
     finapiIndexName: "NIFTY MIDCAP 150",
+    bharatIndexName: "NIFTY MIDCAP 150",
     categoryHint: ["mid cap"],
   },
   {
@@ -37,6 +41,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty LargeMidcap 250 TRI",
     yahooSymbol: "NIFTY_LARGEMID250.NS",
     finapiIndexName: "NIFTY LARGEMIDCAP 250",
+    bharatIndexName: "NIFTY LARGEMID250",
     proxySchemeCode: 152156,
     categoryHint: ["large & mid", "large and mid"],
   },
@@ -45,6 +50,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty Smallcap 250 TRI",
     yahooSymbol: "^CNXSMALL",
     finapiIndexName: "NIFTY SMALLCAP 250",
+    bharatIndexName: "NIFTY SMLCAP 250",
     categoryHint: ["small cap"],
   },
   {
@@ -52,6 +58,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty 500 TRI",
     yahooSymbol: "^CRSLDX",
     finapiIndexName: "NIFTY 500",
+    bharatIndexName: "NIFTY 500",
     categoryHint: ["multi cap", "flexi cap"],
   },
   {
@@ -59,6 +66,7 @@ export const BENCHMARKS: Benchmark[] = [
     label: "Nifty Next 50 TRI",
     yahooSymbol: "^NX50",
     finapiIndexName: "NIFTY NEXT 50",
+    bharatIndexName: "NIFTY NEXT 50",
     categoryHint: ["large cap"],
   },
   // Sensex is a BSE index, so the NSE-oriented finapi endpoint has no entry
