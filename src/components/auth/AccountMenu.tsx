@@ -28,6 +28,7 @@ export function AccountMenu() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   if (!access?.session) return null;
   const email = access.session.user.email ?? "Signed in";
