@@ -170,8 +170,18 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Home,
+  component: GatedHome,
 });
+
+/** Everything on this page is invite-only, so the gate wraps the whole terminal. */
+function GatedHome() {
+  return (
+    <AccessGate>
+      <Home />
+    </AccessGate>
+  );
+}
+
 
 /** Keeps tab height stable while a split chunk loads, so content doesn't jump. */
 function CardSkeleton() {
