@@ -59,6 +59,12 @@ export function AccountMenu() {
               Manage access
             </DropdownMenuItem>
           )}
+          {access.isOwner && (
+            <DropdownMenuItem onSelect={() => setStatsOpen(true)}>
+              <Gauge className="mr-2 h-4 w-4" />
+              Usage dashboard
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => void signOut()}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
