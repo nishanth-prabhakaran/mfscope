@@ -26,6 +26,9 @@ import { FundSearch } from "@/components/comparison/FundSearch";
 import { FundChips } from "@/components/comparison/FundChips";
 import { RiskProfilerCard } from "@/components/comparison/RiskProfilerCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AccessGate } from "@/components/auth/AccessGate";
+import { AccountMenu } from "@/components/auth/AccountMenu";
+
 import { ReturnsComparisonCard } from "@/components/comparison/ReturnsComparisonCard";
 
 import { BenchmarkSelector } from "@/components/comparison/BenchmarkSelector";
@@ -170,8 +173,18 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Home,
+  component: GatedHome,
 });
+
+/** Everything on this page is invite-only, so the gate wraps the whole terminal. */
+function GatedHome() {
+  return (
+    <AccessGate>
+      <Home />
+    </AccessGate>
+  );
+}
+
 
 /** Keeps tab height stable while a split chunk loads, so content doesn't jump. */
 function CardSkeleton() {
@@ -317,6 +330,8 @@ function Home() {
               </Button>
             )}
             <ThemeToggle />
+            <AccountMenu />
+
             <InstallButton className="h-8 gap-1.5 px-2.5 text-xs" />
           </div>
         </div>
