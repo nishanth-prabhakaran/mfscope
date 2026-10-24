@@ -4,13 +4,38 @@ export interface RetirementInput {
   currentAge: number;
   retirementAge: number;
   lifeExpectancy: number;
-  monthlyExpenseToday: number;   // ₹ in today's money
-  inflation: number;             // % p.a.
+  monthlyExpenseToday: number;   // ₹ gross, today's money
+  inflation: number;             // % p.a. inflation before retirement
   preReturn: number;             // % p.a. expected return before retirement
   postReturn: number;            // % p.a. expected return after retirement
   existingCorpus: number;        // ₹ already saved
   currentMonthlySip: number;     // ₹ ongoing SIP
   sipStepUp: number;             // % annual step-up on SIP
+  // ----- Optional advanced inputs -----
+  postInflation?: number;        // % p.a. inflation after retirement (defaults to `inflation`)
+  pensionIncomeToday?: number;   // ₹/month other income in retirement (today's money)
+  bequestToday?: number;         // ₹ legacy amount to leave at end of life (today's money)
+}
+
+export interface AccumulationRow {
+  age: number;
+  year: number;
+  monthlySip: number;        // SIP running during that year (after step-ups)
+  annualInvested: number;    // ₹ invested during that year
+  totalInvested: number;     // cumulative invested by year end
+  corpus: number;            // projected corpus at year end
+  required: number;          // on-track corpus needed at that age
+  progressPct: number;       // corpus / required (percent)
+  monthlyExpenseThen: number;// gross monthly expense at that age (today's ₹ inflated)
+}
+
+export interface DrawdownRow {
+  age: number;
+  grossExpense: number;      // annual expense in that retirement year
+  pension: number;           // annual other income in that year
+  netWithdrawal: number;     // gross - pension (what the corpus must fund)
+  corpusStart: number;       // corpus at start of the year
+  corpusEnd: number;         // corpus at end of the year (after withdrawal + growth)
 }
 
 export interface RetirementResult {
@@ -18,6 +43,9 @@ export interface RetirementResult {
   yearsInRetirement: number;
   monthlyExpenseAtRetirement: number;
   annualExpenseAtRetirement: number;
+  pensionAtRetirement: number;   // annual pension income at retirement (₹)
+  postInflationPct: number;      // effective post-retirement inflation used
+  bequestAtEnd: number;          // nominal legacy amount at life expectancy
   corpusRequired: number;
   futureValueExisting: number;
   futureValueSip: number;
@@ -28,14 +56,17 @@ export interface RetirementResult {
   surplus: boolean;
   corpusPath: { age: number; projected: number; required: number }[];
   drawdownPath: { age: number; corpus: number; annualWithdrawal: number }[];
+  schedule: AccumulationRow[];       // year-by-year accumulation table
+  drawdownSchedule: DrawdownRow[];   // year-by-year retirement table
   corpusLastsTillAge: number | null;
 }
 
 const clampPct = (p: number) => p / 100;
 
-/** FV of a lump sum */
+/** FV of a lump sum, compounded monthly to stay consistent with the SIP math. */
 export function futureValue(pv: number, ratePct: number, years: number): number {
-  return pv * Math.pow(1 + clampPct(ratePct), years);
+  const i = clampPct(ratePct) / 12;
+  return pv * Math.pow(1 + i, Math.round(years * 12));
 }
 
 /** FV of a monthly SIP with optional annual step-up, compounded monthly. */
@@ -79,10 +110,22 @@ export function calculateRetirement(inp: RetirementInput): RetirementResult {
   const yearsToRetire = Math.max(0, inp.retirementAge - inp.currentAge);
   const yearsInRetirement = Math.max(0, inp.lifeExpectancy - inp.retirementAge);
 
+  const postInfl = inp.postInflation ?? inp.inflation;
+  const pensionToday = inp.pensionIncomeToday ?? 0;
+  const bequestToday = inp.bequestToday ?? 0;
+
   const monthlyExpenseAtRetirement = inp.monthlyExpenseToday * Math.pow(1 + clampPct(inp.inflation), yearsToRetire);
   const annualExpenseAtRetirement = monthlyExpenseAtRetirement * 12;
+  const pensionAtRetirement = pensionToday * Math.pow(1 + clampPct(postInfl), yearsToRetire);
+  const netAnnualExpenseAtRetirement = Math.max(0, annualExpenseAtRetirement - pensionAtRetirement);
 
-  const corpusRequired = corpusForAnnuity(annualExpenseAtRetirement, inp.postReturn, inp.inflation, yearsInRetirement);
+  // Legacy target: inflate today's ₹ to end of life, then discount to retirement day.
+  const bequestAtEnd = bequestToday * Math.pow(1 + clampPct(postInfl), yearsToRetire + yearsInRetirement);
+  const bequestPV = yearsInRetirement > 0
+    ? bequestAtEnd / Math.pow(1 + clampPct(inp.postReturn), yearsInRetirement)
+    : bequestAtEnd;
+
+  const corpusRequired = corpusForAnnuity(netAnnualExpenseAtRetirement, inp.postReturn, postInfl, yearsInRetirement) + bequestPV;
   const futureValueExisting = futureValue(inp.existingCorpus, inp.preReturn, yearsToRetire);
   const futureValueSip = sipFutureValue(inp.currentMonthlySip, inp.preReturn, yearsToRetire, inp.sipStepUp);
   const projectedCorpus = futureValueExisting + futureValueSip;
@@ -92,47 +135,87 @@ export function calculateRetirement(inp: RetirementInput): RetirementResult {
   const requiredMonthlySip = requiredSip(needFromSip, inp.preReturn, yearsToRetire);
   const additionalMonthlySip = Math.max(0, requiredMonthlySip - inp.currentMonthlySip);
 
-  // Accumulation path
+  // Accumulation path + full year-by-year schedule
   const corpusPath: RetirementResult["corpusPath"] = [];
+  const schedule: AccumulationRow[] = [];
   {
     const i = clampPct(inp.preReturn) / 12;
     let corpus = inp.existingCorpus;
+    let invested = inp.existingCorpus;
     let amt = inp.currentMonthlySip;
     for (let y = 0; y <= yearsToRetire; y++) {
       const remaining = yearsToRetire - y;
       const requiredNow = remaining > 0
         ? corpusRequired / Math.pow(1 + clampPct(inp.preReturn), remaining)
         : corpusRequired;
+      const annualInvested = amt * 12;
       corpusPath.push({ age: inp.currentAge + y, projected: corpus, required: requiredNow });
+      schedule.push({
+        age: inp.currentAge + y,
+        year: y,
+        monthlySip: amt,
+        annualInvested: y === 0 ? 0 : annualInvested,
+        totalInvested: invested,
+        corpus,
+        required: requiredNow,
+        progressPct: requiredNow > 0 ? (corpus / requiredNow) * 100 : 100,
+        monthlyExpenseThen: inp.monthlyExpenseToday * Math.pow(1 + clampPct(inp.inflation), y),
+      });
       if (y === yearsToRetire) break;
       for (let m = 0; m < 12; m++) corpus = (corpus + amt) * (1 + i);
+      invested += annualInvested;
       if (inp.sipStepUp) amt *= 1 + clampPct(inp.sipStepUp);
     }
   }
 
-  // Retirement drawdown path using the projected corpus
+  // Retirement drawdown path (pension-adjusted) + full schedule
   const drawdownPath: RetirementResult["drawdownPath"] = [];
+  const drawdownSchedule: DrawdownRow[] = [];
   let corpusLastsTillAge: number | null = null;
   {
     let corpus = projectedCorpus;
-    let withdrawal = annualExpenseAtRetirement;
+    let grossExpense = annualExpenseAtRetirement;
+    let pension = pensionAtRetirement;
+    let netWithdrawal = Math.max(0, grossExpense - pension);
     for (let y = 0; y < yearsInRetirement; y++) {
-      drawdownPath.push({ age: inp.retirementAge + y, corpus: Math.max(0, corpus), annualWithdrawal: withdrawal });
-      corpus = (corpus - withdrawal) * (1 + clampPct(inp.postReturn));
-      if (corpus <= 0 && corpusLastsTillAge === null) corpusLastsTillAge = inp.retirementAge + y;
-      withdrawal *= 1 + clampPct(inp.inflation);
+      const corpusStart = corpus;
+      const corpusEnd = Math.max(0, (corpus - netWithdrawal) * (1 + clampPct(inp.postReturn)));
+      drawdownPath.push({ age: inp.retirementAge + y, corpus: corpusEnd, annualWithdrawal: netWithdrawal });
+      drawdownSchedule.push({
+        age: inp.retirementAge + y,
+        grossExpense,
+        pension,
+        netWithdrawal,
+        corpusStart,
+        corpusEnd,
+      });
+      if (corpusEnd <= 0 && corpusLastsTillAge === null) corpusLastsTillAge = inp.retirementAge + y;
+      corpus = corpusEnd;
+      grossExpense *= 1 + clampPct(postInfl);
+      pension *= 1 + clampPct(postInfl);
+      netWithdrawal = Math.max(0, grossExpense - pension);
     }
-    drawdownPath.push({ age: inp.retirementAge + yearsInRetirement, corpus: Math.max(0, corpus), annualWithdrawal: withdrawal });
-    if (corpusLastsTillAge === null && corpus > 0) corpusLastsTillAge = inp.lifeExpectancy;
+    const corpusEnd = Math.max(0, (corpus - netWithdrawal) * (1 + clampPct(inp.postReturn)));
+    drawdownPath.push({ age: inp.retirementAge + yearsInRetirement, corpus: corpusEnd, annualWithdrawal: netWithdrawal });
+    drawdownSchedule.push({
+      age: inp.retirementAge + yearsInRetirement,
+      grossExpense,
+      pension,
+      netWithdrawal,
+      corpusStart: corpus,
+      corpusEnd,
+    });
+    if (corpusLastsTillAge === null && corpusEnd > 0) corpusLastsTillAge = inp.lifeExpectancy;
   }
 
   return {
     yearsToRetire, yearsInRetirement,
     monthlyExpenseAtRetirement, annualExpenseAtRetirement,
+    pensionAtRetirement, postInflationPct: postInfl, bequestAtEnd,
     corpusRequired, futureValueExisting, futureValueSip, projectedCorpus,
     gap, requiredMonthlySip, additionalMonthlySip,
     surplus: gap <= 0,
-    corpusPath, drawdownPath, corpusLastsTillAge,
+    corpusPath, drawdownPath, schedule, drawdownSchedule, corpusLastsTillAge,
   };
 }
 
