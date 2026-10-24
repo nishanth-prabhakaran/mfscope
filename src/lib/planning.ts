@@ -63,9 +63,10 @@ export interface RetirementResult {
 
 const clampPct = (p: number) => p / 100;
 
-/** FV of a lump sum */
+/** FV of a lump sum, compounded monthly to stay consistent with the SIP math. */
 export function futureValue(pv: number, ratePct: number, years: number): number {
-  return pv * Math.pow(1 + clampPct(ratePct), years);
+  const i = clampPct(ratePct) / 12;
+  return pv * Math.pow(1 + i, Math.round(years * 12));
 }
 
 /** FV of a monthly SIP with optional annual step-up, compounded monthly. */
