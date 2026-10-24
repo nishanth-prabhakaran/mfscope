@@ -217,7 +217,6 @@ export function calculateRetirement(inp: RetirementInput): RetirementResult {
     corpusPath, drawdownPath, schedule, drawdownSchedule, corpusLastsTillAge,
   };
 }
-}
 
 // ---------- Investment projection ----------
 export interface ProjectionInput {
