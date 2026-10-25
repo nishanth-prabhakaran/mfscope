@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { FACTSHEET_AVAILABLE } from "@/lib/features";
 import {
@@ -193,6 +194,23 @@ function CardSkeleton() {
   );
 }
 
+// Tabs the dashboard remembers across reloads (phone lock / app resume).
+const MAIN_TABS = new Set(
+  ["deepdive", "risk", "benchmark", "returns", "drawdown", "growth", "scores", "portfolio", "calc", "diversify", "costs", "annual"]
+    .filter((t) => FACTSHEET_AVAILABLE || (t !== "deepdive" && t !== "costs")),
+);
+
+const CALC_TABS = new Set(["backtest", "goal", "projection", "swp", "retirement", "rollingsip", "switch"]);
+
+// Dates are stored as timestamps; an empty string means "no start date".
+const dateStateOptions = {
+  serialize: (v: Date | undefined) => (v ? String(v.getTime()) : ""),
+  deserialize: (raw: string) => {
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? new Date(n) : undefined;
+  },
+};
+
 function Home() {
   const hydrated = useHydrated();
   const { funds, add, remove, clear, has, shareUrl, hydrateNames } = useSelection();
@@ -206,10 +224,25 @@ function Home() {
     hydrateNames((code) => byCode.get(code));
   }, [schemeListQuery.data, hydrateNames]);
   const [copied, setCopied] = useState(false);
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [benchmarkKey, setBenchmarkKey] = useState<BenchmarkKey | undefined>(undefined);
+  const [startDate, setStartDate] = usePersistentState<Date | undefined>(
+    "analysis:start-date",
+    undefined,
+    dateStateOptions,
+  );
+  const [benchmarkKey, setBenchmarkKey] = usePersistentState<BenchmarkKey | undefined>(
+    "analysis:benchmark",
+    undefined,
+  );
   // Shared by the Rolling Returns chart and Risk Analytics so both use the same window.
-  const [rollingPeriod, setRollingPeriod] = useState<RollingYears>(3);
+  const [rollingPeriod, setRollingPeriod] = usePersistentState<RollingYears>(
+    "analysis:rolling-years",
+    3,
+  );
+  // Remember the open tabs so a phone-lock / app-resume reload reopens the same view.
+  const [mainTab, setMainTab] = usePersistentState("ui:main-tab", "risk");
+  const [calcTab, setCalcTab] = usePersistentState("ui:calc-tab", "backtest");
+  const activeMainTab = MAIN_TABS.has(mainTab) ? mainTab : "risk";
+  const activeCalcTab = CALC_TABS.has(calcTab) ? calcTab : "backtest";
   const queries = useSchemes(funds.map((f) => f.schemeCode));
   const benchmarkQuery = useBenchmark(benchmarkKey);
 
@@ -525,7 +558,7 @@ function Home() {
               />
             </Suspense>
 
-            <Tabs defaultValue="risk" className="w-full min-w-0">
+            <Tabs value={activeMainTab} onValueChange={setMainTab} className="w-full min-w-0">
               <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {FACTSHEET_AVAILABLE && <TabsTrigger value="deepdive">Fund Deep Dive</TabsTrigger>}
                 <TabsTrigger value="risk">Risk Analytics</TabsTrigger>
@@ -615,7 +648,7 @@ function Home() {
               </TabsContent>
               <TabsContent value="calc" className="mt-4 min-w-0">
                 <Suspense fallback={<CardSkeleton />}>
-                  <Tabs defaultValue="backtest" className="w-full min-w-0">
+                  <Tabs value={activeCalcTab} onValueChange={setCalcTab} className="w-full min-w-0">
                     <TabsList className="w-full flex justify-start overflow-x-auto whitespace-nowrap [&>*]:shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <TabsTrigger value="backtest">SIP / Lumpsum Backtest</TabsTrigger>
                       <TabsTrigger value="goal">Goal Planner</TabsTrigger>

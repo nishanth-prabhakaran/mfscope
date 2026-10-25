@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,12 +16,12 @@ interface Props {
 }
 
 export function SwpCalculatorCard({ schemes }: Props) {
-  const [initial, setInitial] = useState(5000000);
-  const [monthlyWithdrawal, setMonthlyWithdrawal] = useState(30000);
-  const [annualIncrease, setAnnualIncrease] = useState(6);
-  const [years, setYears] = useState(10);
-  const [expectedReturn, setExpectedReturn] = useState(10);
-  const [inflation, setInflation] = useState(6);
+  const [initial, setInitial] = usePersistentState("swp.initial", 5000000);
+  const [monthlyWithdrawal, setMonthlyWithdrawal] = usePersistentState("swp.monthly-withdrawal", 30000);
+  const [annualIncrease, setAnnualIncrease] = usePersistentState("swp.annual-increase", 6);
+  const [years, setYears] = usePersistentState("swp.years", 10);
+  const [expectedReturn, setExpectedReturn] = usePersistentState("swp.expected-return", 10);
+  const [inflation, setInflation] = usePersistentState("swp.inflation", 6);
 
   const endT = useMemo(
     () => (schemes.length

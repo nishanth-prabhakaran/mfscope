@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +13,10 @@ interface Props {
 }
 
 export function CalculatorsCard({ schemes }: Props) {
-  const [monthly, setMonthly] = useState(10000);
-  const [stepUp, setStepUp] = useState(0);
-  const [years, setYears] = useState(5);
-  const [lumpsum, setLumpsum] = useState(100000);
+  const [monthly, setMonthly] = usePersistentState("calc.sip.monthly", 10000);
+  const [stepUp, setStepUp] = usePersistentState("calc.sip.step-up", 0);
+  const [years, setYears] = usePersistentState("calc.period-years", 5);
+  const [lumpsum, setLumpsum] = usePersistentState("calc.lumpsum.amount", 100000);
 
   const endT = useMemo(
     () => Math.min(...schemes.map((s) => s.data.rows[s.data.rows.length - 1]?.t ?? Date.now())),
