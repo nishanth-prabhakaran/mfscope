@@ -25,8 +25,6 @@ export function PortfolioModeCard({ schemes }: Props) {
   const [weights, setWeights] = usePersistentState<number[]>("portfolio.weights", []);
   const [rebalance, setRebalance] = usePersistentState<Rebalance>("portfolio.rebalance", "annual");
   const [monthlySip, setMonthlySip] = usePersistentState("portfolio.monthly-sip", 10000);
-  const [rebalance, setRebalance] = useState<Rebalance>("annual");
-  const [monthlySip, setMonthlySip] = useState(10000);
 
   useEffect(() => {
     setWeights((prev) => (prev.length === schemes.length ? prev : equalWeights(schemes.length || 1)));
