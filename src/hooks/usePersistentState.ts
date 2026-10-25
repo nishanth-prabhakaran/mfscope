@@ -22,7 +22,7 @@ export function usePersistentState<T>(key: string, initial: T, options?: Options
     let stored: T | undefined;
     try {
       const raw = window.localStorage.getItem(storageKey);
-      if (raw != null && raw !== "") stored = deserialize(raw);
+      if (raw != null && raw !== "") stored = deserialize(raw) as T | undefined;
     } catch {
       stored = undefined;
     }
