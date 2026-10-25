@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ const MODES: { key: Rebalance; label: string }[] = [
 ];
 
 export function PortfolioModeCard({ schemes }: Props) {
-  const [weights, setWeights] = useState<number[]>(() => equalWeights(schemes.length || 1));
+  const [weights, setWeights] = usePersistentState<number[]>(() => ...)
   const [rebalance, setRebalance] = useState<Rebalance>("annual");
   const [monthlySip, setMonthlySip] = useState(10000);
 
