@@ -19,14 +19,14 @@ export function usePersistentState<T>(key: string, initial: T, options?: Options
 
   const [value, setValue] = useState<T>(() => {
     if (typeof window === "undefined") return initial;
+    let stored: T | undefined;
     try {
       const raw = window.localStorage.getItem(storageKey);
-      if (raw == null || raw === "") return initial;
-      const parsed = deserialize(raw);
-      return parsed === undefined ? initial : parsed;
+      if (raw != null && raw !== "") stored = deserialize(raw);
     } catch {
-      return initial;
+      stored = undefined;
     }
+    return (stored === undefined ? initial : stored) as T;
   });
 
   useEffect(() => {
