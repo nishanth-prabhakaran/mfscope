@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,21 +12,21 @@ import { ChevronDown } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export function RetirementCalculatorCard() {
-  const [currentAge, setCurrentAge] = useState(30);
-  const [retirementAge, setRetirementAge] = useState(60);
-  const [lifeExpectancy, setLifeExpectancy] = useState(85);
-  const [monthlyExpenseToday, setMonthlyExpenseToday] = useState(50000);
-  const [inflation, setInflation] = useState(6);
-  const [preReturn, setPreReturn] = useState(12);
-  const [postReturn, setPostReturn] = useState(8);
-  const [existingCorpus, setExistingCorpus] = useState(500000);
-  const [currentMonthlySip, setCurrentMonthlySip] = useState(15000);
-  const [sipStepUp, setSipStepUp] = useState(5);
+  const [currentAge, setCurrentAge] = usePersistentState("retirement.current-age", 30);
+  const [retirementAge, setRetirementAge] = usePersistentState("retirement.retire-age", 60);
+  const [lifeExpectancy, setLifeExpectancy] = usePersistentState("retirement.life-expectancy", 85);
+  const [monthlyExpenseToday, setMonthlyExpenseToday] = usePersistentState("retirement.monthly-expense", 50000);
+  const [inflation, setInflation] = usePersistentState("retirement.inflation", 6);
+  const [preReturn, setPreReturn] = usePersistentState("retirement.pre-return", 12);
+  const [postReturn, setPostReturn] = usePersistentState("retirement.post-return", 8);
+  const [existingCorpus, setExistingCorpus] = usePersistentState("retirement.existing-corpus", 500000);
+  const [currentMonthlySip, setCurrentMonthlySip] = usePersistentState("retirement.current-sip", 15000);
+  const [sipStepUp, setSipStepUp] = usePersistentState("retirement.sip-step-up", 5);
 
   // Optional advanced inputs (empty = not used)
-  const [postInflationStr, setPostInflationStr] = useState("");
-  const [pensionStr, setPensionStr] = useState("");
-  const [bequestStr, setBequestStr] = useState("");
+  const [postInflationStr, setPostInflationStr] = usePersistentState("retirement.post-inflation", "");
+  const [pensionStr, setPensionStr] = usePersistentState("retirement.pension", "");
+  const [bequestStr, setBequestStr] = usePersistentState("retirement.bequest", "");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const optional = useMemo(() => ({

@@ -20,8 +20,8 @@ function monthLabel(t: number) {
 
 export function RollingSipCard({ schemes }: Props) {
   const [run, setRun] = useState(false);
-  const [years, setYears] = useState<RollingYears>(5);
-  const [monthly, setMonthly] = useState(10000);
+  const [years, setYears] = usePersistentState<RollingYears>("rollingsip.years", 5);
+  const [monthly, setMonthly] = usePersistentState("rollingsip.monthly", 10000);
 
   const results = useMemo(() => {
     if (!run) return [];

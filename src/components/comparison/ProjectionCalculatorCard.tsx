@@ -24,12 +24,12 @@ interface Props {
 }
 
 export function ProjectionCalculatorCard({ schemes }: Props) {
-  const [lumpsum, setLumpsum] = useState(100000);
-  const [monthly, setMonthly] = useState(10000);
-  const [stepUp, setStepUp] = useState(10);
-  const [years, setYears] = useState(15);
-  const [expectedReturn, setExpectedReturn] = useState(12);
-  const [inflation, setInflation] = useState(6);
+  const [lumpsum, setLumpsum] = usePersistentState("projection.lumpsum", 100000);
+  const [monthly, setMonthly] = usePersistentState("projection.monthly", 10000);
+  const [stepUp, setStepUp] = usePersistentState("projection.step-up", 10);
+  const [years, setYears] = usePersistentState("projection.years", 15);
+  const [expectedReturn, setExpectedReturn] = usePersistentState("projection.expected-return", 12);
+  const [inflation, setInflation] = usePersistentState("projection.inflation", 6);
   const [showYearly, setShowYearly] = useState(false);
 
   const fundCagrs = useMemo(

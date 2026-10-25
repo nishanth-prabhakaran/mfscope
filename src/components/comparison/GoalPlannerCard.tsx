@@ -16,14 +16,14 @@ interface Props {
 }
 
 export function GoalPlannerCard({ schemes }: Props) {
-  const [goalName, setGoalName] = useState("Child's education");
-  const [targetToday, setTargetToday] = useState(2500000);
-  const [years, setYears] = useState(15);
-  const [inflation, setInflation] = useState(8);
-  const [expectedReturn, setExpectedReturn] = useState(12);
-  const [currentSavings, setCurrentSavings] = useState(200000);
-  const [currentMonthlySip, setCurrentMonthlySip] = useState(10000);
-  const [sipStepUp, setSipStepUp] = useState(10);
+  const [goalName, setGoalName] = usePersistentState("goal.name", "Child's education");
+  const [targetToday, setTargetToday] = usePersistentState("goal.target-today", 2500000);
+  const [years, setYears] = usePersistentState("goal.years", 15);
+  const [inflation, setInflation] = usePersistentState("goal.inflation", 8);
+  const [expectedReturn, setExpectedReturn] = usePersistentState("goal.expected-return", 12);
+  const [currentSavings, setCurrentSavings] = usePersistentState("goal.current-savings", 200000);
+  const [currentMonthlySip, setCurrentMonthlySip] = usePersistentState("goal.current-sip", 10000);
+  const [sipStepUp, setSipStepUp] = usePersistentState("goal.sip-step-up", 10);
 
   const fundCagrs = useMemo(
     () => schemes.map((s) => ({ name: s.name, cagr: calculateRisk(s.data.rows).cagr })),

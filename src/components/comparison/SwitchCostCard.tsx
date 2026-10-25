@@ -16,15 +16,15 @@ const CLASS_OPTIONS: { label: string; value: TaxAssetClass }[] = [
 ];
 
 export function SwitchCostCard() {
-  const [currentValue, setCurrentValue] = useState(1_500_000);
-  const [investedAmount, setInvestedAmount] = useState(1_000_000);
-  const [holdingYears, setHoldingYears] = useState(4);
-  const [assetClass, setAssetClass] = useState<TaxAssetClass>("equity");
-  const [slabRate, setSlabRate] = useState(0.3);
-  const [exitLoadPct, setExitLoadPct] = useState(0);
-  const [currentFundReturn, setCurrentFundReturn] = useState(12);
-  const [newFundReturn, setNewFundReturn] = useState(14);
-  const [yearsAhead, setYearsAhead] = useState(10);
+  const [currentValue, setCurrentValue] = usePersistentState("switch.current-value", 1_500_000);
+  const [investedAmount, setInvestedAmount] = usePersistentState("switch.invested-amount", 1_000_000);
+  const [holdingYears, setHoldingYears] = usePersistentState("switch.holding-years", 4);
+  const [assetClass, setAssetClass] = usePersistentState<TaxAssetClass>("switch.asset-class", "equity");
+  const [slabRate, setSlabRate] = usePersistentState("switch.slab-rate", 0.3);
+  const [exitLoadPct, setExitLoadPct] = usePersistentState("switch.exit-load-pct", 0);
+  const [currentFundReturn, setCurrentFundReturn] = usePersistentState("switch.current-fund-return", 12);
+  const [newFundReturn, setNewFundReturn] = usePersistentState("switch.new-fund-return", 14);
+  const [yearsAhead, setYearsAhead] = usePersistentState("switch.years-ahead", 10);
 
   const result = useMemo(
     () =>
